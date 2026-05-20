@@ -1,42 +1,55 @@
 import { Card } from "@/components/Card";
-import { UPLOAD_READINESS_MODEL } from "@/data/uploadReadinessModel";
+import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
 import {
   formatCoveragePct,
   formatReadinessState,
   formatScoreSummary,
 } from "@/lib/readinessDisplay";
+import type { NormalizedDatasetSummary } from "@/types/normalization";
 
-export function DataReadinessPanel() {
-  const model = UPLOAD_READINESS_MODEL;
+type DataReadinessPanelProps = {
+  ingestionDataset?: NormalizedDatasetSummary & {
+    previewNote?: string;
+    score: NormalizedDatasetSummary["score"];
+    leverUnlocks: NormalizedDatasetSummary["leverUnlocks"];
+  };
+};
+
+export function DataReadinessPanel({
+  ingestionDataset,
+}: DataReadinessPanelProps) {
+  const dataset = ingestionDataset ?? buildPlaceholderIngestionDataset();
+  const score = dataset.score;
 
   return (
     <Card>
       <p className="micro-label mb-2">Data readiness</p>
-      <h3 className="section-title">Readiness scoring model</h3>
+      <h3 className="section-title">Readiness status</h3>
       <p className="mt-2 text-sm text-[var(--text-muted)]">
-        Descriptive scoring structure only. No files are parsed; percentages are
-        not calculated in this build.
+        Descriptive readiness from normalization preview. Does not calculate
+        opportunity or apply pricing rules.
       </p>
       <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--app-bg)] px-4 py-3">
         <p className="text-sm font-medium text-[var(--text-navy)]">
-          Overall: {formatReadinessState(model.overallState)}
+          Overall: {formatReadinessState(dataset.readinessSummary)}
         </p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          {formatScoreSummary(model.score)}
+          {formatScoreSummary({
+            fieldCoveragePct: score.fieldCoveragePct,
+            fileCoveragePct: score.fileCoveragePct,
+            rowCoveragePct: score.rowCoveragePct,
+            diagnosticCoveragePct: score.diagnosticCoveragePct,
+            dataQualityNotes: [],
+          })}
         </p>
       </div>
-      <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-[var(--text-muted)]">
-        {model.summaryNotes.map((note) => (
-          <li key={note}>{note}</li>
-        ))}
-      </ul>
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-md border border-[var(--border)] p-3">
           <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
             Field coverage
           </p>
           <p className="mt-1 text-lg font-semibold text-[var(--text-navy)]">
-            {formatCoveragePct(model.score.fieldCoveragePct)}
+            {formatCoveragePct(score.fieldCoveragePct)}
           </p>
         </div>
         <div className="rounded-md border border-[var(--border)] p-3">
@@ -44,7 +57,7 @@ export function DataReadinessPanel() {
             File coverage
           </p>
           <p className="mt-1 text-lg font-semibold text-[var(--text-navy)]">
-            {formatCoveragePct(model.score.fileCoveragePct)}
+            {formatCoveragePct(score.fileCoveragePct)}
           </p>
         </div>
         <div className="rounded-md border border-[var(--border)] p-3">
@@ -52,7 +65,7 @@ export function DataReadinessPanel() {
             Row coverage
           </p>
           <p className="mt-1 text-lg font-semibold text-[var(--text-navy)]">
-            {formatCoveragePct(model.score.rowCoveragePct)}
+            {formatCoveragePct(score.rowCoveragePct)}
           </p>
         </div>
         <div className="rounded-md border border-[var(--border)] p-3">
@@ -60,54 +73,26 @@ export function DataReadinessPanel() {
             Diagnostic coverage
           </p>
           <p className="mt-1 text-lg font-semibold text-[var(--text-navy)]">
-            {formatCoveragePct(model.score.diagnosticCoveragePct)}
+            {formatCoveragePct(score.diagnosticCoveragePct)}
           </p>
         </div>
       </div>
-      {model.score.dataQualityNotes.length > 0 ? (
-        <div className="mt-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-            Data quality notes
-          </p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-[var(--text-muted)]">
-            {model.score.dataQualityNotes.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
       <div className="mt-8">
         <p className="mb-3 text-sm font-medium text-[var(--text-navy)]">
-          Diagnostic availability by lever
+          Diagnostic unlock by lever
         </p>
         <div className="space-y-3">
-          {model.leverReadiness.map((lever) => (
+          {dataset.leverUnlocks.map((lever) => (
             <div
               key={lever.leverKey}
               className="rounded-lg border border-[var(--border)] bg-[var(--app-bg)] px-4 py-3"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-medium text-[var(--text-navy)]">
-                  {lever.label}
-                </p>
-                <span className="text-xs text-[var(--text-muted)]">
-                  {lever.availability === "unavailable"
-                    ? "Unavailable"
-                    : lever.availability === "limited"
-                      ? "Limited"
-                      : "Available"}
-                </span>
-              </div>
-              <p className="mt-2 text-xs text-[var(--text-muted)]">
-                State: {formatReadinessState(lever.readinessState)}
+              <p className="text-sm font-medium text-[var(--text-navy)]">
+                {lever.label}
               </p>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                Missing required:{" "}
-                {lever.missingRequiredFields.length > 0
-                  ? lever.missingRequiredFields.join(", ")
-                  : "None listed"}
+                {lever.message}
               </p>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">{lever.note}</p>
             </div>
           ))}
         </div>

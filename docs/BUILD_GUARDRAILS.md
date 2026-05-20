@@ -21,6 +21,14 @@
 - Competitors must **not** affect opportunity sizing.
 - Scope math may calculate denominator values (addressable revenue = total × %) but **must not** calculate opportunity.
 
+## Ingestion and normalization (Step 3b)
+
+- Column matching does **not** imply benchmark interpretation or competitive conclusions.
+- `columnMatcher`, `readinessEvaluator`, and `diagnosticUnlocks` must remain **deterministic** and explainable.
+- Readiness percentages describe **coverage only** — not opportunity or pricing performance.
+- Diagnostic unlock states (`unavailable` / `limited` / `available` / `ready`) must **not** imply opportunity sizing.
+- No pricing logic, thresholds, or recommendations until explicit rule alignment.
+
 ## Engine and rules scaffold (Steps 1–7)
 
 - `lib/diagnostic-engine/` returns pending/null outputs only.

@@ -13,7 +13,17 @@
 - Diagnostic availability matrix in `data/diagnosticAvailabilityMatrix.ts`
 - Placeholder UI on Client Uploads tab
 
-### Step 3b — Upload ingestion (next)
+### Step 3b — Upload ingestion scaffolding (complete)
+
+- Deterministic column matcher, readiness evaluator, diagnostic unlocks
+- Placeholder ingestion preview in Client Uploads UI
+- No file parsing, storage, or persistence
+
+### Step 3c — Real file ingestion (next)
+
+- Client-side or server-side parse to detected columns only
+- Persist mappings per session (not in Git)
+- Row-level normalization into `NormalizedPricingRecord`
 
 ### Step 4 — Observed pricing pattern features
 
