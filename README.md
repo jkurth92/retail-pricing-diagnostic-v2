@@ -18,6 +18,8 @@ Steps 2–7 add the output contract, six-step workflow, scope controls, competit
 
 **Step 3** aligns the canonical upload schema (`NormalizedPricingRecord`), field catalog, readiness states, and descriptive scoring model — parsing not active.
 
+**Step 4** defines the observed pricing pattern feature catalog (27 features across 5 levers) — measurements only, no rule interpretation or opportunity math.
+
 ## Current scope (Step 1)
 
 - Next.js App Router with TypeScript and Tailwind CSS
@@ -100,6 +102,8 @@ Do not commit `.env` files or secrets.
 - [docs/NORMALIZATION_FLOW.md](docs/NORMALIZATION_FLOW.md)
 - [docs/UPLOAD_MAPPING.md](docs/UPLOAD_MAPPING.md)
 - [docs/DIAGNOSTIC_AVAILABILITY.md](docs/DIAGNOSTIC_AVAILABILITY.md)
+- [docs/PATTERN_FEATURES.md](docs/PATTERN_FEATURES.md)
+- [docs/OBSERVED_PRICING_PATTERNS.md](docs/OBSERVED_PRICING_PATTERNS.md)
 - [docs/KNOWLEDGE_SOURCE_PLAN.md](docs/KNOWLEDGE_SOURCE_PLAN.md)
 - [docs/BUILD_GUARDRAILS.md](docs/BUILD_GUARDRAILS.md)
 - [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)

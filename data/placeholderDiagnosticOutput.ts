@@ -1,5 +1,9 @@
 import type { DiagnosticRunOutput, LeverKey } from "@/types/diagnostic-output";
+import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
+import { buildObservedPatternsOutput } from "@/lib/patternFeatureBuilder";
 import { UPLOAD_READINESS_MODEL } from "@/data/uploadReadinessModel";
+
+const PREVIEW_INGESTION = buildPlaceholderIngestionDataset();
 
 const LEVER_LABELS: Record<LeverKey, string> = {
   kvis: "KVIs",
@@ -56,43 +60,10 @@ export const PLACEHOLDER_DIAGNOSTIC_OUTPUT: DiagnosticRunOutput = {
     newsRows: [],
     integrationStatus: "pending_alignment",
   },
-  observedPatterns: {
-    guardrailMessage:
-      "Observed pricing patterns will be generated after upload schema, feature generation, and diagnostic rules are aligned. No pricing rules are implemented yet.",
-    overallStatus: "pending_alignment",
-    sections: {
-      kvis: {
-        status: "pending_alignment",
-        evidenceLabel: "Pending",
-        findingsLabel: "Not generated",
-        opportunityImpactLabel: "Not calculated",
-      },
-      price_architecture: {
-        status: "pending_alignment",
-        evidenceLabel: "Pending",
-        findingsLabel: "Not generated",
-        opportunityImpactLabel: "Not calculated",
-      },
-      price_zoning: {
-        status: "pending_alignment",
-        evidenceLabel: "Pending",
-        findingsLabel: "Not generated",
-        opportunityImpactLabel: "Not calculated",
-      },
-      promotions: {
-        status: "pending_alignment",
-        evidenceLabel: "Pending",
-        findingsLabel: "Not generated",
-        opportunityImpactLabel: "Not calculated",
-      },
-      markdown: {
-        status: "pending_alignment",
-        evidenceLabel: "Pending",
-        findingsLabel: "Not generated",
-        opportunityImpactLabel: "Not calculated",
-      },
-    },
-  },
+  observedPatterns: buildObservedPatternsOutput(
+    PREVIEW_INGESTION.normalizedFields,
+    PREVIEW_INGESTION.leverUnlocks,
+  ),
   totalOpportunity: {
     revenueInScope: null,
     revenueInScopeLabel: "Pending",

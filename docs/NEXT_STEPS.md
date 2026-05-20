@@ -25,10 +25,16 @@
 - Persist mappings per session (not in Git)
 - Row-level normalization into `NormalizedPricingRecord`
 
-### Step 4 — Observed pricing pattern features
+### Step 4 — Observed pricing pattern features (complete)
 
-- Align feature definitions per lever (KVI, architecture, zoning, promotions, markdown)
-- Map features to evidence items in `DiagnosticRunOutput`
+- Pattern feature catalog per lever in `data/patternFeatureCatalog.ts`
+- Deterministic builders in `lib/patternFeatureBuilder.ts` and `lib/patternEvidence.ts`
+- Observed Pricing Patterns UI shows feature inventory (no values, no findings)
+
+### Step 4b — Feature computation (next)
+
+- Compute feature values from normalized rows after live ingestion
+- Map computed features to evidence items in `DiagnosticRunOutput`
 
 ### Step 5 — Knowledge source review
 

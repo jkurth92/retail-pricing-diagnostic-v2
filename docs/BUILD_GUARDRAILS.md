@@ -21,6 +21,15 @@
 - Competitors must **not** affect opportunity sizing.
 - Scope math may calculate denominator values (addressable revenue = total × %) but **must not** calculate opportunity.
 
+## Pattern features (Step 4)
+
+- Pattern features must **not** imply pricing conclusions or recommendations.
+- Feature definitions must remain **deterministic** and documented in `calculationNote`.
+- **No benchmark thresholds** in feature definitions or examples.
+- **No opportunity math** in pattern features or observed patterns UI.
+- **No recommendation language** in the observed patterns layer.
+- “Visibility proxy” and similar names are descriptive only — not competitive scores.
+
 ## Ingestion and normalization (Step 3b)
 
 - Column matching does **not** imply benchmark interpretation or competitive conclusions.
