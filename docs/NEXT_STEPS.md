@@ -2,15 +2,18 @@
 
 ## Immediate decision point
 
-**Approve the canonical upload schema** before any parsing, readiness scoring, or pattern generation. Until then, all engine and rule outputs remain `pending_alignment`.
+**Review and sign off** the canonical upload schema (`docs/UPLOAD_SCHEMA.md`) and readiness model (`docs/DATA_READINESS.md`), then implement **file ingestion and normalization** — still no opportunity math or active rules.
 
 ## Roadmap
 
-### Step 3 — Upload schema and data readiness (next)
+### Step 3 — Upload schema and data readiness (complete)
 
-- Finalize required / recommended / optional fields per upload type
-- Define readiness scoring and diagnostics availability rules
-- Implement parse validators (still no opportunity math)
+- Canonical schema v1.0.0 in `types/upload-schema.ts` and `data/uploadFieldCatalog.ts`
+- Readiness states and scoring structure in `types/data-readiness.ts`
+- Diagnostic availability matrix in `data/diagnosticAvailabilityMatrix.ts`
+- Placeholder UI on Client Uploads tab
+
+### Step 3b — Upload ingestion (next)
 
 ### Step 4 — Observed pricing pattern features
 

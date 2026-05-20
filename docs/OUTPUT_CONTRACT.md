@@ -72,7 +72,11 @@ Local competitor entries for retailer overview context. Each `CompetitorCandidat
 
 ### DataReadinessModel
 
-Per-upload readiness structure with required / recommended / optional fields, diagnostics availability (`unavailable` | `limited` | `available`), and parsing status. Placeholder only until schema alignment.
+Per-upload readiness with lifecycle states (`not_uploaded` → `diagnostics_ready`), descriptive score metrics (null until parsing), and per-lever availability. See [`DATA_READINESS.md`](DATA_READINESS.md) and [`UPLOAD_SCHEMA.md`](UPLOAD_SCHEMA.md).
+
+### Canonical upload schema
+
+`NormalizedPricingRecord` and `CanonicalFieldKey` in [`types/upload-schema.ts`](../types/upload-schema.ts). Field catalog: [`data/uploadFieldCatalog.ts`](../data/uploadFieldCatalog.ts).
 
 ### Rule library and engine (scaffold)
 

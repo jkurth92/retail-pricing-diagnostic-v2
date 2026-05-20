@@ -1,5 +1,5 @@
 import type { DiagnosticRunOutput, LeverKey } from "@/types/diagnostic-output";
-import { UPLOAD_READINESS_PLACEHOLDER } from "@/data/uploadReadinessPlaceholders";
+import { UPLOAD_READINESS_MODEL } from "@/data/uploadReadinessModel";
 
 const LEVER_LABELS: Record<LeverKey, string> = {
   kvis: "KVIs",
@@ -26,7 +26,7 @@ export const PLACEHOLDER_DIAGNOSTIC_OUTPUT: DiagnosticRunOutput = {
     selectedPeerCount: 0,
   },
   competitorSet: null,
-  uploadReadiness: UPLOAD_READINESS_PLACEHOLDER,
+  uploadReadiness: UPLOAD_READINESS_MODEL,
   scope: {
     retailerName: null,
     totalRetailerRevenue: null,

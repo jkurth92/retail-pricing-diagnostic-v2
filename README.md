@@ -14,7 +14,9 @@ This app supports a consulting-style pricing diagnostic workflow:
 
 Step 1 delivered the professional UI shell and project foundation.
 
-Steps 2–7 add the output contract, six-step workflow, scope controls, competitor suggestions, upload/readiness placeholders, observed-pattern placeholders, and a disabled rule/engine scaffold.
+Steps 2–7 add the output contract, six-step workflow, scope controls, competitor suggestions, observed-pattern placeholders, and a disabled rule/engine scaffold.
+
+**Step 3** aligns the canonical upload schema (`NormalizedPricingRecord`), field catalog, readiness states, and descriptive scoring model — parsing not active.
 
 ## Current scope (Step 1)
 
@@ -93,6 +95,8 @@ Do not commit `.env` files or secrets.
 
 - [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md)
 - [docs/OUTPUT_CONTRACT.md](docs/OUTPUT_CONTRACT.md)
+- [docs/UPLOAD_SCHEMA.md](docs/UPLOAD_SCHEMA.md)
+- [docs/DATA_READINESS.md](docs/DATA_READINESS.md)
 - [docs/KNOWLEDGE_SOURCE_PLAN.md](docs/KNOWLEDGE_SOURCE_PLAN.md)
 - [docs/BUILD_GUARDRAILS.md](docs/BUILD_GUARDRAILS.md)
 - [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)
