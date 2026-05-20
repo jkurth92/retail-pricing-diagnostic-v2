@@ -32,8 +32,19 @@ yarn-error.log*
 
 # env files
 .env
+.env.local
 .env.*
 !.env.example
+
+# client and proprietary materials
+client_uploads/
+knowledge/raw/
+knowledge/extracted/
+knowledge/review/
+*.pdf
+*.pptx
+*.docx
+*.xlsx
 
 # vercel
 .vercel

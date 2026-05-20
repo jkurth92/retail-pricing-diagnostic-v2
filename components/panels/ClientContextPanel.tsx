@@ -1,7 +1,8 @@
+import { CompetitorSuggestionPanel } from "@/components/CompetitorSuggestionPanel";
 import { EprScoringCard } from "@/components/EprScoringCard";
 import { RetailerInputCard } from "@/components/RetailerInputCard";
 import { StrategicContextCard } from "@/components/StrategicContextCard";
-import { UploadPlaceholderCard } from "@/components/UploadPlaceholderCard";
+import type { CompetitorEntry } from "@/types/competitors";
 import type {
   EprDimension,
   EprScores,
@@ -11,47 +12,37 @@ import type {
 
 type ClientContextPanelProps = {
   retailerName: string;
-  confirmedRetailer: string;
   eprScores: EprScores;
   pricingPosture: PricingPosture;
   retailerFormat: RetailerFormat;
-  competitorSet: string;
   strategicContext: string;
+  competitors: CompetitorEntry[];
   onRetailerNameChange: (value: string) => void;
   onPopulateRetailer: () => void;
   onEprScoreChange: (dimension: EprDimension, score: number) => void;
   onPricingPostureChange: (value: PricingPosture) => void;
   onRetailerFormatChange: (value: RetailerFormat) => void;
-  onCompetitorSetChange: (value: string) => void;
   onStrategicContextChange: (value: string) => void;
+  onCompetitorsChange: (competitors: CompetitorEntry[]) => void;
 };
 
 export function ClientContextPanel({
   retailerName,
-  confirmedRetailer,
   eprScores,
   pricingPosture,
   retailerFormat,
-  competitorSet,
   strategicContext,
+  competitors,
   onRetailerNameChange,
   onPopulateRetailer,
   onEprScoreChange,
   onPricingPostureChange,
   onRetailerFormatChange,
-  onCompetitorSetChange,
   onStrategicContextChange,
+  onCompetitorsChange,
 }: ClientContextPanelProps) {
   return (
     <div className="space-y-6">
-      {confirmedRetailer ? (
-        <p className="text-sm text-[var(--text-muted)]">
-          Retailer confirmed for UI:{" "}
-          <span className="font-medium text-[var(--text-navy)]">
-            {confirmedRetailer}
-          </span>
-        </p>
-      ) : null}
       <RetailerInputCard
         retailerName={retailerName}
         onRetailerNameChange={onRetailerNameChange}
@@ -61,14 +52,15 @@ export function ClientContextPanel({
       <StrategicContextCard
         pricingPosture={pricingPosture}
         retailerFormat={retailerFormat}
-        competitorSet={competitorSet}
         strategicContext={strategicContext}
         onPricingPostureChange={onPricingPostureChange}
         onRetailerFormatChange={onRetailerFormatChange}
-        onCompetitorSetChange={onCompetitorSetChange}
         onStrategicContextChange={onStrategicContextChange}
       />
-      <UploadPlaceholderCard />
+      <CompetitorSuggestionPanel
+        competitors={competitors}
+        onCompetitorsChange={onCompetitorsChange}
+      />
     </div>
   );
 }

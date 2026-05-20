@@ -1,10 +1,8 @@
-export type WorkflowStep = "setup" | "context" | "analysis" | "opportunity";
+import type { WorkflowStep } from "@/types/diagnostic-output";
 
-export type WorkflowTab =
-  | "clientContext"
-  | "scope"
-  | "retailerOverview"
-  | "opportunitySize";
+export type WorkflowTab = WorkflowStep;
+
+export type SidebarFlowStep = "setup" | "context" | "analysis" | "opportunity";
 
 export type PrimaryModule = "overview" | "pricing" | "promotions" | "markdown";
 
@@ -35,6 +33,48 @@ export type DiagnosticLever =
   | "Price Zoning"
   | "Promotions"
   | "Markdown";
+
+export const WORKFLOW_TABS: { id: WorkflowTab; label: string }[] = [
+  { id: "client_context", label: "Client Context" },
+  { id: "client_uploads", label: "Client Uploads" },
+  { id: "retailer_overview", label: "Retailer Overview" },
+  { id: "scope", label: "Scope of Diagnostic" },
+  { id: "observed_pricing_patterns", label: "Observed Pricing Patterns" },
+  { id: "opportunity_size", label: "Opportunity Size" },
+];
+
+export const LEVER_KEY_BY_LABEL: Record<DiagnosticLever, import("@/types/diagnostic-output").LeverKey> = {
+  KVIs: "kvis",
+  "Price Architecture": "price_architecture",
+  "Price Zoning": "price_zoning",
+  Promotions: "promotions",
+  Markdown: "markdown",
+};
+
+export const LEVER_LABEL_BY_KEY: Record<import("@/types/diagnostic-output").LeverKey, DiagnosticLever> = {
+  kvis: "KVIs",
+  price_architecture: "Price Architecture",
+  price_zoning: "Price Zoning",
+  promotions: "Promotions",
+  markdown: "Markdown",
+};
+
+export const DEFAULT_SELECTED_LEVER_KEYS: import("@/types/diagnostic-output").LeverKey[] = [
+  "kvis",
+  "price_architecture",
+  "price_zoning",
+];
+
+export const CATEGORY_CHIP_OPTIONS = [
+  "Grocery",
+  "Household essentials",
+  "Beauty",
+  "Apparel",
+  "Electronics",
+  "Home",
+  "Seasonal",
+  "Other",
+] as const;
 
 export const EPR_DIMENSIONS: {
   key: EprDimension;
@@ -87,3 +127,16 @@ export const DIAGNOSTIC_LEVERS: DiagnosticLever[] = [
   "Promotions",
   "Markdown",
 ];
+
+export function workflowTabToSidebarStep(tab: WorkflowTab): SidebarFlowStep {
+  if (tab === "opportunity_size") return "opportunity";
+  if (
+    tab === "retailer_overview" ||
+    tab === "scope" ||
+    tab === "observed_pricing_patterns"
+  ) {
+    return "analysis";
+  }
+  if (tab === "client_uploads") return "context";
+  return "context";
+}

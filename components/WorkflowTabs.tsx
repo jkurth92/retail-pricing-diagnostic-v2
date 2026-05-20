@@ -1,21 +1,15 @@
 import type { WorkflowTab } from "@/types/ui";
+import { WORKFLOW_TABS } from "@/types/ui";
 
 type WorkflowTabsProps = {
   active: WorkflowTab;
   onChange: (tab: WorkflowTab) => void;
 };
 
-const TABS: { id: WorkflowTab; label: string }[] = [
-  { id: "clientContext", label: "Client Context" },
-  { id: "scope", label: "Scope of Diagnostic" },
-  { id: "retailerOverview", label: "Retailer Overview" },
-  { id: "opportunitySize", label: "Opportunity Size" },
-];
-
 export function WorkflowTabs({ active, onChange }: WorkflowTabsProps) {
   return (
     <div className="mb-6 flex flex-wrap gap-2">
-      {TABS.map((tab) => {
+      {WORKFLOW_TABS.map((tab) => {
         const isActive = tab.id === active;
         return (
           <button

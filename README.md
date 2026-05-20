@@ -1,6 +1,6 @@
 # Retail Pricing Diagnostic (v2)
 
-Agentic retail pricing diagnostic application — Step 1 UI scaffold.
+Agentic retail pricing diagnostic application — Steps 1–7 UI and scaffolding (no active pricing logic).
 
 ## Product purpose
 
@@ -12,7 +12,9 @@ This app supports a consulting-style pricing diagnostic workflow:
 4. Opportunity sizing
 5. Explainable recommendations and memo generation
 
-Step 1 delivers the professional UI shell and project foundation only.
+Step 1 delivered the professional UI shell and project foundation.
+
+Steps 2–7 add the output contract, six-step workflow, scope controls, competitor suggestions, upload/readiness placeholders, observed-pattern placeholders, and a disabled rule/engine scaffold.
 
 ## Current scope (Step 1)
 
@@ -22,6 +24,22 @@ Step 1 delivers the professional UI shell and project foundation only.
 - Placeholder screens: Scope of Diagnostic, Retailer Overview, Opportunity Size
 - UI-only types and transparent EPR average display
 - Product and build guardrail documentation
+
+## Workflow (Steps 1–7)
+
+1. Client Context — retailer, EPR, strategic context, competitor suggestions
+2. Client Uploads — upload placeholders + data readiness model
+3. Retailer Overview — financial / peer / insights / news placeholders
+4. Scope of Diagnostic — denominator math only
+5. Observed Pricing Patterns — evidence placeholders per lever
+6. Opportunity Size — null opportunity output + engine scaffold panel
+
+## Scaffolding added
+
+- Output contract: `types/diagnostic-output.ts`, `scope.ts`, `competitors.ts`, `data-readiness.ts`, `rules.ts`
+- Placeholders: `data/placeholderDiagnosticOutput.ts`, `uploadReadinessPlaceholders.ts`, `ruleLibraryPlaceholder.ts`
+- Engine: `lib/diagnostic-engine/` (returns pending / null)
+- Rules: `lib/rules/ruleLibrary.ts` (all rules disabled)
 
 ## Intentionally not implemented yet
 
@@ -74,5 +92,7 @@ Do not commit `.env` files or secrets.
 ## Documentation
 
 - [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md)
+- [docs/OUTPUT_CONTRACT.md](docs/OUTPUT_CONTRACT.md)
+- [docs/KNOWLEDGE_SOURCE_PLAN.md](docs/KNOWLEDGE_SOURCE_PLAN.md)
 - [docs/BUILD_GUARDRAILS.md](docs/BUILD_GUARDRAILS.md)
 - [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)

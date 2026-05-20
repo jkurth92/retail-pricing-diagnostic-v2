@@ -1,40 +1,40 @@
 # Next Steps
 
-Complete these alignment items before implementing diagnostic rules, benchmarks, or opportunity sizing.
+## Immediate decision point
 
-## 1. Align v2 output contract
+**Approve the canonical upload schema** before any parsing, readiness scoring, or pattern generation. Until then, all engine and rule outputs remain `pending_alignment`.
 
-Define the structured JSON (or equivalent) contract for diagnostic outputs: observed patterns, benchmark interpretation, lever-level findings, confidence, and narrative fields.
+## Roadmap
 
-## 2. Align canonical upload schema
+### Step 3 — Upload schema and data readiness (next)
 
-Specify required columns and formats for:
+- Finalize required / recommended / optional fields per upload type
+- Define readiness scoring and diagnostics availability rules
+- Implement parse validators (still no opportunity math)
 
-- Price file
-- Product master
-- Store / zone file
-- Optional context documents
+### Step 4 — Observed pricing pattern features
 
-Include validation rules and error handling expectations.
+- Align feature definitions per lever (KVI, architecture, zoning, promotions, markdown)
+- Map features to evidence items in `DiagnosticRunOutput`
 
-## 3. Align first diagnostic rules
+### Step 5 — Knowledge source review
 
-Prioritize which rules ship first (e.g. KVI gap detection vs. architecture ladder checks). Document inputs, thresholds, and POV references per rule.
+- Review local knowledge documents (not in Git)
+- Produce approved concept manifest
+- Link concepts to disabled rule slots in `data/ruleLibraryPlaceholder.ts`
 
-## 4. Align opportunity sizing formulas
+### Step 6 — First diagnostic rules
 
-Define lever-level and total opportunity methodology (bps, dollars, ranges), revenue basis, and explicit assumptions. No formulas in code until signed off.
+- Align thresholds and POV references per rule
+- Change individual rules from `disabled` to `approved_not_implemented` then implement
 
-## 5. Align confidence scoring approach
+### Step 7 — Deterministic engine
 
-Specify how match coverage, data quality, and rule strength combine into confidence levels — separate from opportunity magnitude.
+- Enable `runDiagnosticEngine` stages incrementally
+- Opportunity formulas and confidence scoring signed off separately
 
-## Recommended sequence
+## References
 
-1. Upload schema
-2. Output contract
-3. First rule pack
-4. Opportunity formulas
-5. Confidence model
-6. External integrations (retailer overview)
-7. Memo / storyline generation
+- [`OUTPUT_CONTRACT.md`](OUTPUT_CONTRACT.md)
+- [`KNOWLEDGE_SOURCE_PLAN.md`](KNOWLEDGE_SOURCE_PLAN.md)
+- [`BUILD_GUARDRAILS.md`](BUILD_GUARDRAILS.md)

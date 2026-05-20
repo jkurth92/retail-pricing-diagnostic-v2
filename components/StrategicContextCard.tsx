@@ -9,11 +9,9 @@ import {
 type StrategicContextCardProps = {
   pricingPosture: PricingPosture;
   retailerFormat: RetailerFormat;
-  competitorSet: string;
   strategicContext: string;
   onPricingPostureChange: (value: PricingPosture) => void;
   onRetailerFormatChange: (value: RetailerFormat) => void;
-  onCompetitorSetChange: (value: string) => void;
   onStrategicContextChange: (value: string) => void;
 };
 
@@ -26,11 +24,9 @@ const textareaClassName =
 export function StrategicContextCard({
   pricingPosture,
   retailerFormat,
-  competitorSet,
   strategicContext,
   onPricingPostureChange,
   onRetailerFormatChange,
-  onCompetitorSetChange,
   onStrategicContextChange,
 }: StrategicContextCardProps) {
   return (
@@ -82,22 +78,6 @@ export function StrategicContextCard({
             ))}
           </select>
         </div>
-      </div>
-      <div className="mt-6">
-        <label
-          htmlFor="competitor-set"
-          className="mb-2 block text-sm font-medium text-[var(--text-navy)]"
-        >
-          Competitor set
-        </label>
-        <textarea
-          id="competitor-set"
-          rows={3}
-          value={competitorSet}
-          onChange={(e) => onCompetitorSetChange(e.target.value)}
-          placeholder="List primary competitors and any relevant positioning notes."
-          className={textareaClassName}
-        />
       </div>
       <div className="mt-6">
         <label

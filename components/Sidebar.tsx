@@ -1,10 +1,10 @@
-import type { WorkflowStep } from "@/types/ui";
+import type { SidebarFlowStep } from "@/types/ui";
 
 type SidebarProps = {
-  activeStep?: WorkflowStep;
+  activeStep?: SidebarFlowStep;
 };
 
-const FLOW_STEPS: { id: WorkflowStep; label: string }[] = [
+const FLOW_STEPS: { id: SidebarFlowStep; label: string }[] = [
   { id: "setup", label: "Setup" },
   { id: "context", label: "Context" },
   { id: "analysis", label: "Analysis" },

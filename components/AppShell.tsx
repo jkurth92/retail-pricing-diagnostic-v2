@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import type { WorkflowStep } from "@/types/ui";
+import type { SidebarFlowStep } from "@/types/ui";
 
 type AppShellProps = {
   children: ReactNode;
-  activeStep?: WorkflowStep;
+  activeStep?: SidebarFlowStep;
 };
 
 export function AppShell({ children, activeStep = "context" }: AppShellProps) {
