@@ -1,29 +1,16 @@
 import { OPPORTUNITY_CALIBRATION_BANDS } from "@/data/opportunityCalibrationBands";
 import { OPPORTUNITY_THEME_TEMPLATES } from "@/data/opportunityThemes";
+import {
+  buildHypothesisOpportunityTrace,
+  type OpportunityCalibrationInputs,
+} from "@/lib/opportunityCalculationTrace";
 import type { HypothesisFamily } from "@/types/diagnostic-hypotheses";
 import type { ElasticitySensitivity } from "@/types/diagnostic-hypotheses";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
 import type { OpportunityTheme } from "@/types/opportunity-themes";
-import type { EvidenceStrength } from "@/types/evidence-computation";
 
 function bandForFamily(family: HypothesisFamily) {
   return OPPORTUNITY_CALIBRATION_BANDS.find((b) => b.families.includes(family));
-}
-
-function confidenceWidthMultiplier(
-  level: DiagnosticConfidenceLevel,
-  evidenceStrength?: EvidenceStrength,
-): number {
-  let base = 1;
-  if (level === "high") base = 1;
-  else if (level === "medium_high") base = 0.9;
-  else if (level === "medium") base = 0.8;
-  else base = 0.65;
-
-  if (evidenceStrength === "strong") return base;
-  if (evidenceStrength === "moderate") return base * 0.92;
-  if (evidenceStrength === "weak") return base * 0.78;
-  return base;
 }
 
 function elasticityNote(sensitivity: ElasticitySensitivity): string {
@@ -41,33 +28,61 @@ export function calibrateOpportunityTheme(
   family: HypothesisFamily,
   confidenceLevel: DiagnosticConfidenceLevel,
   elasticitySensitivity: ElasticitySensitivity,
-  evidenceStrength?: EvidenceStrength,
+  calibrationContext?: Omit<
+    OpportunityCalibrationInputs,
+    "themeId" | "family" | "confidenceLevel" | "elasticitySensitivity"
+  > & {
+    themeName?: string;
+    themeExposure?: OpportunityCalibrationInputs["themeExposure"];
+  },
 ): OpportunityTheme {
+  const themeName =
+    calibrationContext?.themeName ??
+    OPPORTUNITY_THEME_TEMPLATES[themeId]?.themeName ??
+    themeId;
+
+  const trace = buildHypothesisOpportunityTrace({
+    themeId,
+    themeName,
+    family,
+    confidenceLevel,
+    elasticitySensitivity: elasticitySensitivity,
+    supportingSignals: calibrationContext?.supportingSignals ?? [],
+    confidence: calibrationContext?.confidence ?? {
+      level: confidenceLevel,
+      explanation: "",
+      evidenceCoverage: "partial",
+      signalReinforcement: 0,
+      maturityAdjustment: 0,
+    },
+    evidenceStrength: calibrationContext?.evidenceStrength,
+    evidenceMetrics: calibrationContext?.evidenceMetrics,
+    themeExposure: calibrationContext?.themeExposure,
+  });
+
   const template = OPPORTUNITY_THEME_TEMPLATES[themeId];
   const band = bandForFamily(family);
-  const mult = confidenceWidthMultiplier(confidenceLevel, evidenceStrength);
 
   if (!template || !band) {
     return {
       id: themeId,
       themeName: "Structural opportunity pool",
       opportunityType: "margin_efficiency",
-      estimatedMarginRange: "Thematic — pending calibration",
+      estimatedMarginRange: trace.finalRange.display,
       estimatedRevenueSensitivity: "Directional only",
       recoverability: "medium",
       explanation: "Bounded thematic pool — not a calculated opportunity.",
       elasticitySensitivity,
+      calculationTrace: trace,
     };
   }
 
-  const low = (band.marginRangeLowPct * mult).toFixed(1);
-  const high = (band.marginRangeHighPct * mult).toFixed(1);
-
   return {
     ...template,
-    estimatedMarginRange: `${low}%–${high}% margin opportunity (thematic, bounded)`,
+    estimatedMarginRange: trace.finalRange.display,
     estimatedRevenueSensitivity: `${band.revenueSensitivityNote}. ${elasticityNote(elasticitySensitivity)}`,
     recoverability: band.recoverabilityDefault,
     explanation: `${template.explanation} ${band.themeLabel}.`,
+    calculationTrace: trace,
   };
 }

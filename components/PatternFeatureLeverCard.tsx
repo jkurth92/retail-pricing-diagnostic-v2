@@ -25,9 +25,24 @@ function statusLabel(status: PatternFeature["status"]): string {
 
 type PatternFeatureLeverCardProps = {
   section: LeverPatternFeaturesSection;
+  variant?: "full" | "compact";
 };
 
-export function PatternFeatureLeverCard({ section }: PatternFeatureLeverCardProps) {
+export function PatternFeatureLeverCard({
+  section,
+  variant = "full",
+}: PatternFeatureLeverCardProps) {
+  if (variant === "compact") {
+    return (
+      <div className="exec-tech-lever rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+        <p className="text-sm font-semibold text-[var(--text-navy)]">{section.label}</p>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">
+          {section.featureCount} feature definitions in scope
+        </p>
+      </div>
+    );
+  }
+
   return (
     <Card>
       <p className="micro-label mb-2">Pattern feature inventory</p>

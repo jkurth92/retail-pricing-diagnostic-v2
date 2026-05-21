@@ -1,4 +1,5 @@
 import type { ElasticitySensitivity } from "@/types/diagnostic-hypotheses";
+import type { OpportunityCalculationTrace } from "@/types/opportunity-trace";
 
 export type RecoverabilityLevel = "low" | "medium" | "high";
 
@@ -19,4 +20,6 @@ export type OpportunityTheme = {
   recoverability: RecoverabilityLevel;
   explanation: string;
   elasticitySensitivity: ElasticitySensitivity;
+  /** Deterministic sizing path for audit — same math as estimatedMarginRange */
+  calculationTrace?: OpportunityCalculationTrace;
 };

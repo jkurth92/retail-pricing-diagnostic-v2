@@ -2,6 +2,7 @@ import type { ConfidenceScore } from "@/types/confidence-scoring";
 import type { DiagnosticHypothesis } from "@/types/diagnostic-hypotheses";
 import type { SupportingSignal } from "@/types/diagnostic-hypotheses";
 import type { RecoverabilityLevel } from "@/types/opportunity-themes";
+import type { OpportunityCalculationTrace } from "@/types/opportunity-trace";
 
 export type ExecutiveThemeFamily =
   | "Architecture"
@@ -31,4 +32,5 @@ export type ExecutiveTheme = {
   strategicImportance: StrategicImportance;
   retailerContextNotes: string;
   rank: number;
+  calculationTrace?: OpportunityCalculationTrace;
 };

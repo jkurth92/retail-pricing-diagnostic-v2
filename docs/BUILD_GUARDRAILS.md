@@ -126,6 +126,17 @@
 - Margin opportunity is **primary**; revenue sensitivity is **secondary and directional** only.
 - Strategic implications are interpretive **“what this means”** lines — not action plans.
 
+## Opportunity exposure & calculation trace (Step 14A)
+
+- **Opportunity ranges must be traceable** — every thematic range includes an auditable “How this was calculated” path.
+- **All surfaced themes require measurable evidence** — exposure weighting uses category-level issue tags, not generic narratives.
+- **Opportunity logic must remain auditable** — deterministic modifiers (confidence, exposure, elasticity) documented in trace; no black-box scoring.
+- **Elasticity is contextual only** — reference workbooks modify thematic band width and framing; not SKU optimization or price prescriptions.
+- **Suppress unsupported opportunity claims** — weak evidence widens or suppresses themes; no fake precision.
+- **Calculation traces are secondary UX** — expandable panels only; executive summary stays concise.
+- **Category-weighted exposure** — revenue and role weights differ by category; not equal treatment.
+- **No optimization engines, competitor matching, or automated pricing actions.**
+
 ## Evidence computation & signal generation (Step 13)
 
 - **Evidence computation is central** — measurable architecture, KVI, and category signals must precede theme surfacing.

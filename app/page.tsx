@@ -25,6 +25,7 @@ import type { FinancePeer } from "@/types/finance-peers";
 import { formatToArchetypeId } from "@/lib/archetypeContext";
 import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
 import { runEvidenceComputation } from "@/lib/evidenceComputation";
+import { runOpportunityExposureEngine } from "@/lib/opportunityExposure";
 import { runDiagnosticHypothesisEngine } from "@/lib/hypothesisEngine";
 import { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import { runOpportunityStorylineEngine } from "@/lib/storylineSynthesizer";
@@ -181,6 +182,34 @@ export default function Home() {
     retailerInput,
   ]);
 
+  const opportunityExposure = useMemo(() => {
+    if (!diagnosticReady || !computedEvidence) return null;
+    return runOpportunityExposureEngine({
+      archetypeId,
+      pricingPosture: knowledgePosture,
+      categoryRows: categoryRoles,
+      retailerTicker: retailerEnrichment.context.ticker,
+      normalizedFields: ingestionPreview.normalizedFields,
+      retailerDisplayName: confirmedRetailer || retailerInput,
+      evidence: computedEvidence,
+      eprAverage: Object.values(eprScores).length
+        ? Object.values(eprScores).reduce((a, b) => a + b, 0) /
+          Object.values(eprScores).length
+        : null,
+    });
+  }, [
+    diagnosticReady,
+    computedEvidence,
+    archetypeId,
+    knowledgePosture,
+    categoryRoles,
+    retailerEnrichment.context.ticker,
+    ingestionPreview.normalizedFields,
+    confirmedRetailer,
+    retailerInput,
+    eprScores,
+  ]);
+
   const hypothesisOutput = useMemo(() => {
     if (!diagnosticReady) return EMPTY_HYPOTHESIS_OUTPUT;
     return runDiagnosticHypothesisEngine({
@@ -196,6 +225,7 @@ export default function Home() {
         normalizedFields: ingestionPreview.normalizedFields,
         retailerDisplayName: confirmedRetailer || retailerInput,
       },
+      opportunityExposure: opportunityExposure ?? undefined,
     });
   }, [
     diagnosticReady,
@@ -208,6 +238,7 @@ export default function Home() {
     retailerEnrichment.context.ticker,
     confirmedRetailer,
     retailerInput,
+    opportunityExposure,
   ]);
 
   const hasRevenueInScope = parseNumericInput(revenueInScopeInput) !== null;
@@ -248,6 +279,7 @@ export default function Home() {
       strategicContext,
       enrichment: retailerEnrichment,
       computedEvidence: computedEvidence ?? undefined,
+      opportunityExposure: opportunityExposure ?? undefined,
     });
   }, [
     diagnosticReady,
@@ -259,6 +291,7 @@ export default function Home() {
     strategicContext,
     retailerEnrichment,
     computedEvidence,
+    opportunityExposure,
   ]);
 
   const canRunDiagnostic = Boolean(confirmedRetailer.trim());
@@ -421,6 +454,11 @@ export default function Home() {
             onRunDiagnostic={handleRunDiagnostic}
             canRunDiagnostic={canRunDiagnostic}
             runDisabledReason={runDisabledReason}
+            categoryRoles={categoryRoles}
+            retailerDisplayName={confirmedRetailer || retailerInput}
+            retailerTicker={retailerEnrichment.context.ticker}
+            computedEvidence={computedEvidence}
+            opportunityExposure={opportunityExposure}
           />
         );
       case "opportunity_overview":

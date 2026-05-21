@@ -1,12 +1,12 @@
 "use client";
 
-import { Disclosure } from "@/components/Disclosure";
 import { DiagnosticSection } from "@/components/DiagnosticSection";
 import { ExecutiveDeliverablePanel } from "@/components/ExecutiveDeliverablePanel";
-import { RefineDiagnosticPlaceholder } from "@/components/RefineDiagnosticPlaceholder";
 import { RunDiagnosticCta } from "@/components/RunDiagnosticCta";
-import { ObservedPricingPatternsPanel } from "@/components/panels/ObservedPricingPatternsPanel";
+import { TechnicalDiagnosticsPanel } from "@/components/panels/TechnicalDiagnosticsPanel";
 import type { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
+import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
+import type { InferredCategoryRow } from "@/types/category-scope";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { EprScores } from "@/types/ui";
 
@@ -18,6 +18,11 @@ type PricingDiagnosticPanelProps = {
   onRunDiagnostic: () => void;
   canRunDiagnostic: boolean;
   runDisabledReason?: string;
+  categoryRoles: InferredCategoryRow[];
+  retailerDisplayName: string;
+  retailerTicker?: string | null;
+  computedEvidence?: ComputedEvidenceBundle | null;
+  opportunityExposure?: import("@/types/opportunity-exposure").OpportunityExposureBundle | null;
 };
 
 export function PricingDiagnosticPanel({
@@ -28,6 +33,11 @@ export function PricingDiagnosticPanel({
   onRunDiagnostic,
   canRunDiagnostic,
   runDisabledReason,
+  categoryRoles,
+  retailerDisplayName,
+  retailerTicker,
+  computedEvidence,
+  opportunityExposure,
 }: PricingDiagnosticPanelProps) {
   if (!diagnosticReady) {
     return (
@@ -47,33 +57,29 @@ export function PricingDiagnosticPanel({
   }
 
   return (
-    <div className="max-w-4xl space-y-12 pilot-panel">
+    <div className="max-w-3xl pilot-panel">
       <DiagnosticSection
         title="Pricing diagnostic"
-        lead="Executive summary and structural themes — supporting evidence available on expand."
+        lead="Evidence-backed structural assessment."
       >
         <ExecutiveDeliverablePanel
           readout={executiveDeliverable}
           exportPackage={executiveDeliverable.exportPackage}
           view="full"
           pilotMode
+          consultantSlot={
+            <TechnicalDiagnosticsPanel
+              knowledgeContext={knowledgeContext}
+              eprScores={eprScores}
+              categoryRoles={categoryRoles}
+              retailerDisplayName={retailerDisplayName}
+              retailerTicker={retailerTicker}
+              computedEvidence={computedEvidence}
+              opportunityExposure={computedEvidence ? opportunityExposure : null}
+            />
+          }
         />
       </DiagnosticSection>
-
-      <Disclosure
-        title="Technical detail — pattern inventory"
-        summary="Consultant / internal view · not required for executive readout"
-        variant="subtle"
-        defaultOpen={false}
-      >
-        <ObservedPricingPatternsPanel
-          knowledgeContext={knowledgeContext}
-          eprScores={eprScores}
-          embedded
-        />
-      </Disclosure>
-
-      <RefineDiagnosticPlaceholder />
     </div>
   );
 }

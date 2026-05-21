@@ -1,12 +1,7 @@
+import { buildPortfolioOpportunityTrace } from "@/lib/opportunityCalculationTrace";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { ElasticitySensitivity } from "@/types/diagnostic-hypotheses";
-
-/** Overlap factor — themes are not independent initiatives. */
-import { OUTPUT_CALIBRATION_RULES } from "@/data/outputCalibrationRules";
-
-const MARGIN_OVERLAP_FACTOR = OUTPUT_CALIBRATION_RULES.marginOverlapFactor;
-const MAX_TOTAL_HIGH_PCT = 2.8;
-const MIN_TOTAL_LOW_PCT = 0.4;
+import type { OpportunityCalculationTrace } from "@/types/opportunity-trace";
 
 export function parseMarginBounds(rangeText: string): {
   low: number;
@@ -21,43 +16,36 @@ export function formatMarginRange(low: number, high: number): string {
   return `${low.toFixed(1)}%–${high.toFixed(1)}% indicative margin opportunity (thematic, non-additive)`;
 }
 
+export function computeAggregatedMarginOpportunity(
+  primaryThemes: ExecutiveTheme[],
+  secondaryThemes: ExecutiveTheme[],
+): { rangeText: string; trace: OpportunityCalculationTrace | null } {
+  const all = [...primaryThemes, ...secondaryThemes];
+  if (all.length === 0) {
+    return {
+      rangeText: "Not estimated — insufficient prioritized themes",
+      trace: null,
+    };
+  }
+
+  const trace = buildPortfolioOpportunityTrace(
+    all.map((t) => ({
+      themeName: t.themeName,
+      themeFamily: t.themeFamily,
+      trace: t.calculationTrace,
+      low: t.marginOpportunityLowPct,
+      high: t.marginOpportunityHighPct,
+    })),
+  );
+
+  return { rangeText: trace.finalRange.display, trace };
+}
+
 export function aggregateMarginOpportunity(
   primaryThemes: ExecutiveTheme[],
   secondaryThemes: ExecutiveTheme[],
 ): string {
-  const all = [...primaryThemes, ...secondaryThemes];
-  if (all.length === 0) {
-    return "Not estimated — insufficient prioritized themes";
-  }
-
-  const lows = all.map((t) => t.marginOpportunityLowPct);
-  const highs = all.map((t) => t.marginOpportunityHighPct);
-
-  const archThemes = all.filter(
-    (t) =>
-      t.themeFamily === "Architecture" || t.themeFamily === "Premiumization",
-  );
-  const archHigh =
-    archThemes.length > 0
-      ? Math.max(...archThemes.map((t) => t.marginOpportunityHighPct))
-      : 0;
-
-  const rawLow = lows.reduce((a, b) => a + b, 0) * MARGIN_OVERLAP_FACTOR;
-  const rawHigh = highs.reduce((a, b) => a + b, 0) * MARGIN_OVERLAP_FACTOR;
-
-  const totalLow = Math.max(
-    MIN_TOTAL_LOW_PCT,
-    Math.min(rawLow, archHigh > 0 ? archHigh * 0.6 : rawLow),
-  );
-  const totalHigh = Math.min(
-    MAX_TOTAL_HIGH_PCT,
-    Math.max(rawHigh, archHigh * 0.85),
-  );
-
-  return formatMarginRange(
-    Math.round(totalLow * 10) / 10,
-    Math.round(Math.max(totalHigh, totalLow + 0.3) * 10) / 10,
-  );
+  return computeAggregatedMarginOpportunity(primaryThemes, secondaryThemes).rangeText;
 }
 
 export function buildRevenueSensitivitySummary(

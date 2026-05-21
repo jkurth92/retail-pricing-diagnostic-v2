@@ -73,6 +73,8 @@ export const EMPTY_READOUT: DiagnosticReadout = {
     supportingEvidenceMetrics: [],
     strategicImplicationOneLiner: "—",
     evidenceStrength: "weak",
+    exposureSummaries: [],
+    causalFramingLines: [],
   },
   storylineSections: [],
   opportunityOverview: "",

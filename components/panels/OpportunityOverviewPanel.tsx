@@ -1,7 +1,7 @@
 "use client";
 
 import { DiagnosticSection } from "@/components/DiagnosticSection";
-import { ExecutiveDeliverablePanel } from "@/components/ExecutiveDeliverablePanel";
+import { OpportunityBreakdown } from "@/components/panels/OpportunityBreakdown";
 import { RunDiagnosticCta } from "@/components/RunDiagnosticCta";
 import type { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
@@ -38,12 +38,7 @@ export function OpportunityOverviewPanel({
 
   return (
     <div className="max-w-3xl pilot-panel">
-      <ExecutiveDeliverablePanel
-        readout={executiveDeliverable}
-        exportPackage={executiveDeliverable.exportPackage}
-        view="opportunity"
-        pilotMode
-      />
+      <OpportunityBreakdown readout={executiveDeliverable} />
     </div>
   );
 }

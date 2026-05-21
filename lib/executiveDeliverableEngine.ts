@@ -7,6 +7,7 @@ import { calibrateReadoutImplications } from "@/lib/outputCalibration";
 import { buildStorylineSections } from "@/lib/storylineBuilder";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
+import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 import type { DiagnosticReadout } from "@/types/diagnostic-readout";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { RetailerEnrichmentBundle } from "@/types/retailer-context";
@@ -23,6 +24,7 @@ export type ExecutiveDeliverableInput = {
   strategicContext?: string;
   enrichment?: RetailerEnrichmentBundle | null;
   computedEvidence?: ComputedEvidenceBundle;
+  opportunityExposure?: OpportunityExposureBundle | null;
 };
 
 export function runExecutiveDeliverableEngine(
@@ -49,6 +51,7 @@ export function runExecutiveDeliverableEngine(
     input.strategicContext,
     input.enrichment,
     input.computedEvidence,
+    input.opportunityExposure,
   );
 
   const storylineSections = buildStorylineSections(

@@ -218,7 +218,13 @@ export function buildTrajectoryRows(
     ]),
   );
 
-  return draftRows.map(({ def, companyVal, peerMed }) => ({
+  return draftRows
+    .filter(({ def, companyVal, peerMed }) => {
+      if (def.unit !== "bps") return true;
+      if (companyVal === 0 && (peerMed == null || peerMed === 0)) return false;
+      return true;
+    })
+    .map(({ def, companyVal, peerMed }) => ({
     metricKey: def.key,
     metricLabel: def.label,
     unit: def.unit,

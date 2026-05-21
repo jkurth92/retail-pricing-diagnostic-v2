@@ -1,4 +1,5 @@
 import type { ExecutiveTheme } from "@/types/executive-theme";
+import type { OpportunityCalculationTrace } from "@/types/opportunity-trace";
 
 export type StorylineSummary = {
   id: string;
@@ -7,6 +8,7 @@ export type StorylineSummary = {
   primaryThemes: ExecutiveTheme[];
   secondaryThemes: ExecutiveTheme[];
   marginOpportunityTotalRange: string;
+  marginOpportunityTotalTrace?: OpportunityCalculationTrace;
   revenueSensitivitySummary: string;
   confidenceSummary: string;
   narrative: string;

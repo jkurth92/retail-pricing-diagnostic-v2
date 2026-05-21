@@ -24,7 +24,12 @@ import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { EprScores } from "@/types/ui";
 import type { CanonicalFieldKey } from "@/types/upload-schema";
 import type { LeverDiagnosticUnlock } from "@/types/ingestion";
+import {
+  buildThemeExposureContext,
+  runOpportunityExposureEngine,
+} from "@/lib/opportunityExposure";
 import type { ComputedEvidenceBundle, EvidenceStrength } from "@/types/evidence-computation";
+import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 
 export type HypothesisEngineInput = {
   knowledge: KnowledgeRegistryContext;
@@ -32,6 +37,7 @@ export type HypothesisEngineInput = {
   leverUnlocks: LeverDiagnosticUnlock[];
   eprScores?: EprScores;
   evidenceInput?: EvidenceComputationInput;
+  opportunityExposure?: OpportunityExposureBundle;
 };
 
 function eprAverage(scores?: EprScores): number | null {
@@ -62,6 +68,8 @@ function buildCandidate(
   ctx: SignalEvaluationContext,
   evidenceRatio: number,
   evidenceStrength: EvidenceStrength,
+  evidenceMetrics: ComputedEvidenceBundle["metrics"],
+  exposureBundle: OpportunityExposureBundle,
 ): DiagnosticHypothesis {
   const supporting = matchSignals(fired, entry.triggerSignalIds);
   const conflicting = conflictingSignals(fired, entry.conflictingSignalIds);
@@ -75,12 +83,24 @@ function buildCandidate(
     eprAverage: ctx.eprAverage,
   });
 
+  const themeExposure = buildThemeExposureContext(
+    exposureBundle,
+    entry.hypothesisFamily,
+  );
+
   const opportunityTheme = calibrateOpportunityTheme(
     entry.opportunityThemeId,
     entry.hypothesisFamily,
     confidence.level,
     entry.elasticitySensitivity,
-    evidenceStrength,
+    {
+      themeName: entry.hypothesisName,
+      supportingSignals: supporting,
+      confidence,
+      evidenceStrength,
+      evidenceMetrics,
+      themeExposure,
+    },
   );
 
   const rationale = generateHypothesisRationale(
@@ -156,6 +176,23 @@ export function runDiagnosticHypothesisEngine(
         normalizedFields: input.normalizedFields,
       });
 
+  const exposureBundle =
+    input.opportunityExposure ??
+    (input.evidenceInput
+      ? runOpportunityExposureEngine({
+          ...input.evidenceInput,
+          evidence,
+          eprAverage: eprAverage(input.eprScores),
+        })
+      : runOpportunityExposureEngine({
+          archetypeId: input.knowledge.archetypeId,
+          pricingPosture: input.knowledge.pricingPosture,
+          categoryRows: [],
+          normalizedFields: input.normalizedFields,
+          evidence,
+          eprAverage: eprAverage(input.eprScores),
+        }));
+
   const frameworkFired = evaluateStructuralSignals(signalCtx);
   const fired = mergeEvidenceWithFrameworkSignals(frameworkFired, evidence);
 
@@ -179,6 +216,8 @@ export function runDiagnosticHypothesisEngine(
         signalCtx,
         evidenceRatio,
         evidence.evidenceStrength,
+        evidence.metrics,
+        exposureBundle,
       ),
     );
   }

@@ -1,5 +1,7 @@
 "use client";
 
+import { OpportunityCalculationTracePanel } from "@/components/opportunity/OpportunityCalculationTracePanel";
+
 import { Card } from "@/components/Card";
 import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
@@ -128,6 +130,13 @@ export function DiagnosticHypothesesPanel({
                       Recoverability: {hyp.opportunityTheme.recoverability} ·
                       Elasticity modifier: {hyp.elasticitySensitivity}
                     </p>
+                    {hyp.opportunityTheme.calculationTrace && (
+                      <div className="mt-3">
+                        <OpportunityCalculationTracePanel
+                          trace={hyp.opportunityTheme.calculationTrace}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 

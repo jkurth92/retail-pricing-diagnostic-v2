@@ -14,9 +14,8 @@ import {
   buildStorylineNarrative,
 } from "@/lib/executiveNarrative";
 import {
-  aggregateMarginOpportunity,
+  computeAggregatedMarginOpportunity,
   buildRevenueSensitivitySummary,
-  parseMarginBounds,
 } from "@/lib/opportunityAggregator";
 import { buildOpportunitySummary } from "@/lib/opportunitySummary";
 import { calibrateStorylineResult } from "@/lib/outputCalibration";
@@ -30,7 +29,9 @@ import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { ConfidenceScore } from "@/types/confidence-scoring";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
 import { getArchetype, postureLabel } from "@/lib/archetypeContext";
+import { buildExecutiveThemeOpportunityTrace } from "@/lib/opportunityCalculationTrace";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
+import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 
 function mergeConfidence(
   hypotheses: DiagnosticHypothesis[],
@@ -80,16 +81,17 @@ function buildExecutiveTheme(
 ): ExecutiveTheme | null {
   if (hypotheses.length === 0) return null;
 
-  const bounds = hypotheses
-    .map((h) => parseMarginBounds(h.opportunityTheme.estimatedMarginRange))
-    .filter((b): b is { low: number; high: number } => b !== null);
-
-  const low =
-    bounds.length > 0 ? Math.min(...bounds.map((b) => b.low)) : 0.3;
-  const high =
-    bounds.length > 0 ? Math.max(...bounds.map((b) => b.high)) : 0.8;
-
   const archetype = getArchetype(archetypeId);
+
+  const childTraces = hypotheses
+    .map((h) => h.opportunityTheme.calculationTrace)
+    .filter((t): t is NonNullable<typeof t> => t !== undefined);
+
+  const calculationTrace = buildExecutiveThemeOpportunityTrace(
+    definition.id,
+    definition.themeName,
+    childTraces,
+  );
 
   return {
     id: definition.id,
@@ -99,15 +101,16 @@ function buildExecutiveTheme(
     supportingHypotheses: hypotheses,
     supportingSignals: collectSignals(hypotheses),
     confidence: mergeConfidence(hypotheses),
-    marginOpportunityRange: `${low.toFixed(1)}%–${high.toFixed(1)}% margin opportunity (thematic)`,
-    marginOpportunityLowPct: low,
-    marginOpportunityHighPct: high,
+    marginOpportunityRange: calculationTrace.finalRange.display,
+    marginOpportunityLowPct: calculationTrace.finalRange.lowPct,
+    marginOpportunityHighPct: calculationTrace.finalRange.highPct,
     revenueSensitivityRange: definition.revenueSensitivityNote,
     recoverability:
       hypotheses[0]?.opportunityTheme.recoverability ?? "medium",
     strategicImportance: "primary",
     retailerContextNotes: `${archetype?.archetypeName ?? archetypeId} archetype`,
     rank: 0,
+    calculationTrace,
   };
 }
 
@@ -117,6 +120,7 @@ export type StorylineSynthesisInput = {
   retailerDisplayName?: string | null;
   hasRevenueInScope?: boolean;
   computedEvidence?: ComputedEvidenceBundle;
+  opportunityExposure?: OpportunityExposureBundle;
 };
 
 export type StorylineSynthesisResult = {
@@ -174,6 +178,19 @@ export function synthesizeStoryline(
     `${getArchetype(archetypeId)?.archetypeName ?? archetypeId} archetype.`,
   );
 
+  const aggregated = computeAggregatedMarginOpportunity(primary, secondary);
+
+  if (aggregated.trace && input.opportunityExposure) {
+    aggregated.trace.exposureSummaries = input.opportunityExposure.exposureSummaries;
+    aggregated.trace.categoryExposure = input.opportunityExposure.categoryExposures
+      .filter((c) => c.affectedIssueTags.length > 0)
+      .map((c) => ({
+        label: c.category,
+        value: `${c.revenueWeightPct}% revenue · ${c.monetizableExposurePct}% monetizable`,
+        detail: `Elasticity ${c.elasticitySensitivity} · ${c.elasticitySource}`,
+      }));
+  }
+
   const storyline: StorylineSummary = {
     id: `storyline-${archetypeId}`,
     title,
@@ -185,7 +202,8 @@ export function synthesizeStoryline(
     ),
     primaryThemes: primary,
     secondaryThemes: secondary,
-    marginOpportunityTotalRange: aggregateMarginOpportunity(primary, secondary),
+    marginOpportunityTotalRange: aggregated.rangeText,
+    marginOpportunityTotalTrace: aggregated.trace ?? undefined,
     revenueSensitivitySummary,
     confidenceSummary: buildConfidenceSummary(primary),
     narrative: buildStorylineNarrative(primary, defMap, archetypeId),

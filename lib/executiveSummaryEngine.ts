@@ -4,10 +4,16 @@ import {
   buildStructuralPictureSummary,
 } from "@/lib/strategicNarrative";
 import {
+  buildExposurePrimaryDrivers,
   buildOpportunityHeadline,
   buildStrategicImplicationOneLiner,
 } from "@/lib/evidenceExecutiveSummary";
-import { buildStrategicImplications } from "@/lib/strategicImplications";
+import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
+import {
+  buildConciseExecutiveImplications,
+  polishEvidenceMetrics,
+  polishEvidenceThemes,
+} from "@/lib/executiveOutputPolish";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
@@ -25,8 +31,9 @@ export function buildExecutiveSummaryBlock(
   strategicContext?: string,
   enrichment?: RetailerEnrichmentBundle | null,
   evidence?: ComputedEvidenceBundle,
+  opportunityExposure?: OpportunityExposureBundle | null,
 ): ExecutiveSummary {
-  const { storyline, opportunity } = storylineResult;
+  const { storyline } = storylineResult;
   const profile = buildRetailerPricingProfile(
     knowledge,
     eprScores,
@@ -40,20 +47,6 @@ export function buildExecutiveSummaryBlock(
   ].slice(0, 5);
 
   const archThemes = topThemes.filter((t) => ARCH_FAMILIES.has(t.themeFamily));
-  const implications = buildStrategicImplications(
-    topThemes,
-    profile,
-    storyline.confidenceSummary,
-  );
-
-  const narrative = buildOpeningExecutiveNarrative(
-    profile,
-    storyline.primaryThemes,
-    storyline,
-    enrichment,
-  );
-
-  const maturitySummary = `${profile.maturityProfile} ${buildStructuralPictureSummary(profile, archThemes)}`;
 
   const evidenceBundle = evidence ?? {
     evidenceStrength: "weak" as const,
@@ -71,24 +64,54 @@ export function buildExecutiveSummaryBlock(
     normalizedFields: [],
   };
 
-  const evidenceBackedThemes =
+  const strategicImplicationOneLiner = buildStrategicImplicationOneLiner(
+    evidenceBundle,
+    storyline.primaryThemes,
+  );
+
+  const narrative = buildOpeningExecutiveNarrative(
+    profile,
+    storyline.primaryThemes,
+    storyline,
+    enrichment,
+  );
+
+  const maturitySummary = `${profile.maturityProfile} ${buildStructuralPictureSummary(profile, archThemes)}`;
+
+  const evidenceBackedThemes = polishEvidenceThemes(
     evidenceBundle.evidenceBackedThemes.length > 0
       ? evidenceBundle.evidenceBackedThemes
       : storyline.primaryThemes.slice(0, 3).map((t) => ({
           headline: t.themeName,
           detail: t.summary,
-        }));
+        })),
+    3,
+  );
 
-  const supportingEvidenceMetrics =
-    evidenceBundle.summaries.length > 0
-      ? evidenceBundle.summaries.slice(0, 5)
-      : storyline.primaryThemes
-          .flatMap((t) => t.supportingSignals.slice(0, 1).map((s) => s.signalName))
-          .slice(0, 3);
+  const exposureBundle = opportunityExposure ?? null;
 
-  const strategicImplicationOneLiner = buildStrategicImplicationOneLiner(
+  const supportingEvidenceMetrics = polishEvidenceMetrics(
+    [
+      ...(exposureBundle?.causalFramingLines ?? []),
+      ...(exposureBundle?.exposureSummaries ?? []),
+      ...evidenceBundle.summaries,
+    ].length > 0
+      ? [
+          ...(exposureBundle?.causalFramingLines ?? []),
+          ...(exposureBundle?.exposureSummaries ?? []),
+          ...evidenceBundle.summaries,
+        ]
+      : storyline.primaryThemes.flatMap((t) =>
+          t.supportingSignals
+            .slice(0, 1)
+            .map((s) => s.explanation || s.signalName),
+        ),
+    4,
+  );
+
+  const implications = buildConciseExecutiveImplications(
     evidenceBundle,
-    storyline.primaryThemes,
+    strategicImplicationOneLiner,
   );
 
   return {
@@ -98,26 +121,29 @@ export function buildExecutiveSummaryBlock(
     executiveNarrative: narrative,
     topThemes,
     marginOpportunitySummary: storyline.marginOpportunityTotalRange,
+    marginOpportunityTotalTrace: storyline.marginOpportunityTotalTrace,
     revenueSensitivitySummary: storyline.revenueSensitivitySummary,
     confidenceSummary: storyline.confidenceSummary,
     maturitySummary,
-    strategicImplications: [strategicImplicationOneLiner, ...implications.slice(0, 2)],
-    opportunityHeadline: buildOpportunityHeadline(storylineResult, evidenceBundle),
+    strategicImplications: implications,
+    opportunityHeadline: buildOpportunityHeadline(
+      storylineResult,
+      evidenceBundle,
+      exposureBundle,
+    ),
     primaryDrivers:
-      evidenceBundle.primaryDrivers.length > 0
-        ? evidenceBundle.primaryDrivers
-        : archThemes.slice(0, 3).map((t) => t.themeFamily),
+      exposureBundle && buildExposurePrimaryDrivers(exposureBundle).length > 0
+        ? buildExposurePrimaryDrivers(exposureBundle)
+        : evidenceBundle.primaryDrivers.length > 0
+          ? evidenceBundle.primaryDrivers
+          : archThemes.slice(0, 3).map((t) => t.themeFamily),
     evidenceBackedThemes,
     supportingEvidenceMetrics,
     strategicImplicationOneLiner,
     evidenceStrength: evidenceBundle.evidenceStrength,
-    nextFocusAreas: [
-      "Complete evidence alignment for architecture and KVI fields",
-      "Validate role taxonomy with client category leads",
-      "Align rule packs before translating thematic % to dollars",
-      opportunity.status === "pending_scope_dollars"
-        ? "Translate thematic pools to revenue in scope when formulas are approved"
-        : "Define revenue in scope to enable future dollar framing",
-    ],
+    opportunityExposure: exposureBundle ?? undefined,
+    exposureSummaries: exposureBundle?.exposureSummaries ?? [],
+    causalFramingLines: exposureBundle?.causalFramingLines ?? [],
+    nextFocusAreas: [],
   };
 }

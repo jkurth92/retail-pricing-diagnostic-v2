@@ -3,6 +3,8 @@ import type {
   EvidenceBackedThemeLine,
   EvidenceStrength,
 } from "@/types/evidence-computation";
+import type { OpportunityCalculationTrace } from "@/types/opportunity-trace";
+import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 
 export type RetailerPricingProfile = {
   archetype: string;
@@ -34,4 +36,8 @@ export type ExecutiveSummary = {
   supportingEvidenceMetrics: string[];
   strategicImplicationOneLiner: string;
   evidenceStrength: EvidenceStrength;
+  marginOpportunityTotalTrace?: OpportunityCalculationTrace;
+  opportunityExposure?: OpportunityExposureBundle;
+  exposureSummaries: string[];
+  causalFramingLines: string[];
 };
