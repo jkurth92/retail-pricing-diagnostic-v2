@@ -16,6 +16,8 @@ import {
   formatToArchetypeId,
   legacyPostureToKnowledge,
 } from "@/lib/archetypeContext";
+import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
+import { runDiagnosticHypothesisEngine } from "@/lib/hypothesisEngine";
 import { parseNumericInput } from "@/lib/scopeMath";
 import type { StrategicObjectiveId } from "@/types/knowledge-client";
 import type {
@@ -28,6 +30,7 @@ import {
   DEFAULT_EPR_SCORES,
   DEFAULT_SELECTED_LEVER_KEYS,
   LEVER_LABEL_BY_KEY,
+  WORKFLOW_TABS,
   workflowTabToSidebarStep,
   type EprDimension,
   type EprScores,
@@ -47,14 +50,14 @@ export default function Home() {
   const [pricingPosture, setPricingPosture] =
     useState<PricingPosture>("Not sure");
   const [retailerFormat, setRetailerFormat] =
-    useState<RetailerFormat>("Grocery");
+    useState<RetailerFormat>("Mass");
   const [strategicContext, setStrategicContext] = useState("");
-  const [archetypeId, setArchetypeId] = useState<RetailerArchetypeId>("grocery");
+  const [archetypeId, setArchetypeId] = useState<RetailerArchetypeId>("mass");
   const [knowledgePosture, setKnowledgePosture] =
-    useState<KnowledgePosture>("Hybrid");
+    useState<KnowledgePosture>("EDLP");
   const [strategicObjectives, setStrategicObjectives] = useState<
     StrategicObjectiveId[]
-  >([]);
+  >(["value_perception", "traffic_growth"]);
   const [categoryHint, setCategoryHint] = useState("Laundry detergent");
   const [competitors, setCompetitors] = useState<CompetitorEntry[]>([]);
   const [totalRevenueInput, setTotalRevenueInput] = useState("");
@@ -79,6 +82,22 @@ export default function Home() {
       categoryHint,
     }),
     [archetypeId, knowledgePosture, strategicObjectives, categoryHint],
+  );
+
+  const ingestionPreview = useMemo(
+    () => buildPlaceholderIngestionDataset(),
+    [],
+  );
+
+  const hypothesisOutput = useMemo(
+    () =>
+      runDiagnosticHypothesisEngine({
+        knowledge: knowledgeContext,
+        normalizedFields: ingestionPreview.normalizedFields,
+        leverUnlocks: ingestionPreview.leverUnlocks,
+        eprScores,
+      }),
+    [knowledgeContext, ingestionPreview, eprScores],
   );
 
   const handlePopulateRetailer = () => {
@@ -159,6 +178,11 @@ export default function Home() {
     [selectedLeverKeys],
   );
 
+  const workflowStepLabel = useMemo(() => {
+    const tab = WORKFLOW_TABS.find((t) => t.id === workflowTab);
+    return tab?.label ?? "Workflow";
+  }, [workflowTab]);
+
   const renderWorkflowPanel = () => {
     switch (workflowTab) {
       case "client_context":
@@ -170,6 +194,8 @@ export default function Home() {
             retailerFormat={retailerFormat}
             strategicContext={strategicContext}
             competitors={competitors}
+            knowledgeContext={knowledgeContext}
+            hypothesisOutput={hypothesisOutput}
             archetypeId={archetypeId}
             knowledgePosture={knowledgePosture}
             strategicObjectives={strategicObjectives}
@@ -188,7 +214,7 @@ export default function Home() {
           />
         );
       case "client_uploads":
-        return <ClientUploadsPanel />;
+        return <ClientUploadsPanel knowledgeContext={knowledgeContext} />;
       case "retailer_overview":
         return (
           <RetailerOverviewPanel
@@ -199,6 +225,7 @@ export default function Home() {
       case "scope":
         return (
           <ScopePanel
+            knowledgeContext={knowledgeContext}
             retailerName={confirmedRetailer}
             selectedPeerCount={selectedPeerCount}
             totalRevenueInput={totalRevenueInput}
@@ -219,13 +246,14 @@ export default function Home() {
         return (
           <ObservedPricingPatternsPanel
             knowledgeContext={knowledgeContext}
-            categoryHint={categoryHint}
-            onCategoryHintChange={setCategoryHint}
+            eprScores={eprScores}
           />
         );
       case "opportunity_size":
         return (
           <OpportunitySizePanel
+            knowledgeContext={knowledgeContext}
+            hypothesisOutput={hypothesisOutput}
             retailerName={confirmedRetailer}
             competitors={competitors}
             revenueInScopeLabel={revenueInScopeLabel}
@@ -254,7 +282,11 @@ export default function Home() {
 
   return (
     <AppShell activeStep={workflowTabToSidebarStep(workflowTab)}>
-      <HeaderSummary retailerDisplay={retailerDisplay} />
+      <HeaderSummary
+        retailerDisplay={retailerDisplay}
+        knowledgeContext={knowledgeContext}
+        workflowStepLabel={workflowStepLabel}
+      />
       <PrimaryTabs active={primaryModule} onChange={setPrimaryModule} />
       {renderModulePlaceholder()}
       <WorkflowTabs active={workflowTab} onChange={setWorkflowTab} />

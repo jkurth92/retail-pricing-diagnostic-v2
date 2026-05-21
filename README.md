@@ -22,6 +22,8 @@ Steps 2–7 add the output contract, six-step workflow, scope controls, competit
 
 **Step 5B** implements the pricing knowledge registry (archetypes, roles, benchmark concepts, deterministic inference) — pre-rules, pre-opportunity.
 
+**Step 6A** implements the diagnostic hypothesis engine (structural themes, confidence, bounded opportunity pools) — first reasoning layer, not recommendations.
+
 ## Current scope (Step 1)
 
 - Next.js App Router with TypeScript and Tailwind CSS
@@ -110,6 +112,10 @@ Do not commit `.env` files or secrets.
 - [docs/ROLE_INFERENCE_FRAMEWORK.md](docs/ROLE_INFERENCE_FRAMEWORK.md)
 - [docs/BENCHMARK_CONCEPTS.md](docs/BENCHMARK_CONCEPTS.md)
 - [docs/INTERPRETATION_PHILOSOPHY.md](docs/INTERPRETATION_PHILOSOPHY.md)
+- [docs/DIAGNOSTIC_HYPOTHESIS_FRAMEWORK.md](docs/DIAGNOSTIC_HYPOTHESIS_FRAMEWORK.md)
+- [docs/OPPORTUNITY_PHILOSOPHY.md](docs/OPPORTUNITY_PHILOSOPHY.md)
+- [docs/CONFIDENCE_SCORING.md](docs/CONFIDENCE_SCORING.md)
+- [docs/NARRATIVE_GENERATION.md](docs/NARRATIVE_GENERATION.md)
 - [docs/KNOWLEDGE_SOURCE_PLAN.md](docs/KNOWLEDGE_SOURCE_PLAN.md)
 - [docs/BUILD_GUARDRAILS.md](docs/BUILD_GUARDRAILS.md)
 - [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)

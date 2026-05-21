@@ -3,10 +3,14 @@
 import { useMemo } from "react";
 import { PatternFeatureLeverCard } from "@/components/PatternFeatureLeverCard";
 import { BenchmarkConceptExplorer } from "@/components/BenchmarkConceptExplorer";
-import { RoleInferencePreview } from "@/components/RoleInferencePreview";
+import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
+import { DiagnosticHypothesesPanel } from "@/components/DiagnosticHypothesesPanel";
+import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
+import { RoleInferenceSummaryCard } from "@/components/RoleInferenceSummaryCard";
 import { Card } from "@/components/Card";
 import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
 import { buildObservedPatternsOutput } from "@/lib/patternFeatureBuilder";
+import { runDiagnosticHypothesisEngine } from "@/lib/hypothesisEngine";
 import {
   architectureMonetizationCategories,
   benchmarkConceptsForArchetype,
@@ -17,25 +21,38 @@ import {
 } from "@/lib/archetypeContext";
 import { PATTERN_FEATURE_COUNT } from "@/data/patternFeatureCatalog";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
+import type { EprScores } from "@/types/ui";
 
 type ObservedPricingPatternsPanelProps = {
   knowledgeContext: KnowledgeRegistryContext;
-  categoryHint: string;
-  onCategoryHintChange: (value: string) => void;
+  eprScores: EprScores;
 };
 
 export function ObservedPricingPatternsPanel({
   knowledgeContext,
-  categoryHint,
-  onCategoryHintChange,
+  eprScores,
 }: ObservedPricingPatternsPanelProps) {
-  const output = useMemo(() => {
-    const dataset = buildPlaceholderIngestionDataset();
-    return buildObservedPatternsOutput(
-      dataset.normalizedFields,
-      dataset.leverUnlocks,
-    );
-  }, []);
+  const dataset = useMemo(() => buildPlaceholderIngestionDataset(), []);
+
+  const output = useMemo(
+    () =>
+      buildObservedPatternsOutput(
+        dataset.normalizedFields,
+        dataset.leverUnlocks,
+      ),
+    [dataset],
+  );
+
+  const hypothesisOutput = useMemo(
+    () =>
+      runDiagnosticHypothesisEngine({
+        knowledge: knowledgeContext,
+        normalizedFields: dataset.normalizedFields,
+        leverUnlocks: dataset.leverUnlocks,
+        eprScores,
+      }),
+    [knowledgeContext, dataset, eprScores],
+  );
 
   const archetypeConcepts = useMemo(
     () => benchmarkConceptsForArchetype(knowledgeContext.archetypeId),
@@ -66,43 +83,49 @@ export function ObservedPricingPatternsPanel({
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border-2 border-[var(--accent)] bg-[var(--accent-light)] px-6 py-5">
-        <p className="text-sm font-semibold text-[var(--text-navy)]">
-          {output.guardrailMessage}
-        </p>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
+    <div className="space-y-8">
+      <PocGuardrailBanner
+        title="Observed patterns + hypothesis engine (Step 6A)"
+        detail="Pattern features remain descriptive. Hypotheses interpret structure with bounded opportunity themes — not recommendations or optimized prices."
+      />
+
+      <DiagnosticFrameworkStrip
+        context={knowledgeContext}
+        workflowLabel="Observed Pricing Patterns"
+      />
+
+      <DiagnosticHypothesesPanel
+        output={hypothesisOutput}
+        title="Prioritized structural hypotheses"
+      />
+
+      <Card>
+        <p className="micro-label mb-2">Contextualized preview</p>
+        <h3 className="section-title">
           {expectedStructureHeadline(
             knowledgeContext.archetypeId,
             knowledgeContext.pricingPosture,
           )}
-          . Pattern catalog: {PATTERN_FEATURE_COUNT} features. Findings,
-          recommendations, and opportunity sizing remain disabled.
+        </h3>
+        <p className="mt-2 text-sm text-[var(--text-muted)]">
+          {output.readinessSummary} · {PATTERN_FEATURE_COUNT} pattern features
+          catalogued.
         </p>
-      </div>
-
-      <Card>
-        <p className="micro-label mb-2">Knowledge context</p>
-        <h3 className="section-title">Expected structure preview</h3>
-        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
+        <dl className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
               Likely traffic-driving categories
             </dt>
-            <dd className="mt-1 text-sm text-[var(--text-navy)]">
-              {trafficCategories.length > 0
-                ? trafficCategories.join(", ")
-                : "Define archetype for examples"}
+            <dd className="mt-2 text-sm text-[var(--text-navy)]">
+              {trafficCategories.join(", ") || "—"}
             </dd>
           </div>
-          <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-              Architecture-oriented monetization categories
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              Architecture-oriented monetization
             </dt>
-            <dd className="mt-1 text-sm text-[var(--text-navy)]">
-              {monetizationCategories.length > 0
-                ? monetizationCategories.join(", ")
-                : "Pending archetype mapping"}
+            <dd className="mt-2 text-sm text-[var(--text-navy)]">
+              {monetizationCategories.join(", ") || "—"}
             </dd>
           </div>
         </dl>
@@ -110,49 +133,37 @@ export function ObservedPricingPatternsPanel({
           {suggestedKviConcentrationNote(knowledgeContext.archetypeId)}
         </p>
         {objectiveNotes.length > 0 && (
-          <ul className="mt-3 list-disc pl-5 text-sm text-[var(--text-muted)]">
+          <ul className="mt-3 flex flex-wrap gap-2">
             {objectiveNotes.map((n) => (
-              <li key={n}>{n}</li>
+              <li
+                key={n}
+                className="rounded-full bg-[var(--accent-light)] px-3 py-1 text-xs text-[var(--text-navy)]"
+              >
+                {n}
+              </li>
             ))}
           </ul>
         )}
-        <p className="mt-4 text-xs italic text-[var(--text-muted)]">
-          Available after alignment — feature values and rule interpretation not
-          calculated.
-        </p>
       </Card>
 
-      <RoleInferencePreview
-        context={{ ...knowledgeContext, categoryHint }}
-        categoryHint={categoryHint}
-        onCategoryHintChange={onCategoryHintChange}
+      <RoleInferenceSummaryCard
+        context={knowledgeContext}
+        title="Role context feeding hypotheses"
       />
 
       <BenchmarkConceptExplorer
         concepts={archetypeConcepts}
-        title="Benchmark concept families relevant to retailer archetype"
+        title="Benchmark concept families (descriptive)"
       />
 
-      {output.missingInputs.length > 0 && (
-        <div className="rounded-lg border border-[var(--border)] bg-white px-6 py-4">
-          <p className="micro-label mb-1">Global missing inputs (preview)</p>
-          <p className="text-sm text-[var(--text-navy)]">
-            {output.missingInputs.join(", ")}
-          </p>
+      <div>
+        <p className="micro-label mb-3">Pattern feature inventory by lever</p>
+        <div className="space-y-6">
+          {sections.map((section) => (
+            <PatternFeatureLeverCard key={section.leverKey} section={section} />
+          ))}
         </div>
-      )}
-
-      <ul className="space-y-2 rounded-lg border border-[var(--border)] bg-white px-6 py-4 text-sm text-[var(--text-muted)]">
-        {output.notes.map((note) => (
-          <li key={note} className="list-disc pl-4">
-            {note}
-          </li>
-        ))}
-      </ul>
-
-      {sections.map((section) => (
-        <PatternFeatureLeverCard key={section.leverKey} section={section} />
-      ))}
+      </div>
     </div>
   );
 }

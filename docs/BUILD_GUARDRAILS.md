@@ -21,6 +21,18 @@
 - Competitors must **not** affect opportunity sizing.
 - Scope math may calculate denominator values (addressable revenue = total × %) but **must not** calculate opportunity.
 
+## Diagnostic hypothesis engine (Step 6A)
+
+- Hypotheses must remain **explainable** with visible supporting signals and rationale.
+- **No black-box reasoning** or generative AI conclusions.
+- **No exact pricing prescriptions** or SKU-level actions in hypothesis output.
+- **No fake precision** — thematic margin bands only, not dollar totals.
+- **No hard thresholds** without explicit alignment workshops.
+- **Architecture themes prioritized** over isolated metric anomalies.
+- **Suppress noisy low-confidence** findings (max 5 surfaced).
+- Elasticity is an **interpretation modifier** only — not optimization logic.
+- Opportunity themes are **bounded pools**, not optimized recommendations.
+
 ## Knowledge registry (Step 5B)
 
 - Inference must remain **explainable** — rationale and confidence templates visible in UI.

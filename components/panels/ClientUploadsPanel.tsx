@@ -3,6 +3,10 @@
 import { useMemo } from "react";
 import { Card } from "@/components/Card";
 import { DataReadinessPanel } from "@/components/DataReadinessPanel";
+import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
+import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
+import { RoleInferenceSummaryCard } from "@/components/RoleInferenceSummaryCard";
+import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import { DiagnosticAvailabilityMatrix } from "@/components/DiagnosticAvailabilityMatrix";
 import { IngestionUploadSummary } from "@/components/IngestionUploadSummary";
 import { MappingConfidenceTable } from "@/components/MappingConfidenceTable";
@@ -18,7 +22,13 @@ function normalizationLabel(
   return "Pending normalization";
 }
 
-export function ClientUploadsPanel() {
+type ClientUploadsPanelProps = {
+  knowledgeContext: KnowledgeRegistryContext;
+};
+
+export function ClientUploadsPanel({
+  knowledgeContext,
+}: ClientUploadsPanelProps) {
   const dataset = useMemo(() => buildPlaceholderIngestionDataset(), []);
   const allMappings = dataset.uploadedFiles.flatMap((f) => f.mappedColumns);
   const evidenceFiles = dataset.uploadedFiles.filter(
@@ -26,7 +36,23 @@ export function ClientUploadsPanel() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <PocGuardrailBanner
+        title="Evidence & readiness — preview only"
+        detail="Upload preview shows how normalized fields unlock pattern features and future diagnostics. Files are not parsed or stored."
+        variant="neutral"
+      />
+
+      <DiagnosticFrameworkStrip
+        context={knowledgeContext}
+        workflowLabel="Client Uploads"
+      />
+
+      <RoleInferenceSummaryCard
+        context={knowledgeContext}
+        title="Expected roles while evidence is in preview"
+      />
+
       <Card>
         <p className="micro-label mb-2">Evidence intake</p>
         <h3 className="section-title">Client Uploads</h3>

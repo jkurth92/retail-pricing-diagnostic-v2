@@ -1,13 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { BenchmarkConceptExplorer } from "@/components/BenchmarkConceptExplorer";
-import { CategoryRoleExplorer } from "@/components/CategoryRoleExplorer";
-import { ItemRoleExplorer } from "@/components/ItemRoleExplorer";
+import { OntologyReferenceSection } from "@/components/OntologyReferenceSection";
 import { RetailerArchetypeCard } from "@/components/RetailerArchetypeCard";
 import { RoleInferencePreview } from "@/components/RoleInferencePreview";
 import {
-  benchmarkConceptsForArchetype,
   getArchetype,
   objectivesAdjustEmphasis,
 } from "@/lib/archetypeContext";
@@ -44,10 +41,6 @@ export function KnowledgeRegistryPanel({
   onCategoryHintChange,
 }: KnowledgeRegistryPanelProps) {
   const archetype = getArchetype(archetypeId);
-  const concepts = useMemo(
-    () => benchmarkConceptsForArchetype(archetypeId),
-    [archetypeId],
-  );
   const objectiveNotes = useMemo(
     () => objectivesAdjustEmphasis(strategicObjectives),
     [strategicObjectives],
@@ -63,13 +56,13 @@ export function KnowledgeRegistryPanel({
   return (
     <div className="space-y-6">
       <Card>
-        <p className="micro-label mb-2">Pricing knowledge registry</p>
-        <h3 className="section-title">Strategic intelligence framework</h3>
+        <p className="micro-label mb-2">Strategic inputs</p>
+        <h3 className="section-title">Retailer archetype & objectives</h3>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Ontology and inference scaffolding for future diagnostics — pre-rules,
-          pre-opportunity, no benchmark thresholds.
+          These selections feed role inference and expected-structure previews
+          across the workflow.
         </p>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="mt-6 grid gap-6 lg:grid-cols-3">
           <div>
             <label
               htmlFor="archetype-select"
@@ -114,6 +107,22 @@ export function KnowledgeRegistryPanel({
               ))}
             </select>
           </div>
+          <div>
+            <label
+              htmlFor="category-hint-registry"
+              className="mb-2 block text-sm font-medium text-[var(--text-navy)]"
+            >
+              Example category (inference)
+            </label>
+            <input
+              id="category-hint-registry"
+              type="text"
+              value={categoryHint}
+              onChange={(e) => onCategoryHintChange(e.target.value)}
+              placeholder="Laundry detergent"
+              className={selectClassName}
+            />
+          </div>
         </div>
         <div className="mt-6">
           <p className="mb-2 text-sm font-medium text-[var(--text-navy)]">
@@ -140,9 +149,9 @@ export function KnowledgeRegistryPanel({
           </div>
         </div>
         {objectiveNotes.length > 0 && (
-          <ul className="mt-4 list-disc pl-5 text-sm text-[var(--text-muted)]">
+          <ul className="mt-4 space-y-1 rounded-md bg-[var(--surface-muted)] px-4 py-3 text-sm text-[var(--text-muted)]">
             {objectiveNotes.map((n) => (
-              <li key={n}>{n}</li>
+              <li key={n}>• {n}</li>
             ))}
           </ul>
         )}
@@ -152,22 +161,13 @@ export function KnowledgeRegistryPanel({
         <RetailerArchetypeCard
           archetype={archetype}
           selectedPosture={pricingPosture}
+          compact
         />
       )}
 
-      <RoleInferencePreview
-        context={context}
-        categoryHint={categoryHint}
-        onCategoryHintChange={onCategoryHintChange}
-      />
+      <RoleInferencePreview context={context} />
 
-      <BenchmarkConceptExplorer
-        concepts={concepts}
-        title="Benchmark concepts for selected archetype"
-      />
-
-      <CategoryRoleExplorer highlightArchetype={archetypeId} />
-      <ItemRoleExplorer />
+      <OntologyReferenceSection archetypeId={archetypeId} />
     </div>
   );
 }

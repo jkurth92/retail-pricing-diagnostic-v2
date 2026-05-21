@@ -1,9 +1,16 @@
 import { CompetitorSuggestionPanel } from "@/components/CompetitorSuggestionPanel";
+import { DiagnosticHypothesesPanel } from "@/components/DiagnosticHypothesesPanel";
+import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
+import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
 import { EprScoringCard } from "@/components/EprScoringCard";
+import { FrameworkLayerProgress } from "@/components/FrameworkLayerProgress";
 import { KnowledgeRegistryPanel } from "@/components/KnowledgeRegistryPanel";
+import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
 import { RetailerInputCard } from "@/components/RetailerInputCard";
+import { RoleInferenceSummaryCard } from "@/components/RoleInferenceSummaryCard";
 import { StrategicContextCard } from "@/components/StrategicContextCard";
 import type { CompetitorEntry } from "@/types/competitors";
+import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { StrategicObjectiveId } from "@/types/knowledge-client";
 import type {
   PricingPosture,
@@ -23,6 +30,8 @@ type ClientContextPanelProps = {
   retailerFormat: RetailerFormat;
   strategicContext: string;
   competitors: CompetitorEntry[];
+  knowledgeContext: KnowledgeRegistryContext;
+  hypothesisOutput: DiagnosticHypothesisOutput;
   archetypeId: RetailerArchetypeId;
   knowledgePosture: PricingPosture;
   strategicObjectives: StrategicObjectiveId[];
@@ -47,6 +56,8 @@ export function ClientContextPanel({
   retailerFormat,
   strategicContext,
   competitors,
+  knowledgeContext,
+  hypothesisOutput,
   archetypeId,
   knowledgePosture,
   strategicObjectives,
@@ -64,23 +75,47 @@ export function ClientContextPanel({
   onCategoryHintChange,
 }: ClientContextPanelProps) {
   return (
-    <div className="space-y-6">
-      <RetailerInputCard
-        retailerName={retailerName}
-        onRetailerNameChange={onRetailerNameChange}
-        onPopulate={onPopulateRetailer}
+    <div className="space-y-8">
+      <PocGuardrailBanner
+        title="Diagnostic cockpit — client context"
+        detail="Configure retailer archetype, pricing posture, and strategic objectives. All inference is deterministic POC logic."
       />
-      <EprScoringCard scores={eprScores} onScoreChange={onEprScoreChange} />
-      <KnowledgeRegistryPanel
-        archetypeId={archetypeId}
-        pricingPosture={knowledgePosture}
-        strategicObjectives={strategicObjectives}
-        categoryHint={categoryHint}
-        onArchetypeChange={onArchetypeChange}
-        onPostureChange={onKnowledgePostureChange}
-        onToggleObjective={onToggleObjective}
-        onCategoryHintChange={onCategoryHintChange}
+
+      <DiagnosticFrameworkStrip
+        context={knowledgeContext}
+        workflowLabel="Client Context"
       />
+
+      <div className="grid gap-8 xl:grid-cols-3">
+        <div className="space-y-8 xl:col-span-2">
+          <KnowledgeRegistryPanel
+            archetypeId={archetypeId}
+            pricingPosture={knowledgePosture}
+            strategicObjectives={strategicObjectives}
+            categoryHint={categoryHint}
+            onArchetypeChange={onArchetypeChange}
+            onPostureChange={onKnowledgePostureChange}
+            onToggleObjective={onToggleObjective}
+            onCategoryHintChange={onCategoryHintChange}
+          />
+          <RoleInferenceSummaryCard context={knowledgeContext} />
+          <DiagnosticHypothesesPanel
+            output={hypothesisOutput}
+            title="Live hypothesis preview"
+            showArchitectureNote
+          />
+        </div>
+        <div className="space-y-8">
+          <FrameworkLayerProgress />
+          <RetailerInputCard
+            retailerName={retailerName}
+            onRetailerNameChange={onRetailerNameChange}
+            onPopulate={onPopulateRetailer}
+          />
+          <EprScoringCard scores={eprScores} onScoreChange={onEprScoreChange} />
+        </div>
+      </div>
+
       <StrategicContextCard
         pricingPosture={pricingPosture}
         retailerFormat={retailerFormat}

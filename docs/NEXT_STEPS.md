@@ -36,6 +36,18 @@
 - Compute feature values from normalized rows after live ingestion
 - Map computed features to evidence items in `DiagnosticRunOutput`
 
+### Step 6A — Diagnostic hypothesis engine (complete)
+
+- Deterministic signal grouping, confidence, narrative, opportunity calibration
+- Surfaces 3–5 prioritized structural hypotheses in UI
+- Thematic margin pools — no dollar opportunity or recommendations
+
+### Step 6B — Rule activation (next)
+
+- Align thresholds per hypothesis family
+- Connect pattern feature values when computed
+- Move selected hypotheses from thematic to rule-backed findings
+
 ### Step 5B — Pricing knowledge registry (complete)
 
 - Ontology types, data catalogs, deterministic role inference

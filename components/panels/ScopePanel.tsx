@@ -2,7 +2,11 @@
 
 import { useMemo } from "react";
 import { Card } from "@/components/Card";
+import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
+import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
+import { RoleInferenceSummaryCard } from "@/components/RoleInferenceSummaryCard";
 import { calculateAddressableRevenue, parseNumericInput } from "@/lib/scopeMath";
+import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { LeverKey } from "@/types/diagnostic-output";
 import type { ScopeDefinition } from "@/types/scope";
 import {
@@ -14,6 +18,7 @@ import {
 } from "@/types/ui";
 
 type ScopePanelProps = {
+  knowledgeContext: KnowledgeRegistryContext;
   retailerName: string;
   selectedPeerCount: number;
   totalRevenueInput: string;
@@ -40,6 +45,7 @@ function formatCurrency(value: number | null): string {
 }
 
 export function ScopePanel({
+  knowledgeContext,
   retailerName,
   selectedPeerCount,
   totalRevenueInput,
@@ -107,7 +113,23 @@ export function ScopePanel({
     "w-full max-w-md rounded-md border border-[var(--border)] px-4 py-2.5 text-sm focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <PocGuardrailBanner
+        title="Scope of diagnostic — denominator only"
+        detail="Revenue and lever scope define the sizing denominator. Opportunity ranges elsewhere are illustrative placeholders, not calculated."
+        variant="neutral"
+      />
+
+      <DiagnosticFrameworkStrip
+        context={knowledgeContext}
+        workflowLabel="Scope"
+      />
+
+      <RoleInferenceSummaryCard
+        context={knowledgeContext}
+        title="Role structure informing scope categories"
+      />
+
       <Card>
         <p className="micro-label mb-2">Revenue scope</p>
         <h3 className="section-title">Revenue scope</h3>
