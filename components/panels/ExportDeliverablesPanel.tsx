@@ -23,13 +23,12 @@ export function ExportDeliverablesPanel({
     return (
       <div className="max-w-3xl pilot-panel">
         <DiagnosticSection
-          eyebrow="Step 5"
           title="Executive outputs"
           lead="Partner email, one-page memo, and LOP-ready deck drafts unlock after the diagnostic is generated."
         >
           <p className="text-sm text-[var(--text-muted)]">
-            Complete steps 1–3 first, then return here to preview and download
-            consulting first drafts.
+            Confirm retailer context and scope, generate the diagnostic, then
+            return here to preview and download consulting first drafts.
           </p>
         </DiagnosticSection>
       </div>

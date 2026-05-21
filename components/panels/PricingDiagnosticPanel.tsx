@@ -33,7 +33,6 @@ export function PricingDiagnosticPanel({
     return (
       <div className="max-w-3xl pilot-panel">
         <DiagnosticSection
-          eyebrow="Step 3"
           title="Pricing diagnostic"
           lead="Generate the assessment when retailer context and scope are confirmed."
         >
@@ -50,7 +49,6 @@ export function PricingDiagnosticPanel({
   return (
     <div className="max-w-4xl space-y-12 pilot-panel">
       <DiagnosticSection
-        eyebrow="Step 3"
         title="Pricing diagnostic"
         lead="Executive summary and structural themes — supporting evidence available on expand."
       >
@@ -63,7 +61,8 @@ export function PricingDiagnosticPanel({
       </DiagnosticSection>
 
       <Disclosure
-        title="Supporting evidence"
+        title="Technical detail — pattern inventory"
+        summary="Consultant / internal view · not required for executive readout"
         variant="subtle"
         defaultOpen={false}
       >

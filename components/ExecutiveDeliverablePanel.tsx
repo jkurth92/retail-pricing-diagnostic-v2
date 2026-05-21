@@ -312,12 +312,69 @@ export function ExecutiveDeliverablePanel({
       <DiagnosticSection
         eyebrow="Executive summary"
         title={pilotMode ? "Strategic pricing assessment" : "Pricing diagnostic readout"}
-        lead={exec.executiveNarrative}
+        lead={pilotMode ? exec.opportunityHeadline : exec.executiveNarrative}
       >
-        <p className="opportunity-hero-value">{exec.marginOpportunitySummary}</p>
-        <p className="mt-3 text-sm text-[var(--text-muted)]">
-          {exec.revenueSensitivitySummary}
-        </p>
+        {pilotMode ? (
+          <>
+            <p className="opportunity-hero-value">{exec.marginOpportunitySummary}</p>
+            {exec.primaryDrivers.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  Primary drivers
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-navy)]">
+                  {exec.primaryDrivers.map((d) => (
+                    <li key={d}>{d}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {exec.evidenceBackedThemes.length > 0 && (
+              <div className="mt-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  Evidence-backed structural themes
+                </p>
+                <ul className="mt-3 space-y-4">
+                  {exec.evidenceBackedThemes.map((t) => (
+                    <li key={t.headline}>
+                      <p className="text-sm font-semibold text-[var(--text-navy)]">
+                        {t.headline}
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
+                        {t.detail}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {exec.supportingEvidenceMetrics.length > 0 && (
+              <div className="mt-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  Supporting evidence
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-navy)]">
+                  {exec.supportingEvidenceMetrics.map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <p className="mt-6 text-sm font-medium text-[var(--text-navy)]">
+              {exec.strategicImplicationOneLiner}
+            </p>
+            <Disclosure title="Narrative context" variant="subtle">
+              <p className="narrative-block text-sm">{exec.executiveNarrative}</p>
+            </Disclosure>
+          </>
+        ) : (
+          <>
+            <p className="opportunity-hero-value">{exec.marginOpportunitySummary}</p>
+            <p className="mt-3 text-sm text-[var(--text-muted)]">
+              {exec.revenueSensitivitySummary}
+            </p>
+          </>
+        )}
         <Disclosure title="Confidence & maturity" variant="subtle">
           <p className="text-sm text-[var(--text-navy)]">
             {exec.confidenceSummary}

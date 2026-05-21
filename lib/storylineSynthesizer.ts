@@ -30,6 +30,7 @@ import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { ConfidenceScore } from "@/types/confidence-scoring";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
 import { getArchetype, postureLabel } from "@/lib/archetypeContext";
+import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 
 function mergeConfidence(
   hypotheses: DiagnosticHypothesis[],
@@ -115,6 +116,7 @@ export type StorylineSynthesisInput = {
   knowledge: KnowledgeRegistryContext;
   retailerDisplayName?: string | null;
   hasRevenueInScope?: boolean;
+  computedEvidence?: ComputedEvidenceBundle;
 };
 
 export type StorylineSynthesisResult = {
@@ -133,10 +135,23 @@ export function synthesizeStoryline(
 
   const candidateThemes: ExecutiveTheme[] = [];
 
+  const promoFamilies = new Set(["Promotions", "Markdown"]);
+  const evidence = input.computedEvidence;
+
   for (const def of EXECUTIVE_THEME_DEFINITIONS) {
+    if (
+      promoFamilies.has(def.themeFamily) &&
+      evidence &&
+      !evidence.promoMarkdownEligible
+    ) {
+      continue;
+    }
+
     const hyps = def.hypothesisIds
       .map((id) => hypothesisById.get(id))
       .filter((h): h is DiagnosticHypothesis => h !== undefined);
+    if (hyps.length === 0) continue;
+
     const theme = buildExecutiveTheme(def, hyps, input.knowledge.archetypeId);
     if (theme) {
       theme.retailerContextNotes = `${getArchetype(input.knowledge.archetypeId)?.archetypeName ?? input.knowledge.archetypeId} · ${postureLabel(input.knowledge.pricingPosture)} posture`;
@@ -166,6 +181,7 @@ export function synthesizeStoryline(
       primary,
       archetypeId,
       input.retailerDisplayName ?? null,
+      evidence,
     ),
     primaryThemes: primary,
     secondaryThemes: secondary,
@@ -201,7 +217,7 @@ export function runOpportunityStorylineEngine(
   const result = calibrateStorylineResult(synthesizeStoryline(input));
   return {
     ...result,
-    engineVersion: "6b.0.0",
+    engineVersion: "6b.1.0-evidence",
     generatedAt: new Date().toISOString(),
     guardrailMessage: STORYLINE_GUARDRAIL,
   };

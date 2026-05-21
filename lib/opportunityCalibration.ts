@@ -4,16 +4,26 @@ import type { HypothesisFamily } from "@/types/diagnostic-hypotheses";
 import type { ElasticitySensitivity } from "@/types/diagnostic-hypotheses";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
 import type { OpportunityTheme } from "@/types/opportunity-themes";
+import type { EvidenceStrength } from "@/types/evidence-computation";
 
 function bandForFamily(family: HypothesisFamily) {
   return OPPORTUNITY_CALIBRATION_BANDS.find((b) => b.families.includes(family));
 }
 
-function confidenceWidthMultiplier(level: DiagnosticConfidenceLevel): number {
-  if (level === "high") return 1;
-  if (level === "medium_high") return 0.9;
-  if (level === "medium") return 0.8;
-  return 0.65;
+function confidenceWidthMultiplier(
+  level: DiagnosticConfidenceLevel,
+  evidenceStrength?: EvidenceStrength,
+): number {
+  let base = 1;
+  if (level === "high") base = 1;
+  else if (level === "medium_high") base = 0.9;
+  else if (level === "medium") base = 0.8;
+  else base = 0.65;
+
+  if (evidenceStrength === "strong") return base;
+  if (evidenceStrength === "moderate") return base * 0.92;
+  if (evidenceStrength === "weak") return base * 0.78;
+  return base;
 }
 
 function elasticityNote(sensitivity: ElasticitySensitivity): string {
@@ -31,10 +41,11 @@ export function calibrateOpportunityTheme(
   family: HypothesisFamily,
   confidenceLevel: DiagnosticConfidenceLevel,
   elasticitySensitivity: ElasticitySensitivity,
+  evidenceStrength?: EvidenceStrength,
 ): OpportunityTheme {
   const template = OPPORTUNITY_THEME_TEMPLATES[themeId];
   const band = bandForFamily(family);
-  const mult = confidenceWidthMultiplier(confidenceLevel);
+  const mult = confidenceWidthMultiplier(confidenceLevel, evidenceStrength);
 
   if (!template || !band) {
     return {

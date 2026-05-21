@@ -3,9 +3,14 @@ import {
   buildOpeningExecutiveNarrative,
   buildStructuralPictureSummary,
 } from "@/lib/strategicNarrative";
+import {
+  buildOpportunityHeadline,
+  buildStrategicImplicationOneLiner,
+} from "@/lib/evidenceExecutiveSummary";
 import { buildStrategicImplications } from "@/lib/strategicImplications";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { ExecutiveSummary } from "@/types/executive-summary";
+import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { RetailerEnrichmentBundle } from "@/types/retailer-context";
 import type { EprScores } from "@/types/ui";
@@ -19,6 +24,7 @@ export function buildExecutiveSummaryBlock(
   retailerDisplayName: string,
   strategicContext?: string,
   enrichment?: RetailerEnrichmentBundle | null,
+  evidence?: ComputedEvidenceBundle,
 ): ExecutiveSummary {
   const { storyline, opportunity } = storylineResult;
   const profile = buildRetailerPricingProfile(
@@ -49,6 +55,42 @@ export function buildExecutiveSummaryBlock(
 
   const maturitySummary = `${profile.maturityProfile} ${buildStructuralPictureSummary(profile, archThemes)}`;
 
+  const evidenceBundle = evidence ?? {
+    evidenceStrength: "weak" as const,
+    summaries: [],
+    evidenceBackedThemes: [],
+    primaryDrivers: [],
+    metrics: [],
+    computedSignals: [],
+    eligibleHypothesisIds: [],
+    generatedAt: "",
+    engineVersion: "",
+    promoMarkdownEligible: false,
+    rowCount: 0,
+    categoriesAnalyzed: [],
+    normalizedFields: [],
+  };
+
+  const evidenceBackedThemes =
+    evidenceBundle.evidenceBackedThemes.length > 0
+      ? evidenceBundle.evidenceBackedThemes
+      : storyline.primaryThemes.slice(0, 3).map((t) => ({
+          headline: t.themeName,
+          detail: t.summary,
+        }));
+
+  const supportingEvidenceMetrics =
+    evidenceBundle.summaries.length > 0
+      ? evidenceBundle.summaries.slice(0, 5)
+      : storyline.primaryThemes
+          .flatMap((t) => t.supportingSignals.slice(0, 1).map((s) => s.signalName))
+          .slice(0, 3);
+
+  const strategicImplicationOneLiner = buildStrategicImplicationOneLiner(
+    evidenceBundle,
+    storyline.primaryThemes,
+  );
+
   return {
     id: `exec-summary-${knowledge.archetypeId}`,
     retailerProfile: profile,
@@ -59,7 +101,16 @@ export function buildExecutiveSummaryBlock(
     revenueSensitivitySummary: storyline.revenueSensitivitySummary,
     confidenceSummary: storyline.confidenceSummary,
     maturitySummary,
-    strategicImplications: implications.slice(0, 5),
+    strategicImplications: [strategicImplicationOneLiner, ...implications.slice(0, 2)],
+    opportunityHeadline: buildOpportunityHeadline(storylineResult, evidenceBundle),
+    primaryDrivers:
+      evidenceBundle.primaryDrivers.length > 0
+        ? evidenceBundle.primaryDrivers
+        : archThemes.slice(0, 3).map((t) => t.themeFamily),
+    evidenceBackedThemes,
+    supportingEvidenceMetrics,
+    strategicImplicationOneLiner,
+    evidenceStrength: evidenceBundle.evidenceStrength,
     nextFocusAreas: [
       "Complete evidence alignment for architecture and KVI fields",
       "Validate role taxonomy with client category leads",

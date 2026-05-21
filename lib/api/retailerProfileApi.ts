@@ -64,6 +64,16 @@ export async function fetchFinnhubProfile(
     sector: null,
     industry: data.finnhubIndustry ?? null,
     description: null,
+    operatingMarginDisplay: null,
+    grossMarginDisplay: null,
+    profileUrl: data.weburl ?? null,
+    trajectory: {
+      revenueGrowthPct: null,
+      ebitdaGrowthPct: null,
+      grossMarginChangeBps: null,
+      operatingMarginChangeBps: null,
+      ebitdaMarginChangeBps: null,
+    },
     lastUpdated: new Date().toISOString(),
     source: "api_profile",
   };

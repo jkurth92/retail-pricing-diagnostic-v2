@@ -31,6 +31,7 @@ export type NewsSummary = {
   summary: string;
   relevanceTag: RelevanceTag;
   sourceType: ContextEnrichmentSource;
+  url: string | null;
 };
 
 export type EnrichmentMeta = {

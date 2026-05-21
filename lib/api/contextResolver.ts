@@ -1,4 +1,5 @@
 import { CURATED_COMPANY_PROFILES } from "@/data/curatedCompanyProfiles";
+import { enrichProfileWithCuratedContext } from "@/lib/companyProfileEnrichment";
 import { CURATED_NEWS_BY_TICKER } from "@/data/curatedNewsHeadlines";
 import { fetchFinnhubNews } from "@/lib/api/newsApi";
 import { fetchFinnhubProfile } from "@/lib/api/retailerProfileApi";
@@ -144,8 +145,11 @@ export async function resolveEnrichmentOnServer(
 
   if (apiKey) {
     try {
-      profile = await fetchFinnhubProfile(ticker, apiKey);
-      if (profile) profileSource = "api_profile";
+      const apiProfile = await fetchFinnhubProfile(ticker, apiKey);
+      if (apiProfile) {
+        profile = enrichProfileWithCuratedContext(apiProfile);
+        profileSource = "api_profile";
+      }
       news = await fetchFinnhubNews(ticker, apiKey);
       if (news.length > 0) newsSource = "api_news";
     } catch (e) {

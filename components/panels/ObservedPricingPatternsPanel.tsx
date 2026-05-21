@@ -177,7 +177,9 @@ export function ObservedPricingPatternsPanel({
       </Disclosure>
 
       <div>
-        <p className="micro-label mb-3">Pattern inventory by lever</p>
+        <p className="micro-label mb-3">
+          Pattern inventory by lever (technical · values not computed in executive path)
+        </p>
         <div className="space-y-6">
           {sections.map((section) => (
             <PatternFeatureLeverCard key={section.leverKey} section={section} />

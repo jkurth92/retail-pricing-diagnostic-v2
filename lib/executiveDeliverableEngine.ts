@@ -6,6 +6,7 @@ import { buildOpportunityOverviewNarrative } from "@/lib/opportunityOverview";
 import { calibrateReadoutImplications } from "@/lib/outputCalibration";
 import { buildStorylineSections } from "@/lib/storylineBuilder";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
+import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { DiagnosticReadout } from "@/types/diagnostic-readout";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { RetailerEnrichmentBundle } from "@/types/retailer-context";
@@ -21,6 +22,7 @@ export type ExecutiveDeliverableInput = {
   retailerDisplayName?: string;
   strategicContext?: string;
   enrichment?: RetailerEnrichmentBundle | null;
+  computedEvidence?: ComputedEvidenceBundle;
 };
 
 export function runExecutiveDeliverableEngine(
@@ -46,6 +48,7 @@ export function runExecutiveDeliverableEngine(
     retailerName,
     input.strategicContext,
     input.enrichment,
+    input.computedEvidence,
   );
 
   const storylineSections = buildStorylineSections(
@@ -61,7 +64,7 @@ export function runExecutiveDeliverableEngine(
   );
 
   const readout = calibrateReadoutImplications({
-    engineVersion: "7.0.0",
+    engineVersion: "7.1.0-evidence",
     generatedAt: new Date().toISOString(),
     guardrailMessage:
       "Executive diagnostic readout — narrative-first, deterministic, and non-prescriptive. Not optimization software or tactical pricing guidance.",

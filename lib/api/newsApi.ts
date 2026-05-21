@@ -43,23 +43,28 @@ export async function fetchFinnhubNews(
     source?: string;
     datetime?: number;
     summary?: string;
+    url?: string;
   }>;
 
-  return rows.slice(0, limit).map((row, i) => {
-    const headline = row.headline ?? "Company news item";
-    const summary = row.summary ?? "";
-    return {
-      id: `${symbol}-news-${i}`,
-      headline,
-      source: row.source ?? "Finnhub",
-      publishedAt: row.datetime
-        ? new Date(row.datetime * 1000).toISOString()
-        : new Date().toISOString(),
-      summary: summary.slice(0, 280) || "Recent company news item.",
-      relevanceTag: inferRelevanceTag(headline, summary),
-      sourceType: "api_news",
-    };
-  });
+  return rows
+    .filter((row) => row.url?.trim() && /^https?:\/\//i.test(row.url.trim()))
+    .slice(0, limit)
+    .map((row, i) => {
+      const headline = row.headline ?? "Company news item";
+      const summary = row.summary ?? "";
+      return {
+        id: `${symbol}-news-${i}`,
+        headline,
+        source: row.source ?? "Finnhub",
+        publishedAt: row.datetime
+          ? new Date(row.datetime * 1000).toISOString()
+          : new Date().toISOString(),
+        summary: summary.slice(0, 280) || "Recent company news item.",
+        relevanceTag: inferRelevanceTag(headline, summary),
+        sourceType: "api_news",
+        url: row.url!.trim(),
+      };
+    });
 }
 
 /** Client-side: call app API route for news enrichment. */

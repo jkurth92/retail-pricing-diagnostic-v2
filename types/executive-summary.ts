@@ -1,4 +1,8 @@
 import type { ExecutiveTheme } from "@/types/executive-theme";
+import type {
+  EvidenceBackedThemeLine,
+  EvidenceStrength,
+} from "@/types/evidence-computation";
 
 export type RetailerPricingProfile = {
   archetype: string;
@@ -23,4 +27,11 @@ export type ExecutiveSummary = {
   maturitySummary: string;
   strategicImplications: string[];
   nextFocusAreas: string[];
+  /** Answer-first opportunity framing */
+  opportunityHeadline: string;
+  primaryDrivers: string[];
+  evidenceBackedThemes: EvidenceBackedThemeLine[];
+  supportingEvidenceMetrics: string[];
+  strategicImplicationOneLiner: string;
+  evidenceStrength: EvidenceStrength;
 };

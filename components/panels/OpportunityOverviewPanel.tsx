@@ -24,7 +24,6 @@ export function OpportunityOverviewPanel({
     return (
       <div className="max-w-3xl pilot-panel">
         <DiagnosticSection
-          eyebrow="Step 4"
           title="Opportunity overview"
           lead="Directional margin opportunity appears after you generate the diagnostic."
         >

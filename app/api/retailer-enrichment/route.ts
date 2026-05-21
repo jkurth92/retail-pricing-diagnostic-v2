@@ -6,6 +6,7 @@ import {
   resolveEnrichmentOnServer,
 } from "@/lib/api/contextResolver";
 import { CURATED_COMPANY_PROFILES } from "@/data/curatedCompanyProfiles";
+import { enrichProfileWithCuratedContext } from "@/lib/companyProfileEnrichment";
 import { CURATED_NEWS_BY_TICKER } from "@/data/curatedNewsHeadlines";
 import type { RetailerEnrichmentOverrides } from "@/types/retailer-context";
 
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
     }
     const apiKey = process.env.FINNHUB_API_KEY?.trim();
     let profile = apiKey ? await fetchFinnhubProfile(ticker, apiKey) : null;
+    if (profile) profile = enrichProfileWithCuratedContext(profile);
     let source = profile ? "api_profile" : "inferred_context";
     if (!profile && CURATED_COMPANY_PROFILES[ticker]) {
       profile = {

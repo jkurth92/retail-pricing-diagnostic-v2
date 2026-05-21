@@ -11,6 +11,12 @@ import {
 } from "@/lib/signalGrouping";
 import { prioritizeHypotheses, MAX_SURFACED_HYPOTHESES } from "@/lib/hypothesisPrioritization";
 import { buildObservedPatternsOutput } from "@/lib/patternFeatureBuilder";
+import {
+  isHypothesisEvidenceEligible,
+  mergeEvidenceWithFrameworkSignals,
+  type EvidenceComputationInput,
+  runEvidenceComputation,
+} from "@/lib/evidenceComputation";
 import { inferRoles } from "@/lib/roleInference";
 import type { DiagnosticHypothesis, DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
 import type { SupportingSignal } from "@/types/diagnostic-hypotheses";
@@ -18,12 +24,14 @@ import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { EprScores } from "@/types/ui";
 import type { CanonicalFieldKey } from "@/types/upload-schema";
 import type { LeverDiagnosticUnlock } from "@/types/ingestion";
+import type { ComputedEvidenceBundle, EvidenceStrength } from "@/types/evidence-computation";
 
 export type HypothesisEngineInput = {
   knowledge: KnowledgeRegistryContext;
   normalizedFields: CanonicalFieldKey[];
   leverUnlocks: LeverDiagnosticUnlock[];
   eprScores?: EprScores;
+  evidenceInput?: EvidenceComputationInput;
 };
 
 function eprAverage(scores?: EprScores): number | null {
@@ -53,6 +61,7 @@ function buildCandidate(
   fired: SupportingSignal[],
   ctx: SignalEvaluationContext,
   evidenceRatio: number,
+  evidenceStrength: EvidenceStrength,
 ): DiagnosticHypothesis {
   const supporting = matchSignals(fired, entry.triggerSignalIds);
   const conflicting = conflictingSignals(fired, entry.conflictingSignalIds);
@@ -71,6 +80,7 @@ function buildCandidate(
     entry.hypothesisFamily,
     confidence.level,
     entry.elasticitySensitivity,
+    evidenceStrength,
   );
 
   const rationale = generateHypothesisRationale(
@@ -137,7 +147,17 @@ export function runDiagnosticHypothesisEngine(
     eprAverage: eprAverage(input.eprScores),
   };
 
-  const fired = evaluateStructuralSignals(signalCtx);
+  const evidence: ComputedEvidenceBundle = input.evidenceInput
+    ? runEvidenceComputation(input.evidenceInput)
+    : runEvidenceComputation({
+        archetypeId: input.knowledge.archetypeId,
+        pricingPosture: input.knowledge.pricingPosture,
+        categoryRows: [],
+        normalizedFields: input.normalizedFields,
+      });
+
+  const frameworkFired = evaluateStructuralSignals(signalCtx);
+  const fired = mergeEvidenceWithFrameworkSignals(frameworkFired, evidence);
 
   const registryMap = new Map(
     DIAGNOSTIC_HYPOTHESIS_REGISTRY.map((e) => [e.id, e] as const),
@@ -147,20 +167,29 @@ export function runDiagnosticHypothesisEngine(
 
   for (const entry of DIAGNOSTIC_HYPOTHESIS_REGISTRY) {
     if (!entry.retailerContexts.includes(input.knowledge.archetypeId)) continue;
+    if (!isHypothesisEvidenceEligible(entry.id, evidence)) continue;
 
     const supporting = matchSignals(fired, entry.triggerSignalIds);
     if (supporting.length < entry.minSignalsToSurface) continue;
 
-    candidates.push(buildCandidate(entry, fired, signalCtx, evidenceRatio));
+    candidates.push(
+      buildCandidate(
+        entry,
+        fired,
+        signalCtx,
+        evidenceRatio,
+        evidence.evidenceStrength,
+      ),
+    );
   }
 
   const { surfaced, suppressed } = prioritizeHypotheses(candidates, registryMap);
 
   return {
     generatedAt: new Date().toISOString(),
-    engineVersion: "6a.0.0",
+    engineVersion: "6a.1.0-evidence",
     guardrailMessage:
-      "Hypotheses are structural, thematic interpretations — not pricing recommendations, optimizations, or benchmark verdicts. Opportunity ranges are bounded thematic pools.",
+      "Hypotheses are evidence-backed structural interpretations — not pricing recommendations, optimizations, or benchmark verdicts. Themes without measured signals are suppressed.",
     hypotheses: surfaced,
     suppressedCount: suppressed.length,
     architectureFirstNote: `Architecture-related themes prioritized (max ${MAX_SURFACED_HYPOTHESES} surfaced). ${suppressed.length} theme(s) suppressed for low confidence or rank.`,

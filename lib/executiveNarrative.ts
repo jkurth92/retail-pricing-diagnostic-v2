@@ -5,6 +5,7 @@ import {
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { RetailerArchetypeId } from "@/types/retailer-archetypes";
 import type { ExecutiveThemeDefinition } from "@/data/executiveThemes";
+import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 
 export function buildThemeNarrativeSnippet(
   definition: ExecutiveThemeDefinition,
@@ -18,10 +19,19 @@ export function buildExecutiveSummary(
   primaryThemes: ExecutiveTheme[],
   archetypeId: RetailerArchetypeId,
   retailerName: string | null,
+  evidence?: ComputedEvidenceBundle,
 ): string {
   const who = retailerName?.trim()
     ? `${retailerName.trim()}`
     : "The retailer";
+
+  if (evidence && evidence.evidenceBackedThemes.length > 0) {
+    const lead = evidence.evidenceBackedThemes[0].detail;
+    const metric =
+      evidence.summaries[0] != null ? ` ${evidence.summaries[0]}.` : "";
+    return `${lead}${metric} Thematic diagnostic — not a recommendation to change specific prices.`;
+  }
+
   const ctx = ARCHETYPE_NARRATIVE_CONTEXT[archetypeId];
   const top = primaryThemes.slice(0, 2).map((t) => t.themeName.toLowerCase());
   const topPhrase =

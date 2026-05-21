@@ -1,8 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
-import { formatReadinessState } from "@/lib/readinessDisplay";
+import { useRef, useState } from "react";
 
 type SimplifiedUploadPanelProps = {
   maxFiles?: number;
@@ -16,9 +14,6 @@ export function SimplifiedUploadPanel({
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileNames, setFileNames] = useState<string[]>([]);
 
-  const dataset = useMemo(() => buildPlaceholderIngestionDataset(), []);
-  const readiness = formatReadinessState(dataset.readinessSummary);
-
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
     const names = Array.from(files)
@@ -29,23 +24,22 @@ export function SimplifiedUploadPanel({
   };
 
   return (
-    <div className="simplified-upload space-y-6">
+    <div className="simplified-upload">
       <div
-        className="rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--surface-muted)] px-6 py-10 text-center"
+        className="upload-dropzone"
         role="region"
         aria-label="Upload pricing files"
       >
         <p className="text-sm font-medium text-[var(--text-navy)]">
           Drop pricing files here, or browse
         </p>
-        <p className="mt-2 text-xs text-[var(--text-muted)]">
-          One or two files (price lists, promo calendars, or combined exports).
-          Format is inferred automatically.
+        <p className="mt-1 text-xs text-[var(--text-muted)]">
+          Price lists, promo calendars, or combined exports
         </p>
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="mt-5 rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90"
+          className="mt-4 rounded-md border border-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-light)]"
         >
           Choose files
         </button>
@@ -60,41 +54,15 @@ export function SimplifiedUploadPanel({
       </div>
 
       {fileNames.length > 0 && (
-        <ul className="text-sm text-[var(--text-navy)]">
+        <ul className="mt-4 space-y-1 text-sm text-[var(--text-navy)]">
           {fileNames.map((name) => (
-            <li key={name} className="flex items-center gap-2 py-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+            <li key={name} className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
               {name}
             </li>
           ))}
         </ul>
       )}
-
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5 text-sm">
-        <p className="font-semibold text-[var(--text-navy)]">What we inferred</p>
-        <ul className="mt-3 space-y-2 text-[var(--text-muted)]">
-          <li>
-            Data readiness: <span className="text-[var(--text-navy)]">{readiness}</span>
-          </li>
-          <li>
-            Likely categories:{" "}
-            <span className="text-[var(--text-navy)]">
-              {dataset.normalizedFields.slice(0, 4).join(", ").replace(/_/g, " ") ||
-                "Pending file review"}
-            </span>
-          </li>
-          <li>
-            Diagnostics available:{" "}
-            <span className="text-[var(--text-navy)]">
-              Architecture, KVI, promotions (thematic)
-            </span>
-          </li>
-        </ul>
-        <p className="mt-4 text-xs text-[var(--text-muted)]">
-          Preview only — files are not stored. Confirm scope below before running the
-          assessment.
-        </p>
-      </div>
     </div>
   );
 }

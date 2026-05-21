@@ -126,6 +126,19 @@
 - Margin opportunity is **primary**; revenue sensitivity is **secondary and directional** only.
 - Strategic implications are interpretive **“what this means”** lines — not action plans.
 
+## Evidence computation & signal generation (Step 13)
+
+- **Evidence computation is central** — measurable architecture, KVI, and category signals must precede theme surfacing.
+- **Hypotheses must be evidence-backed** — registry themes without supporting computed signals are suppressed (no generic “architecture compression” without tier/PL-NB evidence).
+- **Avoid generic unsupported narratives** — framework-only signals must not fire when measured evidence does not reinforce them.
+- **Suppress weak themes** — prefer fewer, stronger evidence-backed themes over many low-confidence generic themes.
+- **Executive summaries must remain concise** — answer-first headline, 2–3 evidence-backed themes, supporting metric bullets, one strategic implication sentence.
+- **Feature / pattern inventory panels remain secondary** — technical detail behind disclosure; not default executive UX.
+- **Prioritize measurable signals** over framework language and consulting filler.
+- **Architecture, KVI, and PL/NB dominate** — promo and markdown themes surface only when upload evidence includes promo/markdown fields.
+- **No optimization, exact recommendations, competitor matching, or black-box AI** in the evidence path.
+- Synthetic row generation is **deterministic and explainable** until real CSV parsing is aligned — document as structural proxy, not benchmark truth.
+
 ## Pilot workflow simplification (Step 12)
 
 - **Guided workflow prioritized** — five visible steps; internal architecture not in default navigation.

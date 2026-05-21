@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   createEmptyEnrichment,
   fetchEnrichmentBundle,
@@ -9,7 +9,6 @@ import {
 import type { RetailerEnrichmentOverrides } from "@/types/retailer-context";
 import { AppShell } from "@/components/AppShell";
 import { HeaderSummary } from "@/components/HeaderSummary";
-import { JourneyStepper } from "@/components/JourneyStepper";
 import { PilotWalkthroughBanner } from "@/components/PilotWalkthroughBanner";
 import { RetailerContextPanel } from "@/components/panels/RetailerContextPanel";
 import { UploadScopePanel } from "@/components/panels/UploadScopePanel";
@@ -17,8 +16,15 @@ import { PricingDiagnosticPanel } from "@/components/panels/PricingDiagnosticPan
 import { OpportunityOverviewPanel } from "@/components/panels/OpportunityOverviewPanel";
 import { ExportDeliverablesPanel } from "@/components/panels/ExportDeliverablesPanel";
 import { createSuggestedCompetitors } from "@/lib/competitors";
+import { refreshFinancePeerResolution } from "@/lib/financePeerResolution";
+import {
+  createUserFinancePeer,
+  suggestFinancePeers,
+} from "@/lib/financePeerSuggestion";
+import type { FinancePeer } from "@/types/finance-peers";
 import { formatToArchetypeId } from "@/lib/archetypeContext";
 import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
+import { runEvidenceComputation } from "@/lib/evidenceComputation";
 import { runDiagnosticHypothesisEngine } from "@/lib/hypothesisEngine";
 import { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import { runOpportunityStorylineEngine } from "@/lib/storylineSynthesizer";
@@ -30,19 +36,26 @@ import {
   EMPTY_STORYLINE_EXPORT,
   EMPTY_STORYLINE_RESULT,
 } from "@/lib/pilotEmptyOutputs";
-import { parseNumericInput } from "@/lib/scopeMath";
+import {
+  calculateAddressableRevenue,
+  parseNumericInput,
+} from "@/lib/scopeMath";
 import { PILOT_DEMO_PRESET } from "@/data/pilotDemo";
-import type { StrategicObjectiveId } from "@/types/knowledge-client";
+import { inferCategoryRoles } from "@/lib/inferCategoryRoles";
+import { inferStrategicObjectives } from "@/lib/inferStrategicObjectives";
+import {
+  DEFAULT_ADDRESSABLE_PERCENT,
+  formatRevenueInputValue,
+  parseRevenueFromEnrichment,
+} from "@/lib/scopeRevenue";
+import type { InferredCategoryRow } from "@/types/category-scope";
 import type {
   PricingPosture as KnowledgePosture,
   RetailerArchetypeId,
 } from "@/types/retailer-archetypes";
 import type { CompetitorEntry } from "@/types/competitors";
-import type { LeverKey } from "@/types/diagnostic-output";
 import {
   DEFAULT_EPR_SCORES,
-  DEFAULT_SELECTED_LEVER_KEYS,
-  WORKFLOW_TABS,
   workflowTabToSidebarStep,
   type EprScores,
   type RetailerFormat,
@@ -63,44 +76,110 @@ export default function Home() {
   const [archetypeId, setArchetypeId] = useState<RetailerArchetypeId>("mass");
   const [knowledgePosture, setKnowledgePosture] =
     useState<KnowledgePosture>("EDLP");
-  const [strategicObjectives, setStrategicObjectives] = useState<
-    StrategicObjectiveId[]
-  >(["value_perception", "traffic_growth"]);
-  const [categoryHint, setCategoryHint] = useState("Laundry detergent");
+  const [uploadFileNames, setUploadFileNames] = useState<string[]>([]);
+  const [revenueFromProfile, setRevenueFromProfile] = useState(false);
   const [competitors, setCompetitors] = useState<CompetitorEntry[]>([]);
   const [totalRevenueInput, setTotalRevenueInput] = useState("");
   const [addressablePercentInput, setAddressablePercentInput] = useState("");
-  const [revenueInScopeInput, setRevenueInScopeInput] = useState("");
-  const [includedCategories, setIncludedCategories] = useState<string[]>([]);
-  const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
-  const [selectedLeverKeys, setSelectedLeverKeys] = useState<Set<LeverKey>>(
-    () => new Set(DEFAULT_SELECTED_LEVER_KEYS),
-  );
   const [retailerEnrichment, setRetailerEnrichment] = useState(() =>
     createEmptyEnrichment(),
   );
   const [manualTicker, setManualTicker] = useState("");
   const [enrichmentLoading, setEnrichmentLoading] = useState(false);
+  const [financePeers, setFinancePeers] = useState<FinancePeer[]>([]);
+
+  const categoryRolesInferred = useMemo(
+    () =>
+      inferCategoryRoles({
+        archetypeId,
+        retailerName: confirmedRetailer,
+        ticker: retailerEnrichment.context.ticker,
+        uploadedFileNames: uploadFileNames,
+      }),
+    [
+      archetypeId,
+      confirmedRetailer,
+      retailerEnrichment.context.ticker,
+      uploadFileNames,
+    ],
+  );
+
+  const [categoryRolesEdited, setCategoryRolesEdited] =
+    useState<InferredCategoryRow[] | null>(null);
+  const categoryRolesKey = `${archetypeId}|${confirmedRetailer}|${retailerEnrichment.context.ticker}|${uploadFileNames.join(",")}`;
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset edits when retailer context changes
+    setCategoryRolesEdited(null);
+  }, [categoryRolesKey]);
+
+  const categoryRoles = categoryRolesEdited ?? categoryRolesInferred;
 
   const retailerDisplay = confirmedRetailer.trim() || "Not selected";
-  const selectedPeerCount = competitors.filter(
-    (c) => c.selectedForPeerView,
-  ).length;
-
   const knowledgeContext = useMemo(
     () => ({
       archetypeId,
       pricingPosture: knowledgePosture,
-      strategicObjectives,
-      categoryHint,
+      strategicObjectives: inferStrategicObjectives(archetypeId, knowledgePosture),
+      categoryHint:
+        categoryRoles.find((r) => r.category.trim())?.category ?? "",
     }),
-    [archetypeId, knowledgePosture, strategicObjectives, categoryHint],
+    [archetypeId, knowledgePosture, categoryRoles],
+  );
+
+  useEffect(() => {
+    const parsed = parseRevenueFromEnrichment(retailerEnrichment);
+    if (parsed != null && confirmedRetailer.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill from Step 1 profile
+      setTotalRevenueInput(formatRevenueInputValue(parsed));
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill from Step 1 profile
+      setRevenueFromProfile(true);
+      if (!addressablePercentInput.trim()) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- default scope %
+        setAddressablePercentInput(DEFAULT_ADDRESSABLE_PERCENT);
+      }
+    }
+  }, [retailerEnrichment, confirmedRetailer, addressablePercentInput]);
+
+  const revenueInScopeComputed = useMemo(() => {
+    const total = parseNumericInput(totalRevenueInput);
+    const pct = parseNumericInput(addressablePercentInput);
+    return calculateAddressableRevenue(total, pct);
+  }, [totalRevenueInput, addressablePercentInput]);
+
+  const revenueInScopeInput = useMemo(
+    () =>
+      revenueInScopeComputed != null
+        ? formatRevenueInputValue(revenueInScopeComputed)
+        : "",
+    [revenueInScopeComputed],
   );
 
   const ingestionPreview = useMemo(
     () => buildPlaceholderIngestionDataset(),
     [],
   );
+
+  const computedEvidence = useMemo(() => {
+    if (!diagnosticReady) return null;
+    return runEvidenceComputation({
+      archetypeId,
+      pricingPosture: knowledgePosture,
+      categoryRows: categoryRoles,
+      retailerTicker: retailerEnrichment.context.ticker,
+      normalizedFields: ingestionPreview.normalizedFields,
+      retailerDisplayName: confirmedRetailer || retailerInput,
+    });
+  }, [
+    diagnosticReady,
+    archetypeId,
+    knowledgePosture,
+    categoryRoles,
+    retailerEnrichment.context.ticker,
+    ingestionPreview.normalizedFields,
+    confirmedRetailer,
+    retailerInput,
+  ]);
 
   const hypothesisOutput = useMemo(() => {
     if (!diagnosticReady) return EMPTY_HYPOTHESIS_OUTPUT;
@@ -109,8 +188,27 @@ export default function Home() {
       normalizedFields: ingestionPreview.normalizedFields,
       leverUnlocks: ingestionPreview.leverUnlocks,
       eprScores,
+      evidenceInput: {
+        archetypeId,
+        pricingPosture: knowledgePosture,
+        categoryRows: categoryRoles,
+        retailerTicker: retailerEnrichment.context.ticker,
+        normalizedFields: ingestionPreview.normalizedFields,
+        retailerDisplayName: confirmedRetailer || retailerInput,
+      },
     });
-  }, [diagnosticReady, knowledgeContext, ingestionPreview, eprScores]);
+  }, [
+    diagnosticReady,
+    knowledgeContext,
+    ingestionPreview,
+    eprScores,
+    archetypeId,
+    knowledgePosture,
+    categoryRoles,
+    retailerEnrichment.context.ticker,
+    confirmedRetailer,
+    retailerInput,
+  ]);
 
   const hasRevenueInScope = parseNumericInput(revenueInScopeInput) !== null;
 
@@ -121,6 +219,7 @@ export default function Home() {
       knowledge: knowledgeContext,
       retailerDisplayName: confirmedRetailer || retailerInput,
       hasRevenueInScope,
+      computedEvidence: computedEvidence ?? undefined,
     });
   }, [
     diagnosticReady,
@@ -129,6 +228,7 @@ export default function Home() {
     confirmedRetailer,
     retailerInput,
     hasRevenueInScope,
+    computedEvidence,
   ]);
 
   const executiveDeliverable = useMemo(() => {
@@ -147,6 +247,7 @@ export default function Home() {
       retailerDisplayName: confirmedRetailer || retailerInput,
       strategicContext,
       enrichment: retailerEnrichment,
+      computedEvidence: computedEvidence ?? undefined,
     });
   }, [
     diagnosticReady,
@@ -157,6 +258,7 @@ export default function Home() {
     retailerInput,
     strategicContext,
     retailerEnrichment,
+    computedEvidence,
   ]);
 
   const canRunDiagnostic = Boolean(confirmedRetailer.trim());
@@ -182,8 +284,15 @@ export default function Home() {
           overrides ?? retailerEnrichment.manualOverrides,
         );
         setRetailerEnrichment(bundle);
+        setFinancePeers(suggestFinancePeers(bundle));
         if (bundle.context.ticker && !manualTicker) {
           setManualTicker(bundle.context.ticker);
+        }
+        if (bundle.suggestions.suggestedPosture) {
+          setKnowledgePosture(bundle.suggestions.suggestedPosture);
+        }
+        if (bundle.suggestions.suggestedArchetypeId) {
+          setArchetypeId(bundle.suggestions.suggestedArchetypeId);
         }
       } finally {
         setEnrichmentLoading(false);
@@ -211,40 +320,8 @@ export default function Home() {
     setArchetypeId(formatToArchetypeId(format));
   };
 
-  const toggleStrategicObjective = (id: StrategicObjectiveId) => {
-    setStrategicObjectives((prev) =>
-      prev.includes(id) ? prev.filter((o) => o !== id) : [...prev, id],
-    );
-  };
-
-  const toggleIncludedCategory = (category: string) => {
-    setIncludedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category],
-    );
-    setExcludedCategories((prev) => prev.filter((c) => c !== category));
-  };
-
-  const toggleExcludedCategory = (category: string) => {
-    setExcludedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category],
-    );
-    setIncludedCategories((prev) => prev.filter((c) => c !== category));
-  };
-
-  const toggleLever = (leverKey: LeverKey) => {
-    setSelectedLeverKeys((prev) => {
-      const next = new Set(prev);
-      if (next.has(leverKey)) {
-        next.delete(leverKey);
-      } else {
-        next.add(leverKey);
-      }
-      return next;
-    });
+  const handleUploadFilesChange = (_count: number, names: string[]) => {
+    setUploadFileNames(names);
   };
 
   const handleRunDiagnostic = () => {
@@ -261,23 +338,15 @@ export default function Home() {
     setRetailerFormat(preset.retailerFormat);
     setArchetypeId(preset.archetypeId);
     setKnowledgePosture(preset.knowledgePosture);
-    setStrategicObjectives(preset.strategicObjectives);
-    setCategoryHint(preset.categoryHint);
+    setCategoryRolesEdited(null);
     setStrategicContext(preset.strategicContext);
     setTotalRevenueInput(preset.totalRevenueInput);
     setAddressablePercentInput(preset.addressablePercentInput);
-    setRevenueInScopeInput(preset.revenueInScopeInput);
-    setIncludedCategories(preset.includedCategories);
-    setExcludedCategories([]);
+    setRevenueFromProfile(true);
     setCompetitors(createSuggestedCompetitors(preset.retailerFormat));
     setWorkflowTab("retailer_context");
     void refreshEnrichment(preset.retailerName);
   };
-
-  const workflowStepLabel = useMemo(() => {
-    const tab = WORKFLOW_TABS.find((t) => t.id === workflowTab);
-    return tab?.label ?? "Workflow";
-  }, [workflowTab]);
 
   const marginOpportunityRange = diagnosticReady
     ? storylineResult.storyline.marginOpportunityTotalRange
@@ -289,54 +358,54 @@ export default function Home() {
         return (
           <RetailerContextPanel
             retailerName={retailerInput}
-            retailerFormat={retailerFormat}
-            knowledgeContext={knowledgeContext}
-            archetypeId={archetypeId}
-            knowledgePosture={knowledgePosture}
-            strategicObjectives={strategicObjectives}
-            categoryHint={categoryHint}
             retailerEnrichment={retailerEnrichment}
             manualTicker={manualTicker}
             enrichmentLoading={enrichmentLoading}
+            financePeers={financePeers}
             onRetailerNameChange={setRetailerInput}
             onConfirmRetailer={handleConfirmRetailer}
-            onRetailerFormatChange={handleRetailerFormatChange}
-            onArchetypeChange={setArchetypeId}
-            onKnowledgePostureChange={setKnowledgePosture}
-            onToggleObjective={toggleStrategicObjective}
-            onCategoryHintChange={setCategoryHint}
             onManualTickerChange={setManualTicker}
             onEnrichmentOverrides={handleEnrichmentOverrides}
             onRefreshEnrichment={() =>
               refreshEnrichment(confirmedRetailer || retailerInput)
             }
-            onApplySuggestedSetup={() => {
-              const s = retailerEnrichment.suggestions;
-              if (s.suggestedArchetypeId) setArchetypeId(s.suggestedArchetypeId);
-              if (s.suggestedPosture) setKnowledgePosture(s.suggestedPosture);
-            }}
-            competitors={competitors}
-            onCompetitorsChange={setCompetitors}
+            onFinancePeersChange={(peers) =>
+              setFinancePeers(refreshFinancePeerResolution(peers))
+            }
+            onAddFinancePeer={(name) =>
+              setFinancePeers((prev) =>
+                refreshFinancePeerResolution([
+                  ...prev,
+                  createUserFinancePeer(name),
+                ]),
+              )
+            }
+            onGoToUploadScope={() => setWorkflowTab("upload_scope")}
           />
         );
       case "upload_scope":
         return (
           <UploadScopePanel
-            knowledgeContext={knowledgeContext}
             retailerName={confirmedRetailer}
-            selectedPeerCount={selectedPeerCount}
+            archetypeId={archetypeId}
+            suggestedArchetypeId={
+              retailerEnrichment.suggestions.suggestedArchetypeId
+            }
+            knowledgePosture={knowledgePosture}
+            suggestedPosture={retailerEnrichment.suggestions.suggestedPosture}
+            categoryRoles={categoryRoles}
             totalRevenueInput={totalRevenueInput}
             addressablePercentInput={addressablePercentInput}
-            revenueInScopeInput={revenueInScopeInput}
-            includedCategories={includedCategories}
-            excludedCategories={excludedCategories}
-            selectedLeverKeys={selectedLeverKeys}
-            onTotalRevenueChange={setTotalRevenueInput}
+            revenueFromProfile={revenueFromProfile}
+            onArchetypeChange={setArchetypeId}
+            onKnowledgePostureChange={setKnowledgePosture}
+            onCategoryRolesChange={setCategoryRolesEdited}
+            onTotalRevenueChange={(v) => {
+              setRevenueFromProfile(false);
+              setTotalRevenueInput(v);
+            }}
             onAddressablePercentChange={setAddressablePercentInput}
-            onRevenueInScopeChange={setRevenueInScopeInput}
-            onToggleIncludedCategory={toggleIncludedCategory}
-            onToggleExcludedCategory={toggleExcludedCategory}
-            onToggleLever={toggleLever}
+            onUploadFilesChange={handleUploadFilesChange}
             onRunDiagnostic={handleRunDiagnostic}
             canRunDiagnostic={canRunDiagnostic}
             runDisabledReason={runDisabledReason}
@@ -390,11 +459,9 @@ export default function Home() {
       <HeaderSummary
         retailerDisplay={retailerDisplay}
         knowledgeContext={knowledgeContext}
-        workflowStepLabel={workflowStepLabel}
         marginOpportunityRange={marginOpportunityRange}
         diagnosticReady={diagnosticReady}
       />
-      <JourneyStepper active={workflowTab} onChange={setWorkflowTab} />
       {renderWorkflowPanel()}
     </AppShell>
   );

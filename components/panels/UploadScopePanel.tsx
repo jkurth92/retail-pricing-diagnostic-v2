@@ -1,55 +1,112 @@
 "use client";
 
-import { DiagnosticSection } from "@/components/DiagnosticSection";
+import { useState } from "react";
+import { InferredCategoryRolesTable } from "@/components/scope/InferredCategoryRolesTable";
+import { ScopeAssumptionsCard } from "@/components/scope/ScopeAssumptionsCard";
+import { ScopeRevenueSection } from "@/components/scope/ScopeRevenueSection";
+import { WhatWeFoundPanel } from "@/components/scope/WhatWeFoundPanel";
 import { RunDiagnosticCta } from "@/components/RunDiagnosticCta";
 import { SimplifiedUploadPanel } from "@/components/SimplifiedUploadPanel";
-import { ScopePanel } from "@/components/panels/ScopePanel";
-import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
-import type { LeverKey } from "@/types/diagnostic-output";
+import type { InferredCategoryRow } from "@/types/category-scope";
+import type {
+  PricingPosture,
+  RetailerArchetypeId,
+} from "@/types/retailer-archetypes";
 
 type UploadScopePanelProps = {
-  knowledgeContext: KnowledgeRegistryContext;
   retailerName: string;
-  selectedPeerCount: number;
+  archetypeId: RetailerArchetypeId;
+  suggestedArchetypeId: RetailerArchetypeId | null;
+  knowledgePosture: PricingPosture;
+  suggestedPosture: PricingPosture | null;
+  categoryRoles: InferredCategoryRow[];
   totalRevenueInput: string;
   addressablePercentInput: string;
-  revenueInScopeInput: string;
-  includedCategories: string[];
-  excludedCategories: string[];
-  selectedLeverKeys: Set<LeverKey>;
+  revenueFromProfile: boolean;
+  onArchetypeChange: (id: RetailerArchetypeId) => void;
+  onKnowledgePostureChange: (posture: PricingPosture) => void;
+  onCategoryRolesChange: (rows: InferredCategoryRow[]) => void;
   onTotalRevenueChange: (value: string) => void;
   onAddressablePercentChange: (value: string) => void;
-  onRevenueInScopeChange: (value: string) => void;
-  onToggleIncludedCategory: (category: string) => void;
-  onToggleExcludedCategory: (category: string) => void;
-  onToggleLever: (leverKey: LeverKey) => void;
+  onUploadFilesChange?: (count: number, names: string[]) => void;
   onRunDiagnostic: () => void;
   canRunDiagnostic: boolean;
   runDisabledReason?: string;
 };
 
 export function UploadScopePanel({
+  retailerName,
+  archetypeId,
+  suggestedArchetypeId,
+  knowledgePosture,
+  suggestedPosture,
+  categoryRoles,
+  totalRevenueInput,
+  addressablePercentInput,
+  revenueFromProfile,
+  onArchetypeChange,
+  onKnowledgePostureChange,
+  onCategoryRolesChange,
+  onTotalRevenueChange,
+  onAddressablePercentChange,
+  onUploadFilesChange,
   onRunDiagnostic,
   canRunDiagnostic,
   runDisabledReason,
-  ...scopeProps
 }: UploadScopePanelProps) {
-  return (
-    <div className="max-w-3xl space-y-10 pilot-panel">
-      <DiagnosticSection
-        eyebrow="Step 2"
-        title="Upload & confirm scope"
-        lead="Add one or two pricing files. We infer schema and readiness — then confirm categories and revenue in scope."
-      >
-        <SimplifiedUploadPanel maxFiles={2} />
-      </DiagnosticSection>
+  const [uploadedFileCount, setUploadedFileCount] = useState(0);
 
-      <DiagnosticSection
-        title="Scope confirmation"
-        lead="Refine what is in scope for this assessment. Opportunity framing stays directional until dollar formulas are aligned."
-      >
-        <ScopePanel {...scopeProps} embedded />
-      </DiagnosticSection>
+  const handleFilesChange = (count: number, names: string[]) => {
+    setUploadedFileCount(count);
+    onUploadFilesChange?.(count, names);
+  };
+
+  return (
+    <div className="max-w-5xl space-y-12 pilot-panel">
+      <div className="rc-step-intro">
+        <h2 className="rc-step-title">Upload & confirm scope</h2>
+        <p className="rc-step-lead">
+          Upload pricing files, confirm what we detected, review category roles and
+          revenue, then run the assessment.
+        </p>
+      </div>
+
+      <section className="scope-upload-zone">
+        <SimplifiedUploadPanel maxFiles={2} onFilesChange={handleFilesChange} />
+      </section>
+
+      <WhatWeFoundPanel
+        retailerName={retailerName}
+        uploadedFileCount={uploadedFileCount}
+      />
+
+      <InferredCategoryRolesTable
+        rows={categoryRoles}
+        onRowsChange={onCategoryRolesChange}
+        retailerName={retailerName}
+      />
+
+      <div className="scope-section-divider">
+        <ScopeRevenueSection
+          retailerName={retailerName}
+          totalRevenueInput={totalRevenueInput}
+          addressablePercentInput={addressablePercentInput}
+          revenueFromProfile={revenueFromProfile}
+          onTotalRevenueChange={onTotalRevenueChange}
+          onAddressablePercentChange={onAddressablePercentChange}
+        />
+      </div>
+
+      <div className="scope-section-divider">
+        <ScopeAssumptionsCard
+          archetypeId={archetypeId}
+          suggestedArchetypeId={suggestedArchetypeId}
+          knowledgePosture={knowledgePosture}
+          suggestedPosture={suggestedPosture}
+          onArchetypeChange={onArchetypeChange}
+          onKnowledgePostureChange={onKnowledgePostureChange}
+        />
+      </div>
 
       <RunDiagnosticCta
         onRun={onRunDiagnostic}

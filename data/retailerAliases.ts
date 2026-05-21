@@ -50,6 +50,48 @@ export const RETAILER_ALIAS_ENTRIES: RetailerAliasEntry[] = [
     geography: "United States · Canada",
   },
   {
+    aliases: ["macys", "macy's", "macy"],
+    ticker: "M",
+    publicCompany: true,
+    retailerType: "public_retailer",
+  },
+  {
+    aliases: ["nordstrom"],
+    ticker: "JWN",
+    publicCompany: true,
+    retailerType: "public_retailer",
+  },
+  {
+    aliases: ["cvs", "cvs health"],
+    ticker: "CVS",
+    publicCompany: true,
+    retailerType: "public_retailer",
+  },
+  {
+    aliases: ["walgreens", "walgreens boots alliance"],
+    ticker: "WBA",
+    publicCompany: true,
+    retailerType: "public_retailer",
+  },
+  {
+    aliases: ["tjx", "tj maxx", "marshalls"],
+    ticker: "TJX",
+    publicCompany: true,
+    retailerType: "public_retailer",
+  },
+  {
+    aliases: ["ross", "ross stores"],
+    ticker: "ROST",
+    publicCompany: true,
+    retailerType: "public_retailer",
+  },
+  {
+    aliases: ["bjs", "bj's wholesale", "bjs wholesale club"],
+    ticker: "BJ",
+    publicCompany: true,
+    retailerType: "public_retailer",
+  },
+  {
     aliases: ["dollar general"],
     ticker: "DG",
     publicCompany: true,
