@@ -36,6 +36,13 @@
 - Compute feature values from normalized rows after live ingestion
 - Map computed features to evidence items in `DiagnosticRunOutput`
 
+### Step 7 — Executive deliverable & storyline system (complete)
+
+- Executive summary, retailer profile, seven-section storyline, opportunity overview, strategic implications
+- `runExecutiveDeliverableEngine()` and export scaffold (`scaffold_only`)
+- Overview tab and Opportunity Size show narrative readout
+- PDF/PPT/memo generation not implemented
+
 ### Step 6B — Opportunity & storyline engine (complete)
 
 - Synthesizes hypotheses into executive themes and consulting narrative

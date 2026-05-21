@@ -8,6 +8,7 @@ import { WorkflowTabs } from "@/components/WorkflowTabs";
 import { ClientContextPanel } from "@/components/panels/ClientContextPanel";
 import { ClientUploadsPanel } from "@/components/panels/ClientUploadsPanel";
 import { ObservedPricingPatternsPanel } from "@/components/panels/ObservedPricingPatternsPanel";
+import { ExecutiveDeliverablePanel } from "@/components/ExecutiveDeliverablePanel";
 import { OpportunitySizePanel } from "@/components/panels/OpportunitySizePanel";
 import { RetailerOverviewPanel } from "@/components/panels/RetailerOverviewPanel";
 import { ScopePanel } from "@/components/panels/ScopePanel";
@@ -18,6 +19,7 @@ import {
 } from "@/lib/archetypeContext";
 import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
 import { runDiagnosticHypothesisEngine } from "@/lib/hypothesisEngine";
+import { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import { runOpportunityStorylineEngine } from "@/lib/storylineSynthesizer";
 import { parseNumericInput } from "@/lib/scopeMath";
 import type { StrategicObjectiveId } from "@/types/knowledge-client";
@@ -120,6 +122,25 @@ export default function Home() {
     ],
   );
 
+  const executiveDeliverable = useMemo(
+    () =>
+      runExecutiveDeliverableEngine({
+        knowledge: knowledgeContext,
+        storylineResult,
+        eprScores,
+        retailerDisplayName: confirmedRetailer || retailerInput,
+        strategicContext,
+      }),
+    [
+      knowledgeContext,
+      storylineResult,
+      eprScores,
+      confirmedRetailer,
+      retailerInput,
+      strategicContext,
+    ],
+  );
+
   const handlePopulateRetailer = () => {
     const trimmed = retailerInput.trim();
     setConfirmedRetailer(trimmed || "");
@@ -216,7 +237,7 @@ export default function Home() {
             competitors={competitors}
             knowledgeContext={knowledgeContext}
             hypothesisOutput={hypothesisOutput}
-            storylineResult={storylineResult}
+            executiveDeliverable={executiveDeliverable}
             archetypeId={archetypeId}
             knowledgePosture={knowledgePosture}
             strategicObjectives={strategicObjectives}
@@ -277,6 +298,7 @@ export default function Home() {
             knowledgeContext={knowledgeContext}
             hypothesisOutput={hypothesisOutput}
             storylineResult={storylineResult}
+            executiveDeliverable={executiveDeliverable}
             retailerName={confirmedRetailer}
             competitors={competitors}
             revenueInScopeLabel={revenueInScopeLabel}
@@ -292,7 +314,14 @@ export default function Home() {
 
   const renderModulePlaceholder = () => {
     if (primaryModule === "overview") {
-      return null;
+      return (
+        <div className="mb-8">
+          <ExecutiveDeliverablePanel
+            readout={executiveDeliverable}
+            exportPackage={executiveDeliverable.exportPackage}
+          />
+        </div>
+      );
     }
     return (
       <div className="mb-6 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-6 text-sm text-[var(--text-muted)]">

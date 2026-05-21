@@ -79,6 +79,19 @@
 - `thresholdConfig` and `formulaConfig` must remain `null` until alignment.
 - No elasticity, opportunity rates, or AI recommendations in this build.
 
+## Executive deliverable (Step 7)
+
+- Executive outputs must remain **explainable** — themes, hypotheses, signals, and section narratives traceable to prior engine steps.
+- **No tactical pricing prescriptions** in executive summary, storyline sections, or implications.
+- **No fake precision** — thematic margin bands and overlap-adjusted totals only; no implied dollar certainty.
+- **No optimization behavior** — deliverable is diagnostic readout, not price-setting software.
+- Storyline sequencing must stay **architecture-first** per `data/executiveStorylineFlow.ts`.
+- Outputs must prioritize **coherence over metric volume** — bounded ranges, not KPI dashboards.
+- **Suppress disconnected low-confidence observations** — empty storyline sections omitted; themes already filtered in 6A/6B.
+- Margin opportunity is **primary**; revenue sensitivity is **secondary and directional** only.
+- Export (`lib/exportScaffold.ts`) is **scaffold only** — no PDF/PPT generation until aligned.
+- Strategic implications are interpretive **“what this means”** lines — not action plans.
+
 ## Calculations and AI
 
 - When numeric logic is built, keep calculations **transparent and deterministic**.

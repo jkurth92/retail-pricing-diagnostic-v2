@@ -2,9 +2,10 @@
 
 import { Card } from "@/components/Card";
 import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
-import { ExecutiveStorylinePanel } from "@/components/ExecutiveStorylinePanel";
+import { ExecutiveDeliverablePanel } from "@/components/ExecutiveDeliverablePanel";
 import { EngineScaffoldPanel } from "@/components/EngineScaffoldPanel";
 import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
+import type { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
 import type { CompetitorCandidate } from "@/types/competitors";
@@ -18,6 +19,7 @@ type OpportunitySizePanelProps = {
     generatedAt: string;
     guardrailMessage: string;
   };
+  executiveDeliverable: ReturnType<typeof runExecutiveDeliverableEngine>;
   retailerName: string;
   competitors: CompetitorCandidate[];
   revenueInScopeLabel: string;
@@ -29,6 +31,7 @@ type OpportunitySizePanelProps = {
 export function OpportunitySizePanel({
   knowledgeContext,
   storylineResult,
+  executiveDeliverable,
   retailerName,
   revenueInScopeLabel,
   scopeStatusLabel,
@@ -40,8 +43,8 @@ export function OpportunitySizePanel({
   return (
     <div className="space-y-8">
       <PocGuardrailBanner
-        title="Opportunity size — executive storyline (Step 6B)"
-        detail={storylineResult.guardrailMessage}
+        title="Opportunity size — executive diagnostic readout (Step 7)"
+        detail={executiveDeliverable.guardrailMessage}
       />
 
       <DiagnosticFrameworkStrip
@@ -49,7 +52,10 @@ export function OpportunitySizePanel({
         workflowLabel="Opportunity Size"
       />
 
-      <ExecutiveStorylinePanel result={storylineResult} />
+      <ExecutiveDeliverablePanel
+        readout={executiveDeliverable}
+        exportPackage={executiveDeliverable.exportPackage}
+      />
 
       <Card>
         <p className="micro-label mb-2">Workflow context</p>

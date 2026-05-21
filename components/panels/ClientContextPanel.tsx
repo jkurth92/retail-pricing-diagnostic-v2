@@ -1,7 +1,7 @@
 import { CompetitorSuggestionPanel } from "@/components/CompetitorSuggestionPanel";
 import { DiagnosticHypothesesPanel } from "@/components/DiagnosticHypothesesPanel";
-import { ExecutiveStorylinePanel } from "@/components/ExecutiveStorylinePanel";
-import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
+import { ExecutiveDeliverablePanel } from "@/components/ExecutiveDeliverablePanel";
+import type { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
 import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
 import { EprScoringCard } from "@/components/EprScoringCard";
@@ -34,9 +34,7 @@ type ClientContextPanelProps = {
   competitors: CompetitorEntry[];
   knowledgeContext: KnowledgeRegistryContext;
   hypothesisOutput: DiagnosticHypothesisOutput;
-  storylineResult: StorylineSynthesisResult & {
-    guardrailMessage: string;
-  };
+  executiveDeliverable: ReturnType<typeof runExecutiveDeliverableEngine>;
   archetypeId: RetailerArchetypeId;
   knowledgePosture: PricingPosture;
   strategicObjectives: StrategicObjectiveId[];
@@ -63,7 +61,7 @@ export function ClientContextPanel({
   competitors,
   knowledgeContext,
   hypothesisOutput,
-  storylineResult,
+  executiveDeliverable,
   archetypeId,
   knowledgePosture,
   strategicObjectives,
@@ -92,7 +90,11 @@ export function ClientContextPanel({
         workflowLabel="Client Context"
       />
 
-      <ExecutiveStorylinePanel result={storylineResult} compact />
+      <ExecutiveDeliverablePanel
+        readout={executiveDeliverable}
+        exportPackage={executiveDeliverable.exportPackage}
+        compact
+      />
 
       <div className="grid gap-8 xl:grid-cols-3">
         <div className="space-y-8 xl:col-span-2">
