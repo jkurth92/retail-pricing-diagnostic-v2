@@ -10,8 +10,11 @@ import { RetailerOverviewPanel } from "@/components/panels/RetailerOverviewPanel
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
-import type { CompetitorEntry } from "@/types/competitors";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
+import type {
+  RetailerEnrichmentBundle,
+  RetailerEnrichmentOverrides,
+} from "@/types/retailer-context";
 import type { EprScores } from "@/types/ui";
 
 type SupportingDiagnosticsPanelProps = {
@@ -20,8 +23,12 @@ type SupportingDiagnosticsPanelProps = {
   storylineResult: StorylineSynthesisResult;
   executiveDeliverable: ReturnType<typeof runExecutiveDeliverableEngine>;
   eprScores: EprScores;
-  retailerName: string;
-  competitors: CompetitorEntry[];
+  retailerEnrichment: RetailerEnrichmentBundle;
+  manualTicker: string;
+  enrichmentLoading: boolean;
+  onManualTickerChange: (value: string) => void;
+  onEnrichmentOverrides: (overrides: RetailerEnrichmentOverrides) => void;
+  onRefreshEnrichment: () => void;
 };
 
 export function SupportingDiagnosticsPanel({
@@ -30,8 +37,12 @@ export function SupportingDiagnosticsPanel({
   storylineResult,
   executiveDeliverable,
   eprScores,
-  retailerName,
-  competitors,
+  retailerEnrichment,
+  manualTicker,
+  enrichmentLoading,
+  onManualTickerChange,
+  onEnrichmentOverrides,
+  onRefreshEnrichment,
 }: SupportingDiagnosticsPanelProps) {
   const uniqueSignals = executiveDeliverable.supportingThemes
     .flatMap((t) => t.supportingSignals)
@@ -96,17 +107,14 @@ export function SupportingDiagnosticsPanel({
         <ClientUploadsPanel knowledgeContext={knowledgeContext} embedded />
       </Disclosure>
 
-      <Disclosure
-        title="View retailer market context"
-        summary="Peer suggestions for overview only"
-        variant="subtle"
-      >
-        <RetailerOverviewPanel
-          retailerName={retailerName}
-          competitors={competitors}
-          embedded
-        />
-      </Disclosure>
+      <RetailerOverviewPanel
+        enrichment={retailerEnrichment}
+        manualTicker={manualTicker}
+        onManualTickerChange={onManualTickerChange}
+        onOverridesChange={onEnrichmentOverrides}
+        onRefresh={onRefreshEnrichment}
+        isRefreshing={enrichmentLoading}
+      />
     </div>
   );
 }

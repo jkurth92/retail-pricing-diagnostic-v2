@@ -36,6 +36,12 @@
 - Compute feature values from normalized rows after live ingestion
 - Map computed features to evidence items in `DiagnosticRunOutput`
 
+### Step 9 — Retailer overview API enrichment (complete)
+
+- Retailer context types, alias lookup, Finnhub proxy (optional), curated fallback
+- Retailer overview UI with status, headlines, manual overrides
+- Executive narrative consumes enrichment for phrasing only
+
 ### Step 8 — UX & productization pass (complete)
 
 - Seven-step executive journey navigation (sidebar + stepper)

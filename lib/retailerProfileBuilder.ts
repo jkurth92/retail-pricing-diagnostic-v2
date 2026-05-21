@@ -1,7 +1,9 @@
 import { getArchetype, postureLabel } from "@/lib/archetypeContext";
 import { inferRoles } from "@/lib/roleInference";
+import { buildEnrichmentNarrativeSnippets } from "@/lib/enrichmentNarrative";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { RetailerPricingProfile } from "@/types/executive-summary";
+import type { RetailerEnrichmentBundle } from "@/types/retailer-context";
 import type { EprScores } from "@/types/ui";
 import { STRATEGIC_OBJECTIVES } from "@/types/knowledge-client";
 
@@ -21,6 +23,7 @@ export function buildRetailerPricingProfile(
   knowledge: KnowledgeRegistryContext,
   eprScores: EprScores,
   strategicContext?: string,
+  enrichment?: RetailerEnrichmentBundle | null,
 ): RetailerPricingProfile {
   const archetype = getArchetype(knowledge.archetypeId);
   const inference = inferRoles({
@@ -59,6 +62,7 @@ export function buildRetailerPricingProfile(
         ? `Consultant context: ${strategicContext.trim()}`
         : "No additional strategic context note provided.",
       inference.overrideNote,
-    ],
+      ...buildEnrichmentNarrativeSnippets(enrichment),
+    ].filter(Boolean),
   };
 }

@@ -32,9 +32,9 @@ export function RetailerInputCard({
         </button>
       </div>
       <p className="mt-3 text-sm text-[var(--text-muted)]">
-        Confirming the retailer name will later fetch external data for Retailer
-        Overview. Client uploads are optional for this trigger. Suggested
-        competitors are loaded from local seed data only.
+        Confirming the retailer loads public company context when available
+        (ticker lookup and reference enrichment). Manual overrides always take
+        precedence. Not used for pricing calculations.
       </p>
     </Card>
   );

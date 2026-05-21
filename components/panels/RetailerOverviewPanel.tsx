@@ -1,207 +1,223 @@
+"use client";
+
 import { Card } from "@/components/Card";
-import { getSelectedPeerNames } from "@/lib/competitors";
-import type { CompetitorEntry } from "@/types/competitors";
+import { DiagnosticSection } from "@/components/DiagnosticSection";
+import { Disclosure } from "@/components/Disclosure";
+import { EnrichmentStatusBadge } from "@/components/EnrichmentStatusBadge";
+import { RetailerContextEditor } from "@/components/RetailerContextEditor";
+import { formatStrategicContextSummary } from "@/lib/strategicContextResolver";
+import type { RetailerEnrichmentBundle } from "@/types/retailer-context";
 
 type RetailerOverviewPanelProps = {
-  retailerName: string;
-  competitors: CompetitorEntry[];
+  enrichment: RetailerEnrichmentBundle;
+  manualTicker: string;
+  onManualTickerChange: (value: string) => void;
+  onOverridesChange: (overrides: RetailerEnrichmentBundle["manualOverrides"]) => void;
+  onRefresh: () => void;
+  isRefreshing?: boolean;
   embedded?: boolean;
 };
 
-const FINANCIAL_METRICS = [
-  "Revenue",
-  "EBITDA",
-  "Margin",
-  "Working capital / revenue",
-] as const;
-
-const PEER_COMPARISON_ROWS = [
-  "Revenue growth",
-  "Margin",
-  "EBITDA growth",
-  "Working capital / revenue",
-] as const;
-
-const NEWS_PLACEHOLDER_COUNT = 3;
+function publicPrivateLabel(ctx: RetailerEnrichmentBundle["context"]): string {
+  if (ctx.publicCompany && ctx.ticker) return `Public · ${ctx.ticker}`;
+  if (ctx.retailerType === "private_retailer") return "Private retailer";
+  if (ctx.retailerType === "subsidiary_banner") return "Subsidiary / banner";
+  return "Status unknown";
+}
 
 export function RetailerOverviewPanel({
-  retailerName,
-  competitors,
+  enrichment,
+  manualTicker,
+  onManualTickerChange,
+  onOverridesChange,
+  onRefresh,
+  isRefreshing = false,
   embedded = false,
 }: RetailerOverviewPanelProps) {
-  const displayName = retailerName.trim() || "Not selected";
-  const selectedPeers = getSelectedPeerNames(competitors);
+  const { context, companyProfile, news, meta, suggestions } = enrichment;
+  const displayName = context.retailerName.trim() || "Not selected";
+  const strategicSummary = formatStrategicContextSummary(suggestions);
 
-  const headerBlock = (
+  const headlineSection = (
     <>
-      {!embedded && <p className="micro-label mb-2">Market context</p>}
-      <h3 className={embedded ? "text-base font-semibold" : "section-title"}>
-        {displayName}
-      </h3>
-      <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
-              Ticker
-            </dt>
-            <dd className="mt-1 text-sm font-medium text-[var(--text-navy)]">
-              Pending
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
-              Data status
-            </dt>
-            <dd className="mt-1 text-sm font-medium text-[var(--text-navy)]">
-              Pending external data
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
-              Selected peer count
-            </dt>
-            <dd className="mt-1 text-sm font-medium text-[var(--text-navy)]">
-              {selectedPeers.length}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
-              Source status
-            </dt>
-            <dd className="mt-1 text-sm font-medium text-[var(--text-navy)]">
-              Not connected
-            </dd>
-          </div>
-        </dl>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h3
+            className={
+              embedded
+                ? "text-base font-semibold text-[var(--text-navy)]"
+                : "text-2xl font-semibold tracking-tight text-[var(--text-navy)]"
+            }
+          >
+            {companyProfile?.companyName ?? displayName}
+          </h3>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            {publicPrivateLabel(context)}
+            {context.sector ? ` · ${context.sector}` : ""}
+          </p>
+        </div>
+        <EnrichmentStatusBadge meta={meta} />
+      </div>
+      {context.companyOverview && (
+        <p className="mt-4 text-sm leading-relaxed text-[var(--text-navy)]">
+          {context.companyOverview}
+        </p>
+      )}
     </>
   );
+
+  const metrics = [
+    { label: "Revenue", value: context.revenue ?? companyProfile?.revenueDisplay },
+    { label: "Market cap", value: context.marketCap ?? companyProfile?.marketCapDisplay },
+    { label: "Store count", value: context.storeCount ?? companyProfile?.storeCountDisplay },
+    { label: "Geography", value: context.geography ?? companyProfile?.country },
+  ].filter((m) => m.value);
 
   if (embedded) {
     return (
       <div className="space-y-4">
-        {headerBlock}
-        <p className="text-sm text-[var(--text-muted)]">
-          Peers:{" "}
-          {selectedPeers.length > 0
-            ? selectedPeers.join(", ")
-            : "None selected — configure on Client context"}
-        </p>
+        {headlineSection}
+        {metrics.length > 0 && (
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            {metrics.slice(0, 4).map((m) => (
+              <div key={m.label}>
+                <dt className="text-xs uppercase text-[var(--text-muted)]">
+                  {m.label}
+                </dt>
+                <dd className="mt-0.5 font-medium text-[var(--text-navy)]">
+                  {m.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>{headerBlock}</Card>
+    <div className="max-w-4xl space-y-10">
+      <DiagnosticSection
+        eyebrow="Retailer overview"
+        title={displayName}
+        lead="Public company context and recent signals for onboarding — enrichment only, not used in diagnostic calculations."
+      >
+        {headlineSection}
+      </DiagnosticSection>
 
-      <Card>
-        <p className="micro-label mb-2">Financial performance</p>
-        <h3 className="section-title">Financial performance</h3>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Best available sourced data. Missing external or uploaded values
-          remain not available.
-        </p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {FINANCIAL_METRICS.map((metric) => (
+      {metrics.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {metrics.map((m) => (
             <div
-              key={metric}
-              className="rounded-lg border border-[var(--border)] bg-[var(--app-bg)] p-4"
+              key={m.label}
+              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-4"
             >
-              <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                {metric}
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                {m.label}
               </p>
               <p className="mt-2 text-sm font-semibold text-[var(--text-navy)]">
-                Pending external data
+                {m.value}
               </p>
-              <span className="mt-3 inline-block rounded-full border border-[var(--border)] px-2 py-0.5 text-xs text-[var(--text-muted)]">
-                Pending
-              </span>
-              <div className="mt-4 h-16 rounded-md bg-[var(--border)]/40" />
             </div>
           ))}
         </div>
-      </Card>
+      )}
+
+      {(context.bannerPortfolio || context.geography) && (
+        <Card>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            Format & footprint
+          </p>
+          <dl className="mt-3 space-y-2 text-sm text-[var(--text-navy)]">
+            {context.bannerPortfolio && (
+              <div>
+                <dt className="text-[var(--text-muted)]">Banner portfolio</dt>
+                <dd>{context.bannerPortfolio}</dd>
+              </div>
+            )}
+            {context.geography && (
+              <div>
+                <dt className="text-[var(--text-muted)]">Geography</dt>
+                <dd>{context.geography}</dd>
+              </div>
+            )}
+          </dl>
+        </Card>
+      )}
 
       <Card>
-        <p className="micro-label mb-2">Peer comparison</p>
-        <h3 className="section-title">Company performance against selected peers</h3>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Peer view will use the selected competitor set after external data
-          integration.
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+          Strategic context
         </p>
-        <div className="mt-4">
-          <p className="text-sm font-medium text-[var(--text-navy)]">
-            Selected peers
+        <p className="mt-3 text-sm leading-relaxed text-[var(--text-navy)]">
+          {strategicSummary}
+        </p>
+        {(suggestions.suggestedArchetypeId || suggestions.suggestedPosture) && (
+          <p className="mt-3 text-xs text-[var(--text-muted)]">
+            Suggested setup (optional):{" "}
+            {suggestions.suggestedArchetypeId &&
+              `archetype ${suggestions.suggestedArchetypeId}`}
+            {suggestions.suggestedArchetypeId && suggestions.suggestedPosture && " · "}
+            {suggestions.suggestedPosture &&
+              `posture ${suggestions.suggestedPosture}`}
           </p>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
-            {selectedPeers.length > 0
-              ? selectedPeers.join(", ")
-              : "No peers selected — configure on Client context"}
-          </p>
-        </div>
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-[var(--border)] text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                <th className="py-2 pr-4">Metric</th>
-                <th className="py-2 pr-4">Company</th>
-                <th className="py-2 pr-4">Selected peer median</th>
-                <th className="py-2">Benchmark source</th>
-              </tr>
-            </thead>
-            <tbody>
-              {PEER_COMPARISON_ROWS.map((metric) => (
-                <tr
-                  key={metric}
-                  className="border-b border-[var(--border)] last:border-0"
-                >
-                  <td className="py-3 pr-4 font-medium text-[var(--text-navy)]">
-                    {metric}
-                  </td>
-                  <td className="py-3 pr-4 text-[var(--text-muted)]">Pending</td>
-                  <td className="py-3 pr-4 text-[var(--text-muted)]">Pending</td>
-                  <td className="py-3 text-[var(--text-muted)]">
-                    Pending external data
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        )}
       </Card>
 
-      <Card>
-        <p className="micro-label mb-2">Key insights</p>
-        <h3 className="section-title">What the data suggests</h3>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-[var(--text-muted)]">
-          <li>
-            Insights will populate after external data, uploaded context, and
-            diagnostic evidence are available.
-          </li>
-          <li>
-            No AI-generated interpretation is active in this build.
-          </li>
-        </ul>
-      </Card>
+      {news.length > 0 ? (
+        <Card>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            Recent headlines
+          </p>
+          <ul className="mt-4 space-y-4">
+            {news.slice(0, 5).map((item) => (
+              <li
+                key={item.id}
+                className="border-b border-[var(--border)] pb-4 last:border-0 last:pb-0"
+              >
+                <p className="text-sm font-medium text-[var(--text-navy)]">
+                  {item.headline}
+                </p>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  {item.source} · {item.relevanceTag.replace(/_/g, " ")}
+                </p>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">
+                  {item.summary}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : (
+        <p className="text-sm text-[var(--text-muted)]">
+          No headlines available — continue with manual strategic context.
+        </p>
+      )}
 
-      <Card>
-        <p className="micro-label mb-2">News and headlines</p>
-        <h3 className="section-title">Recent signals to monitor</h3>
-        <ul className="mt-4 space-y-3">
-          {Array.from({ length: NEWS_PLACEHOLDER_COUNT }).map((_, index) => (
-            <li
-              key={`news-${index}`}
-              className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--app-bg)] px-4 py-3"
-            >
-              <span className="text-sm text-[var(--text-muted)]">
-                Headline placeholder {index + 1}
-              </span>
-              <span className="text-xs text-[var(--text-muted)]">
-                Pending external data integration
-              </span>
-            </li>
-          ))}
+      <Disclosure
+        title="View enrichment sources"
+        summary={`Profile: ${meta.profileSource.replace(/_/g, " ")} · News: ${meta.newsSource.replace(/_/g, " ")}`}
+        variant="subtle"
+      >
+        <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--text-muted)]">
+          <li>Profile status: {meta.profileStatus}</li>
+          <li>News status: {meta.newsStatus}</li>
+          <li>Lookup confidence: {enrichment.lookup.confidence}</li>
+          {enrichment.lookup.matchedAlias && (
+            <li>Matched alias: {enrichment.lookup.matchedAlias}</li>
+          )}
+          <li>Not used for opportunity sizing, rules, or competitor matching.</li>
         </ul>
-      </Card>
+      </Disclosure>
+
+      <RetailerContextEditor
+        enrichment={enrichment}
+        manualTicker={manualTicker}
+        onManualTickerChange={onManualTickerChange}
+        onOverridesChange={onOverridesChange}
+        onRefresh={onRefresh}
+        isRefreshing={isRefreshing}
+      />
     </div>
   );
 }

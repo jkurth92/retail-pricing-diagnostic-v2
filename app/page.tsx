@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import {
+  createEmptyEnrichment,
+  fetchEnrichmentBundle,
+  mergeEnrichmentOverrides,
+} from "@/lib/api/contextResolver";
+import type { RetailerEnrichmentOverrides } from "@/types/retailer-context";
 import { AppShell } from "@/components/AppShell";
 import { HeaderSummary } from "@/components/HeaderSummary";
 import { JourneyStepper } from "@/components/JourneyStepper";
@@ -67,6 +73,11 @@ export default function Home() {
   const [selectedLeverKeys, setSelectedLeverKeys] = useState<Set<LeverKey>>(
     () => new Set(DEFAULT_SELECTED_LEVER_KEYS),
   );
+  const [retailerEnrichment, setRetailerEnrichment] = useState(() =>
+    createEmptyEnrichment(),
+  );
+  const [manualTicker, setManualTicker] = useState("");
+  const [enrichmentLoading, setEnrichmentLoading] = useState(false);
 
   const retailerDisplay = confirmedRetailer.trim() || "Not selected";
   const selectedPeerCount = competitors.filter(
@@ -126,6 +137,7 @@ export default function Home() {
         eprScores,
         retailerDisplayName: confirmedRetailer || retailerInput,
         strategicContext,
+        enrichment: retailerEnrichment,
       }),
     [
       knowledgeContext,
@@ -134,14 +146,50 @@ export default function Home() {
       confirmedRetailer,
       retailerInput,
       strategicContext,
+      retailerEnrichment,
     ],
   );
+
+  const refreshEnrichment = useCallback(
+    async (
+      name: string,
+      tickerOverride?: string,
+      overrides?: RetailerEnrichmentOverrides,
+    ) => {
+      if (!name.trim()) {
+        setRetailerEnrichment(createEmptyEnrichment());
+        return;
+      }
+      setEnrichmentLoading(true);
+      try {
+        const bundle = await fetchEnrichmentBundle(
+          name.trim(),
+          (tickerOverride ?? manualTicker) || null,
+          overrides ?? retailerEnrichment.manualOverrides,
+        );
+        setRetailerEnrichment(bundle);
+        if (bundle.context.ticker && !manualTicker) {
+          setManualTicker(bundle.context.ticker);
+        }
+      } finally {
+        setEnrichmentLoading(false);
+      }
+    },
+    [manualTicker, retailerEnrichment.manualOverrides],
+  );
+
+  const handleEnrichmentOverrides = (overrides: RetailerEnrichmentOverrides) => {
+    setRetailerEnrichment((prev) =>
+      mergeEnrichmentOverrides(prev, overrides, manualTicker),
+    );
+  };
 
   const handlePopulateRetailer = () => {
     const trimmed = retailerInput.trim();
     setConfirmedRetailer(trimmed || "");
     setCompetitors(createSuggestedCompetitors(retailerFormat));
     setArchetypeId(formatToArchetypeId(retailerFormat));
+    void refreshEnrichment(trimmed);
   };
 
   const handleRetailerFormatChange = (format: RetailerFormat) => {
@@ -225,6 +273,19 @@ export default function Home() {
             onKnowledgePostureChange={setKnowledgePosture}
             onToggleObjective={toggleStrategicObjective}
             onCategoryHintChange={setCategoryHint}
+            retailerEnrichment={retailerEnrichment}
+            manualTicker={manualTicker}
+            enrichmentLoading={enrichmentLoading}
+            onManualTickerChange={setManualTicker}
+            onEnrichmentOverrides={handleEnrichmentOverrides}
+            onRefreshEnrichment={() =>
+              refreshEnrichment(confirmedRetailer || retailerInput)
+            }
+            onApplySuggestedSetup={() => {
+              const s = retailerEnrichment.suggestions;
+              if (s.suggestedArchetypeId) setArchetypeId(s.suggestedArchetypeId);
+              if (s.suggestedPosture) setKnowledgePosture(s.suggestedPosture);
+            }}
           />
         );
       case "data_scope":
@@ -286,8 +347,14 @@ export default function Home() {
             storylineResult={storylineResult}
             executiveDeliverable={executiveDeliverable}
             eprScores={eprScores}
-            retailerName={confirmedRetailer}
-            competitors={competitors}
+            retailerEnrichment={retailerEnrichment}
+            manualTicker={manualTicker}
+            enrichmentLoading={enrichmentLoading}
+            onManualTickerChange={setManualTicker}
+            onEnrichmentOverrides={handleEnrichmentOverrides}
+            onRefreshEnrichment={() =>
+              refreshEnrichment(confirmedRetailer || retailerInput)
+            }
           />
         );
       default:

@@ -6,6 +6,7 @@ import { buildStorylineSections } from "@/lib/storylineBuilder";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { DiagnosticReadout } from "@/types/diagnostic-readout";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
+import type { RetailerEnrichmentBundle } from "@/types/retailer-context";
 import type { EprScores } from "@/types/ui";
 import type { ExportPackage } from "@/types/export-structure";
 
@@ -15,6 +16,7 @@ export type ExecutiveDeliverableInput = {
   eprScores: EprScores;
   retailerDisplayName?: string;
   strategicContext?: string;
+  enrichment?: RetailerEnrichmentBundle | null;
 };
 
 export function runExecutiveDeliverableEngine(
@@ -35,6 +37,7 @@ export function runExecutiveDeliverableEngine(
     input.eprScores,
     retailerName,
     input.strategicContext,
+    input.enrichment,
   );
 
   const storylineSections = buildStorylineSections(

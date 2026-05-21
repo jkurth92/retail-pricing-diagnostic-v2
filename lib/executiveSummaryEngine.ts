@@ -7,6 +7,7 @@ import { buildStrategicImplications } from "@/lib/strategicImplications";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
+import type { RetailerEnrichmentBundle } from "@/types/retailer-context";
 import type { EprScores } from "@/types/ui";
 
 const ARCH_FAMILIES = new Set(["Architecture", "Premiumization"]);
@@ -17,12 +18,14 @@ export function buildExecutiveSummaryBlock(
   eprScores: EprScores,
   retailerDisplayName: string,
   strategicContext?: string,
+  enrichment?: RetailerEnrichmentBundle | null,
 ): ExecutiveSummary {
   const { storyline, opportunity } = storylineResult;
   const profile = buildRetailerPricingProfile(
     knowledge,
     eprScores,
     strategicContext,
+    enrichment,
   );
 
   const topThemes = [
@@ -41,6 +44,7 @@ export function buildExecutiveSummaryBlock(
     profile,
     storyline.primaryThemes,
     storyline,
+    enrichment,
   );
 
   const maturitySummary = `${profile.maturityProfile} ${buildStructuralPictureSummary(profile, archThemes)}`;

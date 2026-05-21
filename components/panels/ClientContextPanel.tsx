@@ -4,9 +4,14 @@ import { DiagnosticSection } from "@/components/DiagnosticSection";
 import { ExecutiveDeliverablePanel } from "@/components/ExecutiveDeliverablePanel";
 import { JourneyContextStrip } from "@/components/JourneyContextStrip";
 import { KnowledgeRegistryPanel } from "@/components/KnowledgeRegistryPanel";
+import { RetailerOverviewPanel } from "@/components/panels/RetailerOverviewPanel";
 import { RetailerInputCard } from "@/components/RetailerInputCard";
 import { StrategicContextCard } from "@/components/StrategicContextCard";
 import type { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
+import type {
+  RetailerEnrichmentBundle,
+  RetailerEnrichmentOverrides,
+} from "@/types/retailer-context";
 import type { CompetitorEntry } from "@/types/competitors";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { StrategicObjectiveId } from "@/types/knowledge-client";
@@ -41,6 +46,13 @@ type ClientContextPanelProps = {
   onKnowledgePostureChange: (posture: PricingPosture) => void;
   onToggleObjective: (id: StrategicObjectiveId) => void;
   onCategoryHintChange: (value: string) => void;
+  retailerEnrichment: RetailerEnrichmentBundle;
+  manualTicker: string;
+  enrichmentLoading: boolean;
+  onManualTickerChange: (value: string) => void;
+  onEnrichmentOverrides: (overrides: RetailerEnrichmentOverrides) => void;
+  onRefreshEnrichment: () => void;
+  onApplySuggestedSetup?: () => void;
 };
 
 export function ClientContextPanel({
@@ -65,6 +77,13 @@ export function ClientContextPanel({
   onKnowledgePostureChange,
   onToggleObjective,
   onCategoryHintChange,
+  retailerEnrichment,
+  manualTicker,
+  enrichmentLoading,
+  onManualTickerChange,
+  onEnrichmentOverrides,
+  onRefreshEnrichment,
+  onApplySuggestedSetup,
 }: ClientContextPanelProps) {
   return (
     <div className="max-w-3xl space-y-10">
@@ -112,6 +131,31 @@ export function ClientContextPanel({
         onRetailerFormatChange={onRetailerFormatChange}
         onStrategicContextChange={onStrategicContextChange}
       />
+
+      {retailerEnrichment.context.retailerName && (
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
+          <RetailerOverviewPanel
+            enrichment={retailerEnrichment}
+            manualTicker={manualTicker}
+            onManualTickerChange={onManualTickerChange}
+            onOverridesChange={onEnrichmentOverrides}
+            onRefresh={onRefreshEnrichment}
+            isRefreshing={enrichmentLoading}
+            embedded
+          />
+          {(retailerEnrichment.suggestions.suggestedArchetypeId ||
+            retailerEnrichment.suggestions.suggestedPosture) &&
+            onApplySuggestedSetup && (
+              <button
+                type="button"
+                onClick={onApplySuggestedSetup}
+                className="mt-4 text-sm font-medium text-[var(--accent)] hover:underline"
+              >
+                Apply suggested archetype / posture (optional)
+              </button>
+            )}
+        </div>
+      )}
 
       <Disclosure
         title="View peer suggestions (optional)"

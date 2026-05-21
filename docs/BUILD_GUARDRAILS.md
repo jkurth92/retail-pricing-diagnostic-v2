@@ -79,6 +79,18 @@
 - `thresholdConfig` and `formulaConfig` must remain `null` until alignment.
 - No elasticity, opportunity rates, or AI recommendations in this build.
 
+## Retailer context API enrichment (Step 9)
+
+- External APIs **only enrich retailer context** (profile, news, overview) — never core diagnostics.
+- **Never use APIs** as inputs to hypothesis, opportunity, storyline, or rule engines.
+- **Manual override takes precedence** over API and curated reference data.
+- **No competitor scraping** or API-based competitor matching.
+- **No pricing rules, optimization, or opportunity sizing** derived from API context.
+- App must **function fully without API availability** (aliases + manual input + curated fallback).
+- Enrichment mapping must stay **deterministic and explainable** (documented sources in UI).
+- Executive narrative may **phrase** scale/sector/news context; it must **not change diagnostic math**.
+- API keys only in server routes; never commit `.env` or secrets.
+
 ## UX & productization (Step 8)
 
 - **Narrative-first UX** — conclusions and executive narratives before supporting diagnostics.
