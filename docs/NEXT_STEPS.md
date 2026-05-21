@@ -36,6 +36,12 @@
 - Compute feature values from normalized rows after live ingestion
 - Map computed features to evidence items in `DiagnosticRunOutput`
 
+### Step 10 — End-to-end validation & calibration (complete)
+
+- Scenario harness, consistency checker, output calibration rules
+- Validation review workflow step
+- UI clutter reduction on supporting diagnostics
+
 ### Step 9 — Retailer overview API enrichment (complete)
 
 - Retailer context types, alias lookup, Finnhub proxy (optional), curated fallback

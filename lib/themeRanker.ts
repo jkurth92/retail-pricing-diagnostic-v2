@@ -1,9 +1,10 @@
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
+import { OUTPUT_CALIBRATION_RULES } from "@/data/outputCalibrationRules";
 import type { ExecutiveThemeDefinition } from "@/data/executiveThemes";
 
-export const MAX_PRIMARY_THEMES = 5;
-export const MAX_SECONDARY_THEMES = 2;
+export const MAX_PRIMARY_THEMES = OUTPUT_CALIBRATION_RULES.maxPrimaryThemes;
+export const MAX_SECONDARY_THEMES = OUTPUT_CALIBRATION_RULES.maxSecondaryThemes;
 
 const CONFIDENCE_SCORE: Record<DiagnosticConfidenceLevel, number> = {
   low: 0,
@@ -29,7 +30,9 @@ export function computeThemeScore(
   definition: ExecutiveThemeDefinition,
 ): number {
   let score = definition.strategicImportanceWeight;
-  if (definition.architecturePriority) score += 18;
+  if (definition.architecturePriority) {
+    score += OUTPUT_CALIBRATION_RULES.architectureFamilyBoost;
+  }
   score += CONFIDENCE_SCORE[theme.confidence.level];
   score += RECOVERABILITY_SCORE[theme.recoverability] ?? 0;
   score += theme.supportingHypotheses.length * 2;

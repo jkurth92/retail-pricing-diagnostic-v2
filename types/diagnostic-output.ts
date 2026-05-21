@@ -11,7 +11,8 @@ export type WorkflowStep =
   | "structural_themes"
   | "opportunity_overview"
   | "strategic_implications"
-  | "supporting_diagnostics";
+  | "supporting_diagnostics"
+  | "validation_review";
 
 export type LeverKey =
   | "kvis"

@@ -7,7 +7,6 @@ import { JourneyContextStrip } from "@/components/JourneyContextStrip";
 import { ObservedPricingPatternsPanel } from "@/components/panels/ObservedPricingPatternsPanel";
 import { ClientUploadsPanel } from "@/components/panels/ClientUploadsPanel";
 import { RetailerOverviewPanel } from "@/components/panels/RetailerOverviewPanel";
-import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
@@ -20,7 +19,6 @@ import type { EprScores } from "@/types/ui";
 type SupportingDiagnosticsPanelProps = {
   knowledgeContext: KnowledgeRegistryContext;
   hypothesisOutput: DiagnosticHypothesisOutput;
-  storylineResult: StorylineSynthesisResult;
   executiveDeliverable: ReturnType<typeof runExecutiveDeliverableEngine>;
   eprScores: EprScores;
   retailerEnrichment: RetailerEnrichmentBundle;
@@ -34,7 +32,6 @@ type SupportingDiagnosticsPanelProps = {
 export function SupportingDiagnosticsPanel({
   knowledgeContext,
   hypothesisOutput,
-  storylineResult,
   executiveDeliverable,
   eprScores,
   retailerEnrichment,
@@ -82,7 +79,6 @@ export function SupportingDiagnosticsPanel({
         <ObservedPricingPatternsPanel
           knowledgeContext={knowledgeContext}
           eprScores={eprScores}
-          storylineResult={storylineResult}
           embedded
         />
       </Disclosure>

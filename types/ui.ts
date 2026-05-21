@@ -82,6 +82,12 @@ export const WORKFLOW_TABS: {
     description: "Signals, patterns, and evidence",
     sidebarGroup: "evidence",
   },
+  {
+    id: "validation_review",
+    label: "Validation review",
+    description: "Internal E2E calibration checks",
+    sidebarGroup: "evidence",
+  },
 ];
 
 export const LEVER_KEY_BY_LABEL: Record<DiagnosticLever, import("@/types/diagnostic-output").LeverKey> = {

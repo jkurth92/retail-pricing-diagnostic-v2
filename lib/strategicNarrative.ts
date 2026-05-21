@@ -21,7 +21,7 @@ export function buildOpeningExecutiveNarrative(
 
   const scaleHint =
     enrichment?.context.storeCount || enrichment?.context.revenue
-      ? ` At ${enrichment.context.retailerName}'s observed scale, structural themes carry broad portfolio implications.`
+      ? " Scale context informs narrative framing only."
       : "";
 
   const publicHint =

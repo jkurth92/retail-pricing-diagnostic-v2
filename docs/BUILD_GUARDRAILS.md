@@ -79,6 +79,18 @@
 - `thresholdConfig` and `formulaConfig` must remain `null` until alignment.
 - No elasticity, opportunity rates, or AI recommendations in this build.
 
+## End-to-end validation & calibration (Step 10)
+
+- Validate **end-to-end coherence** before adding new product features.
+- **Manual override precedence** must remain verifiable (`lib/contextSanityChecks.ts`).
+- **Client data** (uploads, knowledge selections) remains the core diagnostic source of truth.
+- **API enrichment is context-only** — never hypothesis, opportunity, or storyline inputs.
+- **Suppress clutter and redundancy** in default UI (no duplicate storyline widgets).
+- **Opportunity ranges** must stay bounded, overlap-adjusted, and non-prescriptive.
+- **Architecture-first prioritization** preserved in ranking and storyline order.
+- Use `tests/e2e/*` scenarios and **Validation review** step before release polish.
+- Calibration constants live in `data/outputCalibrationRules.ts` — tune presentation only.
+
 ## Retailer context API enrichment (Step 9)
 
 - External APIs **only enrich retailer context** (profile, news, overview) — never core diagnostics.

@@ -51,16 +51,16 @@ export function buildStorylineNarrative(
 
   if (primaryThemes.length > 3) {
     const others = primaryThemes
-      .slice(3)
+      .slice(3, 5)
       .map((t) => t.themeName)
       .join(", ");
     paragraphs.push(
-      `Additional prioritized themes include ${others}, each with bounded thematic opportunity pools and overlapping structural drivers.`,
+      `Additional themes (${others}) remain bounded thematic pools with shared structural drivers.`,
     );
   }
 
   paragraphs.push(
-    "Together, these themes describe recoverable strategic value pools — primarily margin-led — without prescribing operational pricing actions.",
+    "Recoverable value is framed as margin-led thematic opportunity — not operational price prescriptions.",
   );
 
   return paragraphs.join("\n\n");

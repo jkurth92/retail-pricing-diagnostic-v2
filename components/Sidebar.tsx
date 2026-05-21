@@ -9,7 +9,7 @@ type SidebarProps = {
 const GROUP_LABELS: Record<"setup" | "readout" | "evidence", string> = {
   setup: "Setup",
   readout: "Diagnostic readout",
-  evidence: "Evidence",
+  evidence: "Evidence & review",
 };
 
 export function Sidebar({

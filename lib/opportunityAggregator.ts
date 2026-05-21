@@ -2,7 +2,9 @@ import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { ElasticitySensitivity } from "@/types/diagnostic-hypotheses";
 
 /** Overlap factor — themes are not independent initiatives. */
-const MARGIN_OVERLAP_FACTOR = 0.52;
+import { OUTPUT_CALIBRATION_RULES } from "@/data/outputCalibrationRules";
+
+const MARGIN_OVERLAP_FACTOR = OUTPUT_CALIBRATION_RULES.marginOverlapFactor;
 const MAX_TOTAL_HIGH_PCT = 2.8;
 const MIN_TOTAL_LOW_PCT = 0.4;
 

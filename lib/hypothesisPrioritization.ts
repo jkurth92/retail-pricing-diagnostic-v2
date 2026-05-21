@@ -1,4 +1,5 @@
 import type { DiagnosticHypothesis } from "@/types/diagnostic-hypotheses";
+import { OUTPUT_CALIBRATION_RULES } from "@/data/outputCalibrationRules";
 import type { HypothesisRegistryEntry } from "@/data/diagnosticHypotheses";
 
 const ARCHITECTURE_FAMILIES = new Set([
@@ -6,7 +7,8 @@ const ARCHITECTURE_FAMILIES = new Set([
   "Premiumization",
 ]);
 
-export const MAX_SURFACED_HYPOTHESES = 5;
+export const MAX_SURFACED_HYPOTHESES =
+  OUTPUT_CALIBRATION_RULES.maxSurfacedHypotheses;
 
 export function computeSortScore(
   entry: HypothesisRegistryEntry,

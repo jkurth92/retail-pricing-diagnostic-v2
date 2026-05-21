@@ -2,6 +2,7 @@ import { STORYLINE_GUARDRAIL, STORYLINE_NOTES } from "@/data/storylineTemplates"
 import { buildExecutiveSummaryBlock } from "@/lib/executiveSummaryEngine";
 import { buildExportPackage } from "@/lib/exportScaffold";
 import { buildOpportunityOverviewNarrative } from "@/lib/opportunityOverview";
+import { calibrateReadoutImplications } from "@/lib/outputCalibration";
 import { buildStorylineSections } from "@/lib/storylineBuilder";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { DiagnosticReadout } from "@/types/diagnostic-readout";
@@ -52,7 +53,7 @@ export function runExecutiveDeliverableEngine(
     storyline.primaryThemes,
   );
 
-  const readout: DiagnosticReadout = {
+  const readout = calibrateReadoutImplications({
     engineVersion: "7.0.0",
     generatedAt: new Date().toISOString(),
     guardrailMessage:
@@ -68,7 +69,7 @@ export function runExecutiveDeliverableEngine(
       ...STORYLINE_NOTES,
       "Step 7 packages hypotheses into an executive deliverable for future memo/deck export.",
     ],
-  };
+  });
 
   const exportPackage = buildExportPackage(readout, retailerName);
 

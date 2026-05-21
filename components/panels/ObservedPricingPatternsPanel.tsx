@@ -3,10 +3,7 @@
 import { useMemo } from "react";
 import { PatternFeatureLeverCard } from "@/components/PatternFeatureLeverCard";
 import { BenchmarkConceptExplorer } from "@/components/BenchmarkConceptExplorer";
-import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
 import { DiagnosticHypothesesPanel } from "@/components/DiagnosticHypothesesPanel";
-import { ExecutiveStorylinePanel } from "@/components/ExecutiveStorylinePanel";
-import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
 import { RoleInferenceSummaryCard } from "@/components/RoleInferenceSummaryCard";
 import { Card } from "@/components/Card";
 import { Disclosure } from "@/components/Disclosure";
@@ -22,21 +19,18 @@ import {
   objectivesAdjustEmphasis,
 } from "@/lib/archetypeContext";
 import { PATTERN_FEATURE_COUNT } from "@/data/patternFeatureCatalog";
-import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { EprScores } from "@/types/ui";
 
 type ObservedPricingPatternsPanelProps = {
   knowledgeContext: KnowledgeRegistryContext;
   eprScores: EprScores;
-  storylineResult: StorylineSynthesisResult;
   embedded?: boolean;
 };
 
 export function ObservedPricingPatternsPanel({
   knowledgeContext,
   eprScores,
-  storylineResult,
   embedded = false,
 }: ObservedPricingPatternsPanelProps) {
   const dataset = useMemo(() => buildPlaceholderIngestionDataset(), []);
@@ -107,19 +101,6 @@ export function ObservedPricingPatternsPanel({
 
   return (
     <div className="space-y-8">
-      <PocGuardrailBanner
-        title="Observed pricing patterns"
-        detail="Pattern features are descriptive only — they support themes and narratives, not price recommendations."
-        variant="neutral"
-      />
-
-      <DiagnosticFrameworkStrip
-        context={knowledgeContext}
-        workflowLabel="Patterns"
-      />
-
-      <ExecutiveStorylinePanel result={storylineResult} compact />
-
       <Disclosure
         title="View underlying hypotheses"
         summary="Structural hypotheses behind themes"

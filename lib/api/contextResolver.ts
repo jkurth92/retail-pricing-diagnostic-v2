@@ -22,12 +22,32 @@ function applyOverrides(
   base: RetailerContext,
   overrides: RetailerEnrichmentOverrides,
 ): RetailerContext {
-  const merged: RetailerContext = { ...base, ...overrides };
-  if (overrides.notes) {
-    merged.notes = [...new Set([...base.notes, ...overrides.notes])];
+  const merged: RetailerContext = { ...base };
+  const scalarKeys: (keyof RetailerEnrichmentOverrides)[] = [
+    "retailerName",
+    "retailerType",
+    "ticker",
+    "publicCompany",
+    "companyProfileStatus",
+    "companyOverview",
+    "bannerPortfolio",
+    "geography",
+    "storeCount",
+    "revenue",
+    "marketCap",
+    "sector",
+    "subSector",
+  ];
+  for (const key of scalarKeys) {
+    const val = overrides[key];
+    if (val !== undefined) {
+      Object.assign(merged, { [key]: val });
+    }
+  }
+  if (overrides.notes !== undefined) {
+    merged.notes = overrides.notes;
   }
   if (overrides.ticker !== undefined) {
-    merged.ticker = overrides.ticker;
     merged.publicCompany = Boolean(overrides.ticker);
   }
   return merged;

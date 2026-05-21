@@ -17,6 +17,8 @@ import { StructuralThemesPanel } from "@/components/panels/StructuralThemesPanel
 import { OpportunityOverviewPanel } from "@/components/panels/OpportunityOverviewPanel";
 import { StrategicImplicationsPanel } from "@/components/panels/StrategicImplicationsPanel";
 import { SupportingDiagnosticsPanel } from "@/components/panels/SupportingDiagnosticsPanel";
+import { ValidationReviewPanel } from "@/components/panels/ValidationReviewPanel";
+import { RETAILER_VALIDATION_SCENARIOS } from "@/tests/e2e/retailer-scenarios";
 import { createSuggestedCompetitors } from "@/lib/competitors";
 import {
   formatToArchetypeId,
@@ -344,7 +346,6 @@ export default function Home() {
           <SupportingDiagnosticsPanel
             knowledgeContext={knowledgeContext}
             hypothesisOutput={hypothesisOutput}
-            storylineResult={storylineResult}
             executiveDeliverable={executiveDeliverable}
             eprScores={eprScores}
             retailerEnrichment={retailerEnrichment}
@@ -355,6 +356,25 @@ export default function Home() {
             onRefreshEnrichment={() =>
               refreshEnrichment(confirmedRetailer || retailerInput)
             }
+          />
+        );
+      case "validation_review":
+        return (
+          <ValidationReviewPanel
+            onApplyScenarioToApp={(scenarioId) => {
+              const scenario = RETAILER_VALIDATION_SCENARIOS.find(
+                (s) => s.id === scenarioId,
+              );
+              if (!scenario) return;
+              setRetailerInput(scenario.retailerName);
+              setConfirmedRetailer(scenario.retailerName);
+              setArchetypeId(scenario.archetypeId);
+              setKnowledgePosture(scenario.pricingPosture);
+              setStrategicObjectives(scenario.strategicObjectives);
+              setCategoryHint(scenario.categoryHint);
+              void refreshEnrichment(scenario.retailerName);
+              setWorkflowTab("client_context");
+            }}
           />
         );
       default:

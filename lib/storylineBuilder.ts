@@ -1,3 +1,4 @@
+import { OUTPUT_CALIBRATION_RULES } from "@/data/outputCalibrationRules";
 import { EXECUTIVE_STORYLINE_FLOW } from "@/data/executiveStorylineFlow";
 import {
   orderedStorylineSections,
@@ -71,8 +72,8 @@ function buildSectionNarrative(
   }
 
   const themeNarratives = themes
-    .slice(0, 3)
-    .map((t) => `${t.themeName}: ${t.summary}`)
+    .slice(0, OUTPUT_CALIBRATION_RULES.maxStorylineSectionThemesListed)
+    .map((t) => t.summary)
     .join(" ");
 
   return `${def.narrativeLead} ${themeNarratives}`;

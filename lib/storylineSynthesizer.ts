@@ -19,6 +19,7 @@ import {
   parseMarginBounds,
 } from "@/lib/opportunityAggregator";
 import { buildOpportunitySummary } from "@/lib/opportunitySummary";
+import { calibrateStorylineResult } from "@/lib/outputCalibration";
 import { rankExecutiveThemes } from "@/lib/themeRanker";
 import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
 import type { DiagnosticHypothesis } from "@/types/diagnostic-hypotheses";
@@ -197,7 +198,7 @@ export function runOpportunityStorylineEngine(
   generatedAt: string;
   guardrailMessage: string;
 } {
-  const result = synthesizeStoryline(input);
+  const result = calibrateStorylineResult(synthesizeStoryline(input));
   return {
     ...result,
     engineVersion: "6b.0.0",
