@@ -20,7 +20,7 @@ export function CategoryContributionChart({
 
   return (
     <div className="dx-contrib">
-      <p className="dx-contrib-title">Category revenue weight (in-scope)</p>
+      <p className="dx-contrib-title">In-scope category weight</p>
       <ul className="dx-contrib-list">
         {sorted.map((c) => (
           <li key={c.category} className="dx-contrib-row">

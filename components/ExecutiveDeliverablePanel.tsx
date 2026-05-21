@@ -52,6 +52,7 @@ type ExecutiveDeliverablePanelProps = {
   /** Optional consultant-mode panels (technical diagnostics, etc.) */
   consultantSlot?: ReactNode;
   opportunityExposure?: import("@/types/opportunity-exposure").OpportunityExposureBundle | null;
+  computedEvidence?: import("@/types/evidence-computation").ComputedEvidenceBundle | null;
 };
 
 export function ExecutiveDeliverablePanel({
@@ -61,6 +62,7 @@ export function ExecutiveDeliverablePanel({
   pilotMode = false,
   consultantSlot,
   opportunityExposure,
+  computedEvidence,
 }: ExecutiveDeliverablePanelProps) {
   const { executiveSummary: exec } = readout;
   const profile = exec.retailerProfile;
@@ -72,6 +74,7 @@ export function ExecutiveDeliverablePanel({
           exec={exec}
           implications={exec.strategicImplications.slice(0, 3)}
           opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
+          computedEvidence={computedEvidence}
         />
       </div>
     );
@@ -156,34 +159,30 @@ export function ExecutiveDeliverablePanel({
   }
 
   if (pilotMode) {
+    const technicalSlot = (
+      <>
+        {consultantSlot}
+        {readout.storylineSections.length > 0 && (
+          <div className="dx-tech-storyline">
+            {readout.storylineSections.map((s) => (
+              <StorylineSectionItem key={s.id} section={s} />
+            ))}
+          </div>
+        )}
+      </>
+    );
+
     return (
       <div className="dx-deliverable-wrap">
         <ExecutivePilotSummary
           exec={exec}
-          implications={exec.strategicImplications.slice(0, 3)}
+          implications={exec.strategicImplications.slice(0, 2)}
           opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
+          computedEvidence={computedEvidence}
+          technicalDiagnosticsSlot={
+            consultantSlot || readout.storylineSections.length > 0 ? technicalSlot : undefined
+          }
         />
-        {(consultantSlot || readout.storylineSections.length > 0) && (
-          <Disclosure
-            title="Technical diagnostics"
-            summary="Hypotheses · patterns · export storyline"
-            variant="subtle"
-            defaultOpen={false}
-            className="dx-consultant-drawer"
-          >
-            <div className="space-y-8 pt-2">
-              {consultantSlot}
-              {readout.storylineSections.length > 0 && (
-                <div>
-                  <p className="exec-block-title mb-3">Consulting storyline (export)</p>
-                  {readout.storylineSections.map((s) => (
-                    <StorylineSectionItem key={s.id} section={s} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </Disclosure>
-        )}
       </div>
     );
   }

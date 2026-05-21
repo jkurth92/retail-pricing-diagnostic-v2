@@ -60,7 +60,7 @@ export function PricingDiagnosticPanel({
     <div className="max-w-5xl pilot-panel dx-diagnostic-page">
       <DiagnosticSection
         title="Pricing diagnostic"
-        lead="Structural assessment · scan the tiles below"
+        lead="Opportunity → drivers → evidence → technical detail"
       >
         <ExecutiveDeliverablePanel
           readout={executiveDeliverable}
@@ -68,6 +68,7 @@ export function PricingDiagnosticPanel({
           view="full"
           pilotMode
           opportunityExposure={opportunityExposure}
+          computedEvidence={computedEvidence}
           consultantSlot={
             <TechnicalDiagnosticsPanel
               knowledgeContext={knowledgeContext}
