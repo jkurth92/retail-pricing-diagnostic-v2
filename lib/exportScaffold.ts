@@ -39,7 +39,7 @@ export function buildExportPackage(
     retailerName: retailerName || "Client",
     generatedAt: readout.generatedAt,
     format,
-    status: "scaffold_only",
+    status: "ready",
     executiveSummaryBlock: toBlock(
       "executive-summary",
       "Executive summary",
@@ -68,7 +68,7 @@ export function buildExportPackage(
       false,
     ),
     footerNotes: [
-      "Export generation is scaffolded only in this build.",
+      "Consulting first-draft exports — editable DOCX, PPTX, and partner email.",
       readout.guardrailMessage,
       ...readout.notes,
     ],
@@ -78,5 +78,5 @@ export function buildExportPackage(
 export function exportReadinessLabel(pkg: ExportPackage): string {
   return pkg.status === "scaffold_only"
     ? "Export structure ready — generation pending alignment"
-    : "Ready for export";
+    : "Consulting drafts ready — preview and download";
 }

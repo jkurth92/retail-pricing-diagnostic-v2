@@ -14,7 +14,7 @@ export type ExportPackage = {
   retailerName: string;
   generatedAt: string;
   format: ExportFormat;
-  status: "scaffold_only" | "ready_for_generation";
+  status: "scaffold_only" | "ready_for_generation" | "ready";
   executiveSummaryBlock: ExportSectionBlock;
   storylineBlocks: ExportSectionBlock[];
   opportunityBlock: ExportSectionBlock;

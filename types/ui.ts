@@ -83,6 +83,12 @@ export const WORKFLOW_TABS: {
     sidebarGroup: "evidence",
   },
   {
+    id: "export_deliverables",
+    label: "Executive exports",
+    description: "Preview and download consulting drafts",
+    sidebarGroup: "readout",
+  },
+  {
     id: "validation_review",
     label: "Validation review",
     description: "Internal E2E calibration checks",

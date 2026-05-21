@@ -45,6 +45,9 @@ knowledge/review/
 *.pptx
 *.docx
 *.xlsx
+!templates/Template.pptx
+
+.tmp-export/
 
 # vercel
 .vercel

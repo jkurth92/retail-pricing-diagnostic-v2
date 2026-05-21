@@ -124,8 +124,22 @@
 - Outputs must prioritize **coherence over metric volume** — bounded ranges, not KPI dashboards.
 - **Suppress disconnected low-confidence observations** — empty storyline sections omitted; themes already filtered in 6A/6B.
 - Margin opportunity is **primary**; revenue sensitivity is **secondary and directional** only.
-- Export (`lib/exportScaffold.ts`) is **scaffold only** — no PDF/PPT generation until aligned.
 - Strategic implications are interpretive **“what this means”** lines — not action plans.
+
+## Executive export system (Step 11)
+
+- Exports must remain **editable** (DOCX, PPTX, copyable email) — not locked or image-only deliverables.
+- Outputs are **narrative-first consulting first drafts** — not analytics reports or dashboard exports.
+- **Answer-first structure required** — memo executive answer and slide 1 opportunity headline lead.
+- **Architecture-first prioritization** — architecture deep dive is the default anchor slide.
+- **Avoid dashboard-style slides** and excessive analytics density (no chart packs in default deck).
+- **No operational recommendations** or exact price prescriptions in export copy.
+- **No fake precision** — directional margin bands only; no implied dollar certainty from exports.
+- Deliverables should resemble **consulting draft deliverables** (partner email, 1-page memo, sparse deck).
+- PDF export remains **disabled** until explicitly aligned; DOCX is the preferred document format.
+- PPTX must use `templates/Template.pptx` as layout basis when present; remain LOP-editable.
+- Storyline export must preserve **headline → implication → evidence → opportunity → confidence** hierarchy.
+- Modularity (`ExportSection`, `ExportSectionSelection`) must not lock consultants into static layouts.
 
 ## Calculations and AI
 

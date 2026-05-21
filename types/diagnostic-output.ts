@@ -12,6 +12,7 @@ export type WorkflowStep =
   | "opportunity_overview"
   | "strategic_implications"
   | "supporting_diagnostics"
+  | "export_deliverables"
   | "validation_review";
 
 export type LeverKey =

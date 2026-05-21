@@ -87,6 +87,13 @@ body {
   border-top: 1px solid var(--border);
 }
 
+.export-preview-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 1.25rem 1.5rem;
+}
+
 .narrative-block {
   font-size: 1.0625rem;
   line-height: 1.7;

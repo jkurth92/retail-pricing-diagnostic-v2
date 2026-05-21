@@ -17,6 +17,7 @@ import { StructuralThemesPanel } from "@/components/panels/StructuralThemesPanel
 import { OpportunityOverviewPanel } from "@/components/panels/OpportunityOverviewPanel";
 import { StrategicImplicationsPanel } from "@/components/panels/StrategicImplicationsPanel";
 import { SupportingDiagnosticsPanel } from "@/components/panels/SupportingDiagnosticsPanel";
+import { ExportDeliverablesPanel } from "@/components/panels/ExportDeliverablesPanel";
 import { ValidationReviewPanel } from "@/components/panels/ValidationReviewPanel";
 import { RETAILER_VALIDATION_SCENARIOS } from "@/tests/e2e/retailer-scenarios";
 import { createSuggestedCompetitors } from "@/lib/competitors";
@@ -339,6 +340,14 @@ export default function Home() {
           <StrategicImplicationsPanel
             knowledgeContext={knowledgeContext}
             executiveDeliverable={executiveDeliverable}
+          />
+        );
+      case "export_deliverables":
+        return (
+          <ExportDeliverablesPanel
+            knowledgeContext={knowledgeContext}
+            exportBundle={executiveDeliverable.exportBundle}
+            storylineExport={executiveDeliverable.storylineExport}
           />
         );
       case "supporting_diagnostics":
