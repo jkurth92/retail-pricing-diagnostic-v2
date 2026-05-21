@@ -6,6 +6,7 @@ type HeaderSummaryProps = {
   knowledgeContext?: KnowledgeRegistryContext;
   workflowStepLabel?: string;
   marginOpportunityRange?: string;
+  diagnosticReady?: boolean;
 };
 
 export function HeaderSummary({
@@ -13,6 +14,7 @@ export function HeaderSummary({
   knowledgeContext,
   workflowStepLabel,
   marginOpportunityRange,
+  diagnosticReady = false,
 }: HeaderSummaryProps) {
   const archetype = knowledgeContext
     ? getArchetype(knowledgeContext.archetypeId)
@@ -23,7 +25,7 @@ export function HeaderSummary({
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
-            Strategic pricing diagnostic
+            Strategic pricing copilot
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text-navy)]">
             {retailerDisplay === "Not selected"
@@ -31,8 +33,9 @@ export function HeaderSummary({
               : retailerDisplay}
           </h1>
           <p className="mt-3 text-base leading-relaxed text-[var(--text-muted)]">
-            Executive readout of structural pricing themes and bounded
-            opportunity — diagnostic, not prescriptive.
+            {diagnosticReady
+              ? "Guided diagnostic — review storyline, opportunity, and exports."
+              : "Confirm retailer context and scope, then generate your assessment."}
           </p>
         </div>
         <div className="flex flex-col gap-2 text-sm lg:text-right">

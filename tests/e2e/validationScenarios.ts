@@ -2,7 +2,7 @@ import { RETAILER_VALIDATION_SCENARIOS } from "@/tests/e2e/retailer-scenarios";
 
 export type FlowCheckpoint =
   | "retailer_context"
-  | "client_context"
+  | "retailer_context"
   | "scope_readiness"
   | "role_inference"
   | "hypothesis_generation"
@@ -27,7 +27,7 @@ export const VALIDATION_SCENARIO_EXPECTATIONS: ValidationScenarioExpectation[] =
     scenarioId: s.id,
     checkpoints: [
       "retailer_context",
-      "client_context",
+      "retailer_context",
       "scope_readiness",
       "role_inference",
       "hypothesis_generation",

@@ -4,16 +4,13 @@ import type { ObservedPricingPatternsOutput } from "@/types/observed-patterns";
 import type { RetailerOverviewOutput } from "@/types/retailer-overview";
 import type { ScopeDefinition } from "@/types/scope";
 
+/** Pilot guided journey — five visible steps. */
 export type WorkflowStep =
-  | "client_context"
-  | "data_scope"
-  | "pricing_profile"
-  | "structural_themes"
+  | "retailer_context"
+  | "upload_scope"
+  | "pricing_diagnostic"
   | "opportunity_overview"
-  | "strategic_implications"
-  | "supporting_diagnostics"
-  | "export_deliverables"
-  | "validation_review";
+  | "executive_outputs";
 
 export type LeverKey =
   | "kvis"

@@ -66,7 +66,7 @@ export function KnowledgeRegistryPanel({
         )}
         {compact && (
           <h3 className="text-base font-semibold text-[var(--text-navy)] mb-4">
-            Archetype & objectives
+            Pricing assumptions
           </h3>
         )}
         <p className="mt-2 text-sm text-[var(--text-muted)]">

@@ -238,3 +238,56 @@ body {
 .implication-list li:last-child {
   border-bottom: none;
 }
+
+.pilot-banner {
+  margin-bottom: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--accent-light);
+  background: var(--accent-light);
+}
+
+.pilot-banner-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.pilot-panel {
+  padding-bottom: 2rem;
+}
+
+.run-diagnostic-cta {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 2rem 1.5rem;
+}
+
+.run-diagnostic-cta-inner {
+  max-width: 36rem;
+}
+
+.refine-diagnostic-panel {
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.retailer-profile-summary {
+  box-shadow: var(--shadow);
+}
+
+.journey-stepper-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (min-width: 900px) {
+  .journey-stepper-list {
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+}

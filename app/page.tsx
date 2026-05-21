@@ -10,26 +10,28 @@ import type { RetailerEnrichmentOverrides } from "@/types/retailer-context";
 import { AppShell } from "@/components/AppShell";
 import { HeaderSummary } from "@/components/HeaderSummary";
 import { JourneyStepper } from "@/components/JourneyStepper";
-import { ClientContextPanel } from "@/components/panels/ClientContextPanel";
-import { DataScopePanel } from "@/components/panels/DataScopePanel";
-import { PricingProfilePanel } from "@/components/panels/PricingProfilePanel";
-import { StructuralThemesPanel } from "@/components/panels/StructuralThemesPanel";
+import { PilotWalkthroughBanner } from "@/components/PilotWalkthroughBanner";
+import { RetailerContextPanel } from "@/components/panels/RetailerContextPanel";
+import { UploadScopePanel } from "@/components/panels/UploadScopePanel";
+import { PricingDiagnosticPanel } from "@/components/panels/PricingDiagnosticPanel";
 import { OpportunityOverviewPanel } from "@/components/panels/OpportunityOverviewPanel";
-import { StrategicImplicationsPanel } from "@/components/panels/StrategicImplicationsPanel";
-import { SupportingDiagnosticsPanel } from "@/components/panels/SupportingDiagnosticsPanel";
 import { ExportDeliverablesPanel } from "@/components/panels/ExportDeliverablesPanel";
-import { ValidationReviewPanel } from "@/components/panels/ValidationReviewPanel";
-import { RETAILER_VALIDATION_SCENARIOS } from "@/tests/e2e/retailer-scenarios";
 import { createSuggestedCompetitors } from "@/lib/competitors";
-import {
-  formatToArchetypeId,
-  legacyPostureToKnowledge,
-} from "@/lib/archetypeContext";
+import { formatToArchetypeId } from "@/lib/archetypeContext";
 import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
 import { runDiagnosticHypothesisEngine } from "@/lib/hypothesisEngine";
 import { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import { runOpportunityStorylineEngine } from "@/lib/storylineSynthesizer";
+import {
+  EMPTY_EXPORT_BUNDLE,
+  EMPTY_EXPORT_PACKAGE,
+  EMPTY_HYPOTHESIS_OUTPUT,
+  EMPTY_READOUT,
+  EMPTY_STORYLINE_EXPORT,
+  EMPTY_STORYLINE_RESULT,
+} from "@/lib/pilotEmptyOutputs";
 import { parseNumericInput } from "@/lib/scopeMath";
+import { PILOT_DEMO_PRESET } from "@/data/pilotDemo";
 import type { StrategicObjectiveId } from "@/types/knowledge-client";
 import type {
   PricingPosture as KnowledgePosture,
@@ -42,21 +44,19 @@ import {
   DEFAULT_SELECTED_LEVER_KEYS,
   WORKFLOW_TABS,
   workflowTabToSidebarStep,
-  type EprDimension,
   type EprScores,
-  type PricingPosture,
   type RetailerFormat,
   type WorkflowTab,
 } from "@/types/ui";
 
 export default function Home() {
   const [workflowTab, setWorkflowTab] =
-    useState<WorkflowTab>("client_context");
+    useState<WorkflowTab>("retailer_context");
+  const [diagnosticReady, setDiagnosticReady] = useState(false);
+  const [pilotDemoActive, setPilotDemoActive] = useState(false);
   const [retailerInput, setRetailerInput] = useState("");
   const [confirmedRetailer, setConfirmedRetailer] = useState("");
   const [eprScores, setEprScores] = useState<EprScores>(DEFAULT_EPR_SCORES);
-  const [pricingPosture, setPricingPosture] =
-    useState<PricingPosture>("Not sure");
   const [retailerFormat, setRetailerFormat] =
     useState<RetailerFormat>("Mass");
   const [strategicContext, setStrategicContext] = useState("");
@@ -102,56 +102,67 @@ export default function Home() {
     [],
   );
 
-  const hypothesisOutput = useMemo(
-    () =>
-      runDiagnosticHypothesisEngine({
-        knowledge: knowledgeContext,
-        normalizedFields: ingestionPreview.normalizedFields,
-        leverUnlocks: ingestionPreview.leverUnlocks,
-        eprScores,
-      }),
-    [knowledgeContext, ingestionPreview, eprScores],
-  );
+  const hypothesisOutput = useMemo(() => {
+    if (!diagnosticReady) return EMPTY_HYPOTHESIS_OUTPUT;
+    return runDiagnosticHypothesisEngine({
+      knowledge: knowledgeContext,
+      normalizedFields: ingestionPreview.normalizedFields,
+      leverUnlocks: ingestionPreview.leverUnlocks,
+      eprScores,
+    });
+  }, [diagnosticReady, knowledgeContext, ingestionPreview, eprScores]);
 
   const hasRevenueInScope = parseNumericInput(revenueInScopeInput) !== null;
 
-  const storylineResult = useMemo(
-    () =>
-      runOpportunityStorylineEngine({
-        hypothesisOutput,
-        knowledge: knowledgeContext,
-        retailerDisplayName: confirmedRetailer || retailerInput,
-        hasRevenueInScope,
-      }),
-    [
+  const storylineResult = useMemo(() => {
+    if (!diagnosticReady) return EMPTY_STORYLINE_RESULT;
+    return runOpportunityStorylineEngine({
       hypothesisOutput,
-      knowledgeContext,
-      confirmedRetailer,
-      retailerInput,
+      knowledge: knowledgeContext,
+      retailerDisplayName: confirmedRetailer || retailerInput,
       hasRevenueInScope,
-    ],
-  );
+    });
+  }, [
+    diagnosticReady,
+    hypothesisOutput,
+    knowledgeContext,
+    confirmedRetailer,
+    retailerInput,
+    hasRevenueInScope,
+  ]);
 
-  const executiveDeliverable = useMemo(
-    () =>
-      runExecutiveDeliverableEngine({
-        knowledge: knowledgeContext,
-        storylineResult,
-        eprScores,
-        retailerDisplayName: confirmedRetailer || retailerInput,
-        strategicContext,
-        enrichment: retailerEnrichment,
-      }),
-    [
-      knowledgeContext,
+  const executiveDeliverable = useMemo(() => {
+    if (!diagnosticReady) {
+      return {
+        ...EMPTY_READOUT,
+        exportPackage: EMPTY_EXPORT_PACKAGE,
+        exportBundle: EMPTY_EXPORT_BUNDLE,
+        storylineExport: EMPTY_STORYLINE_EXPORT,
+      };
+    }
+    return runExecutiveDeliverableEngine({
+      knowledge: knowledgeContext,
       storylineResult,
       eprScores,
-      confirmedRetailer,
-      retailerInput,
+      retailerDisplayName: confirmedRetailer || retailerInput,
       strategicContext,
-      retailerEnrichment,
-    ],
-  );
+      enrichment: retailerEnrichment,
+    });
+  }, [
+    diagnosticReady,
+    knowledgeContext,
+    storylineResult,
+    eprScores,
+    confirmedRetailer,
+    retailerInput,
+    strategicContext,
+    retailerEnrichment,
+  ]);
+
+  const canRunDiagnostic = Boolean(confirmedRetailer.trim());
+  const runDisabledReason = canRunDiagnostic
+    ? undefined
+    : "Confirm a retailer name before generating the diagnostic.";
 
   const refreshEnrichment = useCallback(
     async (
@@ -187,7 +198,7 @@ export default function Home() {
     );
   };
 
-  const handlePopulateRetailer = () => {
+  const handleConfirmRetailer = () => {
     const trimmed = retailerInput.trim();
     setConfirmedRetailer(trimmed || "");
     setCompetitors(createSuggestedCompetitors(retailerFormat));
@@ -200,19 +211,10 @@ export default function Home() {
     setArchetypeId(formatToArchetypeId(format));
   };
 
-  const handleLegacyPostureChange = (posture: PricingPosture) => {
-    setPricingPosture(posture);
-    setKnowledgePosture(legacyPostureToKnowledge(posture));
-  };
-
   const toggleStrategicObjective = (id: StrategicObjectiveId) => {
     setStrategicObjectives((prev) =>
       prev.includes(id) ? prev.filter((o) => o !== id) : [...prev, id],
     );
-  };
-
-  const handleEprScoreChange = (dimension: EprDimension, score: number) => {
-    setEprScores((prev) => ({ ...prev, [dimension]: score }));
   };
 
   const toggleIncludedCategory = (category: string) => {
@@ -245,40 +247,64 @@ export default function Home() {
     });
   };
 
+  const handleRunDiagnostic = () => {
+    setDiagnosticReady(true);
+    setWorkflowTab("pricing_diagnostic");
+  };
+
+  const handleStartPilotDemo = () => {
+    const preset = PILOT_DEMO_PRESET;
+    setPilotDemoActive(true);
+    setDiagnosticReady(false);
+    setRetailerInput(preset.retailerName);
+    setConfirmedRetailer(preset.retailerName);
+    setRetailerFormat(preset.retailerFormat);
+    setArchetypeId(preset.archetypeId);
+    setKnowledgePosture(preset.knowledgePosture);
+    setStrategicObjectives(preset.strategicObjectives);
+    setCategoryHint(preset.categoryHint);
+    setStrategicContext(preset.strategicContext);
+    setTotalRevenueInput(preset.totalRevenueInput);
+    setAddressablePercentInput(preset.addressablePercentInput);
+    setRevenueInScopeInput(preset.revenueInScopeInput);
+    setIncludedCategories(preset.includedCategories);
+    setExcludedCategories([]);
+    setCompetitors(createSuggestedCompetitors(preset.retailerFormat));
+    setWorkflowTab("retailer_context");
+    void refreshEnrichment(preset.retailerName);
+  };
+
   const workflowStepLabel = useMemo(() => {
     const tab = WORKFLOW_TABS.find((t) => t.id === workflowTab);
     return tab?.label ?? "Workflow";
   }, [workflowTab]);
 
+  const marginOpportunityRange = diagnosticReady
+    ? storylineResult.storyline.marginOpportunityTotalRange
+    : undefined;
+
   const renderWorkflowPanel = () => {
     switch (workflowTab) {
-      case "client_context":
+      case "retailer_context":
         return (
-          <ClientContextPanel
+          <RetailerContextPanel
             retailerName={retailerInput}
-            pricingPosture={pricingPosture}
             retailerFormat={retailerFormat}
-            strategicContext={strategicContext}
-            competitors={competitors}
             knowledgeContext={knowledgeContext}
-            executiveDeliverable={executiveDeliverable}
             archetypeId={archetypeId}
             knowledgePosture={knowledgePosture}
             strategicObjectives={strategicObjectives}
             categoryHint={categoryHint}
+            retailerEnrichment={retailerEnrichment}
+            manualTicker={manualTicker}
+            enrichmentLoading={enrichmentLoading}
             onRetailerNameChange={setRetailerInput}
-            onPopulateRetailer={handlePopulateRetailer}
-            onPricingPostureChange={handleLegacyPostureChange}
+            onConfirmRetailer={handleConfirmRetailer}
             onRetailerFormatChange={handleRetailerFormatChange}
-            onStrategicContextChange={setStrategicContext}
-            onCompetitorsChange={setCompetitors}
             onArchetypeChange={setArchetypeId}
             onKnowledgePostureChange={setKnowledgePosture}
             onToggleObjective={toggleStrategicObjective}
             onCategoryHintChange={setCategoryHint}
-            retailerEnrichment={retailerEnrichment}
-            manualTicker={manualTicker}
-            enrichmentLoading={enrichmentLoading}
             onManualTickerChange={setManualTicker}
             onEnrichmentOverrides={handleEnrichmentOverrides}
             onRefreshEnrichment={() =>
@@ -289,11 +315,13 @@ export default function Home() {
               if (s.suggestedArchetypeId) setArchetypeId(s.suggestedArchetypeId);
               if (s.suggestedPosture) setKnowledgePosture(s.suggestedPosture);
             }}
+            competitors={competitors}
+            onCompetitorsChange={setCompetitors}
           />
         );
-      case "data_scope":
+      case "upload_scope":
         return (
-          <DataScopePanel
+          <UploadScopePanel
             knowledgeContext={knowledgeContext}
             retailerName={confirmedRetailer}
             selectedPeerCount={selectedPeerCount}
@@ -309,23 +337,21 @@ export default function Home() {
             onToggleIncludedCategory={toggleIncludedCategory}
             onToggleExcludedCategory={toggleExcludedCategory}
             onToggleLever={toggleLever}
+            onRunDiagnostic={handleRunDiagnostic}
+            canRunDiagnostic={canRunDiagnostic}
+            runDisabledReason={runDisabledReason}
           />
         );
-      case "pricing_profile":
+      case "pricing_diagnostic":
         return (
-          <PricingProfilePanel
+          <PricingDiagnosticPanel
             knowledgeContext={knowledgeContext}
             executiveDeliverable={executiveDeliverable}
             eprScores={eprScores}
-            onEprScoreChange={handleEprScoreChange}
-          />
-        );
-      case "structural_themes":
-        return (
-          <StructuralThemesPanel
-            knowledgeContext={knowledgeContext}
-            executiveDeliverable={executiveDeliverable}
-            hypothesisOutput={hypothesisOutput}
+            diagnosticReady={diagnosticReady}
+            onRunDiagnostic={handleRunDiagnostic}
+            canRunDiagnostic={canRunDiagnostic}
+            runDisabledReason={runDisabledReason}
           />
         );
       case "opportunity_overview":
@@ -333,57 +359,18 @@ export default function Home() {
           <OpportunityOverviewPanel
             knowledgeContext={knowledgeContext}
             executiveDeliverable={executiveDeliverable}
+            diagnosticReady={diagnosticReady}
+            onRunDiagnostic={handleRunDiagnostic}
+            canRunDiagnostic={canRunDiagnostic}
           />
         );
-      case "strategic_implications":
-        return (
-          <StrategicImplicationsPanel
-            knowledgeContext={knowledgeContext}
-            executiveDeliverable={executiveDeliverable}
-          />
-        );
-      case "export_deliverables":
+      case "executive_outputs":
         return (
           <ExportDeliverablesPanel
             knowledgeContext={knowledgeContext}
             exportBundle={executiveDeliverable.exportBundle}
             storylineExport={executiveDeliverable.storylineExport}
-          />
-        );
-      case "supporting_diagnostics":
-        return (
-          <SupportingDiagnosticsPanel
-            knowledgeContext={knowledgeContext}
-            hypothesisOutput={hypothesisOutput}
-            executiveDeliverable={executiveDeliverable}
-            eprScores={eprScores}
-            retailerEnrichment={retailerEnrichment}
-            manualTicker={manualTicker}
-            enrichmentLoading={enrichmentLoading}
-            onManualTickerChange={setManualTicker}
-            onEnrichmentOverrides={handleEnrichmentOverrides}
-            onRefreshEnrichment={() =>
-              refreshEnrichment(confirmedRetailer || retailerInput)
-            }
-          />
-        );
-      case "validation_review":
-        return (
-          <ValidationReviewPanel
-            onApplyScenarioToApp={(scenarioId) => {
-              const scenario = RETAILER_VALIDATION_SCENARIOS.find(
-                (s) => s.id === scenarioId,
-              );
-              if (!scenario) return;
-              setRetailerInput(scenario.retailerName);
-              setConfirmedRetailer(scenario.retailerName);
-              setArchetypeId(scenario.archetypeId);
-              setKnowledgePosture(scenario.pricingPosture);
-              setStrategicObjectives(scenario.strategicObjectives);
-              setCategoryHint(scenario.categoryHint);
-              void refreshEnrichment(scenario.retailerName);
-              setWorkflowTab("client_context");
-            }}
+            diagnosticReady={diagnosticReady}
           />
         );
       default:
@@ -396,13 +383,16 @@ export default function Home() {
       activeStep={workflowTabToSidebarStep(workflowTab)}
       onNavigate={setWorkflowTab}
     >
+      <PilotWalkthroughBanner
+        onStartDemo={handleStartPilotDemo}
+        demoActive={pilotDemoActive}
+      />
       <HeaderSummary
         retailerDisplay={retailerDisplay}
         knowledgeContext={knowledgeContext}
         workflowStepLabel={workflowStepLabel}
-        marginOpportunityRange={
-          storylineResult.storyline.marginOpportunityTotalRange
-        }
+        marginOpportunityRange={marginOpportunityRange}
+        diagnosticReady={diagnosticReady}
       />
       <JourneyStepper active={workflowTab} onChange={setWorkflowTab} />
       {renderWorkflowPanel()}

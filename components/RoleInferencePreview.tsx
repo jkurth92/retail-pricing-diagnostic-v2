@@ -26,7 +26,7 @@ export function RoleInferencePreview({ context }: RoleInferencePreviewProps) {
   return (
     <div className="space-y-4">
       <Card>
-        <p className="micro-label mb-2">Live inference output</p>
+        <p className="micro-label mb-2">Role structure preview</p>
         <h3 className="section-title">Rationale & confidence</h3>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
           Updates when archetype, posture, objectives, or category hint change.

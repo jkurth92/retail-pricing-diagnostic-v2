@@ -38,61 +38,31 @@ export const WORKFLOW_TABS: {
   id: WorkflowTab;
   label: string;
   description: string;
-  sidebarGroup: "setup" | "readout" | "evidence";
 }[] = [
   {
-    id: "client_context",
-    label: "Client context",
-    description: "Retailer type, posture, and objectives",
-    sidebarGroup: "setup",
+    id: "retailer_context",
+    label: "Retailer context",
+    description: "Profile and commercial framing",
   },
   {
-    id: "data_scope",
-    label: "Data & scope",
-    description: "Upload readiness and revenue in scope",
-    sidebarGroup: "setup",
+    id: "upload_scope",
+    label: "Upload & scope",
+    description: "Files, categories, and revenue in scope",
   },
   {
-    id: "pricing_profile",
-    label: "Pricing profile",
-    description: "Inferred structure and maturity",
-    sidebarGroup: "readout",
-  },
-  {
-    id: "structural_themes",
-    label: "Structural themes",
-    description: "Prioritized pricing narratives",
-    sidebarGroup: "readout",
+    id: "pricing_diagnostic",
+    label: "Pricing diagnostic",
+    description: "Executive summary and structural themes",
   },
   {
     id: "opportunity_overview",
     label: "Opportunity overview",
-    description: "Margin-led thematic opportunity",
-    sidebarGroup: "readout",
+    description: "Directional margin opportunity",
   },
   {
-    id: "strategic_implications",
-    label: "Strategic implications",
-    description: "What the structure means",
-    sidebarGroup: "readout",
-  },
-  {
-    id: "supporting_diagnostics",
-    label: "Supporting diagnostics",
-    description: "Signals, patterns, and evidence",
-    sidebarGroup: "evidence",
-  },
-  {
-    id: "export_deliverables",
-    label: "Executive exports",
-    description: "Preview and download consulting drafts",
-    sidebarGroup: "readout",
-  },
-  {
-    id: "validation_review",
-    label: "Validation review",
-    description: "Internal E2E calibration checks",
-    sidebarGroup: "evidence",
+    id: "executive_outputs",
+    label: "Executive outputs",
+    description: "Memo, deck, and partner email drafts",
   },
 ];
 

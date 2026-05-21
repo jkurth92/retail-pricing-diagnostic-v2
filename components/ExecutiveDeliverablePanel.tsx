@@ -54,12 +54,15 @@ type ExecutiveDeliverablePanelProps = {
   readout: DiagnosticReadout;
   exportPackage: ExportPackage;
   view?: ExecutivePanelView;
+  /** Pilot: narrative-first layout without export-prep clutter */
+  pilotMode?: boolean;
 };
 
 export function ExecutiveDeliverablePanel({
   readout,
   exportPackage,
   view = "full",
+  pilotMode = false,
 }: ExecutiveDeliverablePanelProps) {
   const { executiveSummary: exec } = readout;
   const profile = exec.retailerProfile;
@@ -139,8 +142,8 @@ export function ExecutiveDeliverablePanel({
   if (view === "themes") {
     return (
       <DiagnosticSection
-        eyebrow="Key structural themes"
-        title="Observed pricing themes"
+        eyebrow="Structural themes"
+        title="Top structural themes"
         lead="Prioritized structural narratives from the diagnostic — architecture emphasized first."
       >
         <ul>
@@ -149,8 +152,8 @@ export function ExecutiveDeliverablePanel({
           ))}
         </ul>
         <Disclosure
-          title="View supporting signals"
-          summary="Evidence behind surfaced themes"
+          title="Supporting evidence"
+          summary="Signals behind surfaced themes"
           variant="subtle"
         >
           <ul className="mt-2 flex flex-wrap gap-2">
@@ -294,25 +297,28 @@ export function ExecutiveDeliverablePanel({
     );
   }
 
-  const sections: { view: Exclude<ExecutivePanelView, "full" | "compact"> }[] = [
-    { view: "profile" },
-    { view: "themes" },
-    { view: "opportunity" },
-    { view: "implications" },
-  ];
+  const sections: { view: Exclude<ExecutivePanelView, "full" | "compact"> }[] =
+    pilotMode
+      ? [{ view: "themes" }, { view: "implications" }]
+      : [
+          { view: "profile" },
+          { view: "themes" },
+          { view: "opportunity" },
+          { view: "implications" },
+        ];
 
   return (
     <div className="space-y-0">
       <DiagnosticSection
         eyebrow="Executive summary"
-        title="Pricing diagnostic readout"
+        title={pilotMode ? "Strategic pricing assessment" : "Pricing diagnostic readout"}
         lead={exec.executiveNarrative}
       >
         <p className="opportunity-hero-value">{exec.marginOpportunitySummary}</p>
         <p className="mt-3 text-sm text-[var(--text-muted)]">
           {exec.revenueSensitivitySummary}
         </p>
-        <Disclosure title="View confidence & maturity" variant="subtle">
+        <Disclosure title="Confidence & maturity" variant="subtle">
           <p className="text-sm text-[var(--text-navy)]">
             {exec.confidenceSummary}
           </p>
@@ -328,21 +334,24 @@ export function ExecutiveDeliverablePanel({
           readout={readout}
           exportPackage={exportPackage}
           view={sectionView}
+          pilotMode={pilotMode}
         />
       ))}
 
-      <div className="diagnostic-section">
-        <Disclosure
-          title="Memo & deck preparation"
-          summary={exportReadinessLabel(exportPackage)}
-          variant="subtle"
-        >
-          <p className="text-sm text-[var(--text-muted)]">
-            Export structure is prepared ({exportPackage.storylineBlocks.length}{" "}
-            sections). File generation is not enabled in this build.
-          </p>
-        </Disclosure>
-      </div>
+      {!pilotMode && (
+        <div className="diagnostic-section">
+          <Disclosure
+            title="Deliverable preparation"
+            summary={exportReadinessLabel(exportPackage)}
+            variant="subtle"
+          >
+            <p className="text-sm text-[var(--text-muted)]">
+              {exportPackage.storylineBlocks.length} storyline sections packaged
+              for export.
+            </p>
+          </Disclosure>
+        </div>
+      )}
     </div>
   );
 }

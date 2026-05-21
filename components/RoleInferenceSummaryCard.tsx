@@ -29,10 +29,10 @@ export function RoleInferenceSummaryCard({
 
   return (
     <Card>
-      <p className="micro-label mb-2">Role inference</p>
+      <p className="micro-label mb-2">Category roles</p>
       <h3 className="section-title">{title}</h3>
       <p className="mt-2 text-sm text-[var(--text-muted)]">
-        Deterministic preview from ontology rules — overrideable, not SKU-level
+        Likely role structure for this retailer — overrideable, not SKU-level
         assignment.
       </p>
       <div className="mt-5 grid gap-6 lg:grid-cols-2">

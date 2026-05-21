@@ -10,7 +10,7 @@ type AppShellProps = {
 
 export function AppShell({
   children,
-  activeStep = "client_context",
+  activeStep = "retailer_context",
   onNavigate,
 }: AppShellProps) {
   return (

@@ -126,6 +126,17 @@
 - Margin opportunity is **primary**; revenue sensitivity is **secondary and directional** only.
 - Strategic implications are interpretive **“what this means”** lines — not action plans.
 
+## Pilot workflow simplification (Step 12)
+
+- **Guided workflow prioritized** — five visible steps; internal architecture not in default navigation.
+- **Hide internal complexity** — ontology, registry, calibration, and validation are secondary or disclosed only.
+- **Narrative-first UX** — summary and themes before evidence and mechanics.
+- **Uploads feel intelligent and lightweight** — unified 1–2 file intake; no default file-type taxonomy.
+- Users must **not configure frameworks manually** in the default path — assumptions are optional disclosures.
+- **Framework mechanics remain secondary** — progressive disclosure required for evidence and reference material.
+- Diagnostic flow stays **simple and executive-oriented** — explicit “Generate pricing diagnostic” gate before readout.
+- **No new intelligence** in this step — UX and workflow only; engines unchanged.
+
 ## Executive export system (Step 11)
 
 - Exports must remain **editable** (DOCX, PPTX, copyable email) — not locked or image-only deliverables.

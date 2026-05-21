@@ -13,8 +13,8 @@ export function RetailerInputCard({
 }: RetailerInputCardProps) {
   return (
     <Card>
-      <p className="micro-label mb-2">Retailer input</p>
-      <h3 className="section-title">Retailer</h3>
+      <p className="micro-label mb-2">Start here</p>
+      <h3 className="section-title">Retailer name</h3>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <input
           type="text"
@@ -28,13 +28,13 @@ export function RetailerInputCard({
           onClick={onPopulate}
           className="shrink-0 rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90"
         >
-          Populate retailer data
+          Build retailer profile
         </button>
       </div>
       <p className="mt-3 text-sm text-[var(--text-muted)]">
-        Confirming the retailer loads public company context when available
-        (ticker lookup and reference enrichment). Manual overrides always take
-        precedence. Not used for pricing calculations.
+        We enrich the profile automatically — archetype, posture, category
+        focus, and public context when available. Review and lightly edit; no
+        framework configuration required.
       </p>
     </Card>
   );
