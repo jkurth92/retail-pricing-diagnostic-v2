@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Disclosure } from "@/components/Disclosure";
 import { DiagnosticSection } from "@/components/DiagnosticSection";
 import { ExecutivePilotSummary } from "@/components/executive/ExecutivePilotSummary";
-import { OpportunityCalculationTracePanel } from "@/components/opportunity/OpportunityCalculationTracePanel";
+import { ExecutiveThemeInsightCard } from "@/components/executive/ExecutiveThemeInsightCard";
 import { exportReadinessLabel } from "@/lib/exportScaffold";
 import type { DiagnosticReadout } from "@/types/diagnostic-readout";
 import type { ExportPackage } from "@/types/export-structure";
@@ -22,25 +22,10 @@ export type ExecutivePanelView =
 function ThemeListItem({ theme, rank }: { theme: ExecutiveTheme; rank?: boolean }) {
   return (
     <li className="theme-list-item">
-      <p className="text-base font-semibold text-[var(--text-navy)]">
-        {rank && (
-          <span className="mr-2 font-normal text-[var(--text-muted)]">
-            {theme.rank}.
-          </span>
-        )}
-        {theme.themeName}
-      </p>
-      <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
-        {theme.summary}
-      </p>
-      <p className="mt-3 text-sm font-medium text-[var(--accent)]">
-        {theme.marginOpportunityRange}
-      </p>
-      {theme.calculationTrace && (
-        <div className="mt-3">
-          <OpportunityCalculationTracePanel trace={theme.calculationTrace} />
-        </div>
+      {rank && (
+        <span className="dx-rank-badge">{theme.rank}</span>
       )}
+      <ExecutiveThemeInsightCard theme={theme} />
     </li>
   );
 }
@@ -66,6 +51,7 @@ type ExecutiveDeliverablePanelProps = {
   pilotMode?: boolean;
   /** Optional consultant-mode panels (technical diagnostics, etc.) */
   consultantSlot?: ReactNode;
+  opportunityExposure?: import("@/types/opportunity-exposure").OpportunityExposureBundle | null;
 };
 
 export function ExecutiveDeliverablePanel({
@@ -74,6 +60,7 @@ export function ExecutiveDeliverablePanel({
   view = "full",
   pilotMode = false,
   consultantSlot,
+  opportunityExposure,
 }: ExecutiveDeliverablePanelProps) {
   const { executiveSummary: exec } = readout;
   const profile = exec.retailerProfile;
@@ -84,6 +71,7 @@ export function ExecutiveDeliverablePanel({
         <ExecutivePilotSummary
           exec={exec}
           implications={exec.strategicImplications.slice(0, 3)}
+          opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
         />
       </div>
     );
@@ -158,7 +146,7 @@ export function ExecutiveDeliverablePanel({
         title="What this means"
         lead="Concise structural interpretation — not tactical price prescriptions."
       >
-        <ul className="exec-implications">
+        <ul className="dx-implication-callouts">
           {exec.strategicImplications.slice(0, 3).map((imp) => (
             <li key={imp}>{imp}</li>
           ))}
@@ -169,17 +157,19 @@ export function ExecutiveDeliverablePanel({
 
   if (pilotMode) {
     return (
-      <div className="space-y-8">
+      <div className="dx-deliverable-wrap">
         <ExecutivePilotSummary
           exec={exec}
           implications={exec.strategicImplications.slice(0, 3)}
+          opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
         />
         {(consultantSlot || readout.storylineSections.length > 0) && (
           <Disclosure
             title="Technical diagnostics"
-            summary="Consultant mode · pattern inventory, hypotheses, memo storyline"
+            summary="Hypotheses · patterns · export storyline"
             variant="subtle"
             defaultOpen={false}
+            className="dx-consultant-drawer"
           >
             <div className="space-y-8 pt-2">
               {consultantSlot}
@@ -214,6 +204,7 @@ export function ExecutiveDeliverablePanel({
         <ExecutivePilotSummary
           exec={exec}
           implications={exec.strategicImplications.slice(0, 3)}
+          opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
         />
       </DiagnosticSection>
 

@@ -1,89 +1,131 @@
 "use client";
 
 import { Disclosure } from "@/components/Disclosure";
+import { CategoryContributionChart } from "@/components/executive/CategoryContributionChart";
+import { EvidenceMetricTiles } from "@/components/executive/EvidenceMetricTiles";
+import { ExecutiveThemeInsightCard } from "@/components/executive/ExecutiveThemeInsightCard";
+import { OpportunityRangeVisual } from "@/components/executive/OpportunityRangeVisual";
 import { OpportunityCalculationTracePanel } from "@/components/opportunity/OpportunityCalculationTracePanel";
+import {
+  confidenceLabelFromTrace,
+  shortenThemeTitle,
+} from "@/lib/executiveUxHelpers";
 import {
   parseMarginRangeDisplay,
   polishEvidenceMetrics,
   polishEvidenceThemes,
 } from "@/lib/executiveOutputPolish";
 import type { ExecutiveSummary } from "@/types/executive-summary";
+import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 
 type ExecutivePilotSummaryProps = {
   exec: ExecutiveSummary;
   implications: string[];
+  opportunityExposure?: OpportunityExposureBundle | null;
 };
 
 export function ExecutivePilotSummary({
   exec,
   implications,
+  opportunityExposure,
 }: ExecutivePilotSummaryProps) {
   const margin = parseMarginRangeDisplay(exec.marginOpportunitySummary);
-  const themes = polishEvidenceThemes(exec.evidenceBackedThemes, 3);
-  const metrics = polishEvidenceMetrics(exec.supportingEvidenceMetrics, 4);
+  const themes = polishEvidenceThemes(exec.evidenceBackedThemes, 4);
+  const metrics = polishEvidenceMetrics(exec.supportingEvidenceMetrics, 6);
+  const topThemes = exec.topThemes.slice(0, 4);
+  const exposure = opportunityExposure ?? exec.opportunityExposure ?? null;
+
+  const confidenceLabel =
+    exec.marginOpportunityTotalTrace
+      ? confidenceLabelFromTrace(
+          exec.marginOpportunityTotalTrace.formulaSummary,
+          exec.marginOpportunityTotalTrace.finalRange.lowPct,
+          exec.marginOpportunityTotalTrace.finalRange.highPct,
+        )
+      : undefined;
 
   return (
-    <div className="exec-readout">
-      <header className="exec-opportunity-card">
-        <p className="exec-opportunity-eyebrow">Potential pricing opportunity</p>
+    <div className="dx-dashboard">
+      {/* Hero opportunity tile */}
+      <section className="dx-tile dx-tile-hero" aria-labelledby="dx-opportunity-heading">
+        <p id="dx-opportunity-heading" className="dx-tile-eyebrow">
+          Potential pricing opportunity
+        </p>
         {margin ? (
-          <p className="exec-opportunity-range" aria-label="Margin opportunity range">
-            <span className="exec-opportunity-pct">{margin.display}</span>
-            <span className="exec-opportunity-suffix">margin improvement</span>
-          </p>
+          <>
+            <div className="dx-hero-range-row">
+              <p className="dx-hero-range-value" aria-label="Margin opportunity range">
+                {margin.display}
+              </p>
+              <span className="dx-hero-range-unit">margin improvement</span>
+            </div>
+            <OpportunityRangeVisual
+              lowPct={parseFloat(margin.low)}
+              highPct={parseFloat(margin.high)}
+              confidenceLabel={confidenceLabel}
+            />
+          </>
         ) : (
-          <p className="exec-opportunity-range">{exec.marginOpportunitySummary}</p>
+          <p className="dx-hero-range-value">{exec.marginOpportunitySummary}</p>
         )}
-        <p className="exec-opportunity-sub">{exec.opportunityHeadline}</p>
-        {exec.marginOpportunityTotalTrace && (
-          <div className="mt-4">
-            <OpportunityCalculationTracePanel trace={exec.marginOpportunityTotalTrace} />
-          </div>
+        {exec.opportunityHeadline && (
+          <p className="dx-hero-subline">{exec.opportunityHeadline}</p>
         )}
-      </header>
+      </section>
 
+      {/* Primary drivers */}
       {exec.primaryDrivers.length > 0 && (
-        <section className="exec-block">
-          <h3 className="exec-block-title">Primary drivers</h3>
-          <ul className="exec-driver-chips">
+        <section className="dx-tile dx-tile-drivers">
+          <h3 className="dx-section-label">Primary drivers</h3>
+          <ul className="dx-driver-pills">
             {exec.primaryDrivers.map((d) => (
-              <li key={d}>{d}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {themes.length > 0 && (
-        <section className="exec-block">
-          <h3 className="exec-block-title">Structural themes</h3>
-          <ul className="exec-theme-cards">
-            {themes.map((t) => (
-              <li key={t.headline} className="exec-theme-card">
-                <p className="exec-theme-headline">{t.headline}</p>
-                <p className="exec-theme-detail">{t.detail}</p>
+              <li key={d} className="dx-driver-pill">
+                {shortenThemeTitle(d)}
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      {metrics.length > 0 && (
-        <section className="exec-block">
-          <h3 className="exec-block-title">Supporting evidence</h3>
-          <ul className="exec-evidence-grid">
-            {metrics.map((m) => (
-              <li key={m} className="exec-evidence-item">
-                {m}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <div className="dx-grid-two">
+        {/* Structural themes */}
+        {(topThemes.length > 0 || themes.length > 0) && (
+          <section className="dx-tile dx-tile-themes">
+            <h3 className="dx-section-label">Structural themes</h3>
+            <div className="dx-theme-stack">
+              {topThemes.length > 0
+                ? topThemes.map((t) => (
+                    <ExecutiveThemeInsightCard key={t.id} theme={t} />
+                  ))
+                : themes.map((t) => (
+                    <ExecutiveThemeInsightCard key={t.headline} evidenceLine={t} />
+                  ))}
+            </div>
+          </section>
+        )}
 
+        {/* Evidence + category contribution */}
+        <div className="dx-stack-secondary">
+          {exposure && exposure.categoryExposures.length > 0 && (
+            <section className="dx-tile dx-tile-contrib">
+              <CategoryContributionChart categories={exposure.categoryExposures} />
+            </section>
+          )}
+
+          {metrics.length > 0 && (
+            <section className="dx-tile dx-tile-evidence">
+              <h3 className="dx-section-label">Supporting evidence</h3>
+              <EvidenceMetricTiles metrics={metrics} />
+            </section>
+          )}
+        </div>
+      </div>
+
+      {/* Implications callouts */}
       {implications.length > 0 && (
-        <section className="exec-block exec-implications-block">
-          <h3 className="exec-block-title">What this means</h3>
-          <ul className="exec-implications">
+        <section className="dx-tile dx-tile-implications">
+          <h3 className="dx-section-label">What this means</h3>
+          <ul className="dx-implication-callouts">
             {implications.map((imp) => (
               <li key={imp}>{imp}</li>
             ))}
@@ -91,17 +133,27 @@ export function ExecutivePilotSummary({
         </section>
       )}
 
+      {/* Consultant detail — traces, benchmark, narrative */}
       <Disclosure
         title="Consultant detail"
-        summary="Confidence, narrative context, and technical diagnostics"
+        summary="Calculation trace · benchmark context · confidence · technical diagnostics"
         variant="subtle"
         defaultOpen={false}
+        className="dx-consultant-drawer"
       >
-        <div className="exec-consultant-detail space-y-4">
-          <p className="text-sm text-[var(--text-muted)]">{exec.confidenceSummary}</p>
-          <p className="text-sm leading-relaxed text-[var(--text-navy)]">
-            {exec.executiveNarrative}
-          </p>
+        <div className="dx-consultant-inner">
+          {exec.marginOpportunityTotalTrace && (
+            <OpportunityCalculationTracePanel
+              trace={exec.marginOpportunityTotalTrace}
+              mode="consultant"
+            />
+          )}
+          <div className="dx-consultant-meta">
+            <p className="dx-consultant-line">{exec.confidenceSummary}</p>
+            {exec.maturitySummary && (
+              <p className="dx-consultant-line dx-consultant-muted">{exec.maturitySummary}</p>
+            )}
+          </div>
         </div>
       </Disclosure>
     </div>

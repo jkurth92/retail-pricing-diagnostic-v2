@@ -8,6 +8,7 @@ type DisclosureProps = {
   children: ReactNode;
   defaultOpen?: boolean;
   variant?: "default" | "subtle";
+  className?: string;
 };
 
 export function Disclosure({
@@ -16,6 +17,7 @@ export function Disclosure({
   children,
   defaultOpen = false,
   variant = "default",
+  className = "",
 }: DisclosureProps) {
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
@@ -26,7 +28,7 @@ export function Disclosure({
       : "border-[var(--border)] bg-[var(--surface)]";
 
   return (
-    <div className={`rounded-lg border ${border}`}>
+    <div className={`rounded-lg border ${border} ${className}`.trim()}>
       <button
         type="button"
         aria-expanded={open}
