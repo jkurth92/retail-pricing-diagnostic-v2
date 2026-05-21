@@ -1,5 +1,7 @@
 import { CompetitorSuggestionPanel } from "@/components/CompetitorSuggestionPanel";
 import { DiagnosticHypothesesPanel } from "@/components/DiagnosticHypothesesPanel";
+import { ExecutiveStorylinePanel } from "@/components/ExecutiveStorylinePanel";
+import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
 import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
 import { EprScoringCard } from "@/components/EprScoringCard";
@@ -32,6 +34,9 @@ type ClientContextPanelProps = {
   competitors: CompetitorEntry[];
   knowledgeContext: KnowledgeRegistryContext;
   hypothesisOutput: DiagnosticHypothesisOutput;
+  storylineResult: StorylineSynthesisResult & {
+    guardrailMessage: string;
+  };
   archetypeId: RetailerArchetypeId;
   knowledgePosture: PricingPosture;
   strategicObjectives: StrategicObjectiveId[];
@@ -58,6 +63,7 @@ export function ClientContextPanel({
   competitors,
   knowledgeContext,
   hypothesisOutput,
+  storylineResult,
   archetypeId,
   knowledgePosture,
   strategicObjectives,
@@ -85,6 +91,8 @@ export function ClientContextPanel({
         context={knowledgeContext}
         workflowLabel="Client Context"
       />
+
+      <ExecutiveStorylinePanel result={storylineResult} compact />
 
       <div className="grid gap-8 xl:grid-cols-3">
         <div className="space-y-8 xl:col-span-2">

@@ -24,6 +24,8 @@ Steps 2–7 add the output contract, six-step workflow, scope controls, competit
 
 **Step 6A** implements the diagnostic hypothesis engine (structural themes, confidence, bounded opportunity pools) — first reasoning layer, not recommendations.
 
+**Step 6B** implements the opportunity & storyline engine (executive themes, narrative, aggregated margin framing) — still not dollar optimization or recommendations.
+
 ## Current scope (Step 1)
 
 - Next.js App Router with TypeScript and Tailwind CSS
@@ -116,6 +118,9 @@ Do not commit `.env` files or secrets.
 - [docs/OPPORTUNITY_PHILOSOPHY.md](docs/OPPORTUNITY_PHILOSOPHY.md)
 - [docs/CONFIDENCE_SCORING.md](docs/CONFIDENCE_SCORING.md)
 - [docs/NARRATIVE_GENERATION.md](docs/NARRATIVE_GENERATION.md)
+- [docs/OPPORTUNITY_AND_STORYLINE_ENGINE.md](docs/OPPORTUNITY_AND_STORYLINE_ENGINE.md)
+- [docs/EXECUTIVE_NARRATIVE_PHILOSOPHY.md](docs/EXECUTIVE_NARRATIVE_PHILOSOPHY.md)
+- [docs/OPPORTUNITY_AGGREGATION.md](docs/OPPORTUNITY_AGGREGATION.md)
 - [docs/KNOWLEDGE_SOURCE_PLAN.md](docs/KNOWLEDGE_SOURCE_PLAN.md)
 - [docs/BUILD_GUARDRAILS.md](docs/BUILD_GUARDRAILS.md)
 - [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)

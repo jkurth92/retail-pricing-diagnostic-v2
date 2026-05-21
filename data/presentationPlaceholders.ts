@@ -119,5 +119,5 @@ export const FRAMEWORK_LAYER_LABELS = [
   { step: 3, name: "Pattern features", status: "Defined, not calculated" },
   { step: 4, name: "Knowledge & inference", status: "Active (POC)" },
   { step: 5, name: "Hypothesis engine", status: "Active (POC)" },
-  { step: 6, name: "Opportunity sizing", status: "Thematic pools only" },
+  { step: 6, name: "Storyline & opportunity", status: "Active (POC)" },
 ] as const;

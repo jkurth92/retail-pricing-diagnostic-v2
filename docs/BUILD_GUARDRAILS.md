@@ -21,6 +21,18 @@
 - Competitors must **not** affect opportunity sizing.
 - Scope math may calculate denominator values (addressable revenue = total × %) but **must not** calculate opportunity.
 
+## Opportunity & storyline engine (Step 6B)
+
+- Storyline must remain **explainable** with visible themes, hypotheses, and signals.
+- **No recommendation language** or exact pricing prescriptions in narrative output.
+- **No exact optimization outputs** or dollar precision without aligned formulas.
+- **No competitor dependence** in storyline synthesis.
+- **No fake precision** — overlap-adjusted thematic margin totals only.
+- **Max 3–5 primary themes**; secondary themes capped at 2.
+- **Architecture-first prioritization** in ranking and narrative emphasis.
+- **Suppress low-confidence** themes from primary storyline.
+- Revenue sensitivity is **secondary** to margin opportunity.
+
 ## Diagnostic hypothesis engine (Step 6A)
 
 - Hypotheses must remain **explainable** with visible supporting signals and rationale.

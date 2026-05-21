@@ -5,6 +5,7 @@ import { PatternFeatureLeverCard } from "@/components/PatternFeatureLeverCard";
 import { BenchmarkConceptExplorer } from "@/components/BenchmarkConceptExplorer";
 import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
 import { DiagnosticHypothesesPanel } from "@/components/DiagnosticHypothesesPanel";
+import { ExecutiveStorylinePanel } from "@/components/ExecutiveStorylinePanel";
 import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
 import { RoleInferenceSummaryCard } from "@/components/RoleInferenceSummaryCard";
 import { Card } from "@/components/Card";
@@ -20,17 +21,20 @@ import {
   objectivesAdjustEmphasis,
 } from "@/lib/archetypeContext";
 import { PATTERN_FEATURE_COUNT } from "@/data/patternFeatureCatalog";
+import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { EprScores } from "@/types/ui";
 
 type ObservedPricingPatternsPanelProps = {
   knowledgeContext: KnowledgeRegistryContext;
   eprScores: EprScores;
+  storylineResult: StorylineSynthesisResult & { guardrailMessage: string };
 };
 
 export function ObservedPricingPatternsPanel({
   knowledgeContext,
   eprScores,
+  storylineResult,
 }: ObservedPricingPatternsPanelProps) {
   const dataset = useMemo(() => buildPlaceholderIngestionDataset(), []);
 
@@ -85,8 +89,8 @@ export function ObservedPricingPatternsPanel({
   return (
     <div className="space-y-8">
       <PocGuardrailBanner
-        title="Observed patterns + hypothesis engine (Step 6A)"
-        detail="Pattern features remain descriptive. Hypotheses interpret structure with bounded opportunity themes — not recommendations or optimized prices."
+        title="Patterns → hypotheses → storyline (6A / 6B)"
+        detail="Pattern features are descriptive. Hypotheses and executive storyline provide thematic margin framing — not recommendations or optimized prices."
       />
 
       <DiagnosticFrameworkStrip
@@ -94,9 +98,12 @@ export function ObservedPricingPatternsPanel({
         workflowLabel="Observed Pricing Patterns"
       />
 
+      <ExecutiveStorylinePanel result={storylineResult} />
+
       <DiagnosticHypothesesPanel
         output={hypothesisOutput}
-        title="Prioritized structural hypotheses"
+        title="Underlying structural hypotheses"
+        showArchitectureNote={false}
       />
 
       <Card>

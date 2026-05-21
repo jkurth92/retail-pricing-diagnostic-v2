@@ -7,12 +7,14 @@ type HeaderSummaryProps = {
   retailerDisplay: string;
   knowledgeContext?: KnowledgeRegistryContext;
   workflowStepLabel?: string;
+  marginOpportunityRange?: string;
 };
 
 export function HeaderSummary({
   retailerDisplay,
   knowledgeContext,
   workflowStepLabel,
+  marginOpportunityRange,
 }: HeaderSummaryProps) {
   const archetype = knowledgeContext
     ? getArchetype(knowledgeContext.archetypeId)
@@ -56,7 +58,10 @@ export function HeaderSummary({
             value={workflowStepLabel ?? "Workflow"}
           />
           <StatusPill label="Engine" value="Scaffold only" />
-          <StatusPill label="Opportunity" value="Illustrative" />
+          <StatusPill
+            label="Margin theme"
+            value={marginOpportunityRange ?? "Thematic"}
+          />
         </div>
       </div>
     </Card>

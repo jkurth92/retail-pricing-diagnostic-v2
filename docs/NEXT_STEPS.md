@@ -36,6 +36,17 @@
 - Compute feature values from normalized rows after live ingestion
 - Map computed features to evidence items in `DiagnosticRunOutput`
 
+### Step 6B — Opportunity & storyline engine (complete)
+
+- Synthesizes hypotheses into executive themes and consulting narrative
+- Margin-led aggregated opportunity framing with overlap adjustment
+- UI on Client Context, Observed Patterns, Opportunity Size
+
+### Step 7 — Rule activation & dollar sizing (next)
+
+- Align thresholds; translate thematic ranges to scope dollars when approved
+- Connect computed pattern values to signal strength
+
 ### Step 6A — Diagnostic hypothesis engine (complete)
 
 - Deterministic signal grouping, confidence, narrative, opportunity calibration

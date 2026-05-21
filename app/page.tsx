@@ -18,6 +18,7 @@ import {
 } from "@/lib/archetypeContext";
 import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
 import { runDiagnosticHypothesisEngine } from "@/lib/hypothesisEngine";
+import { runOpportunityStorylineEngine } from "@/lib/storylineSynthesizer";
 import { parseNumericInput } from "@/lib/scopeMath";
 import type { StrategicObjectiveId } from "@/types/knowledge-client";
 import type {
@@ -98,6 +99,25 @@ export default function Home() {
         eprScores,
       }),
     [knowledgeContext, ingestionPreview, eprScores],
+  );
+
+  const hasRevenueInScope = parseNumericInput(revenueInScopeInput) !== null;
+
+  const storylineResult = useMemo(
+    () =>
+      runOpportunityStorylineEngine({
+        hypothesisOutput,
+        knowledge: knowledgeContext,
+        retailerDisplayName: confirmedRetailer || retailerInput,
+        hasRevenueInScope,
+      }),
+    [
+      hypothesisOutput,
+      knowledgeContext,
+      confirmedRetailer,
+      retailerInput,
+      hasRevenueInScope,
+    ],
   );
 
   const handlePopulateRetailer = () => {
@@ -196,6 +216,7 @@ export default function Home() {
             competitors={competitors}
             knowledgeContext={knowledgeContext}
             hypothesisOutput={hypothesisOutput}
+            storylineResult={storylineResult}
             archetypeId={archetypeId}
             knowledgePosture={knowledgePosture}
             strategicObjectives={strategicObjectives}
@@ -247,6 +268,7 @@ export default function Home() {
           <ObservedPricingPatternsPanel
             knowledgeContext={knowledgeContext}
             eprScores={eprScores}
+            storylineResult={storylineResult}
           />
         );
       case "opportunity_size":
@@ -254,11 +276,11 @@ export default function Home() {
           <OpportunitySizePanel
             knowledgeContext={knowledgeContext}
             hypothesisOutput={hypothesisOutput}
+            storylineResult={storylineResult}
             retailerName={confirmedRetailer}
             competitors={competitors}
             revenueInScopeLabel={revenueInScopeLabel}
             scopeStatusLabel={scopeStatusLabel}
-            selectedLeverLabels={selectedLeverLabels}
             scopeDefined={scopeStatusLabel === "Scope defined"}
             runId="local-diagnostic-run"
           />
@@ -286,6 +308,9 @@ export default function Home() {
         retailerDisplay={retailerDisplay}
         knowledgeContext={knowledgeContext}
         workflowStepLabel={workflowStepLabel}
+        marginOpportunityRange={
+          storylineResult.storyline.marginOpportunityTotalRange
+        }
       />
       <PrimaryTabs active={primaryModule} onChange={setPrimaryModule} />
       {renderModulePlaceholder()}
