@@ -33,6 +33,11 @@ export function StrategicContextCard({
     <Card>
       <p className="micro-label mb-2">Strategic context</p>
       <h3 className="section-title">Strategic Context</h3>
+      <p className="mt-2 text-sm text-[var(--text-muted)]">
+        Archetype, pricing posture, and objectives are configured in the Pricing
+        Knowledge Registry above. Format and notes below complement workflow
+        context.
+      </p>
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <div>
           <label

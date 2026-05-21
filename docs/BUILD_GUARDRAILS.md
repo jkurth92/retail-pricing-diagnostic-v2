@@ -21,6 +21,16 @@
 - Competitors must **not** affect opportunity sizing.
 - Scope math may calculate denominator values (addressable revenue = total × %) but **must not** calculate opportunity.
 
+## Knowledge registry (Step 5B)
+
+- Inference must remain **explainable** — rationale and confidence templates visible in UI.
+- **No hidden AI pricing logic** or generative conclusions.
+- Benchmark concepts are **descriptive only** — no thresholds in concept definitions.
+- **No active thresholds** without explicit alignment workshops.
+- **No opportunity sizing** during the ontology stage.
+- Category/item role overrides must stay **lightweight** — no SKU-by-SKU management assumptions.
+- Future rule candidates are scaffold records only — not executed by the engine.
+
 ## Pattern features (Step 4)
 
 - Pattern features must **not** imply pricing conclusions or recommendations.

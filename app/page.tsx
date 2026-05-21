@@ -12,7 +12,16 @@ import { OpportunitySizePanel } from "@/components/panels/OpportunitySizePanel";
 import { RetailerOverviewPanel } from "@/components/panels/RetailerOverviewPanel";
 import { ScopePanel } from "@/components/panels/ScopePanel";
 import { createSuggestedCompetitors } from "@/lib/competitors";
+import {
+  formatToArchetypeId,
+  legacyPostureToKnowledge,
+} from "@/lib/archetypeContext";
 import { parseNumericInput } from "@/lib/scopeMath";
+import type { StrategicObjectiveId } from "@/types/knowledge-client";
+import type {
+  PricingPosture as KnowledgePosture,
+  RetailerArchetypeId,
+} from "@/types/retailer-archetypes";
 import type { CompetitorEntry } from "@/types/competitors";
 import type { LeverKey } from "@/types/diagnostic-output";
 import {
@@ -40,6 +49,13 @@ export default function Home() {
   const [retailerFormat, setRetailerFormat] =
     useState<RetailerFormat>("Grocery");
   const [strategicContext, setStrategicContext] = useState("");
+  const [archetypeId, setArchetypeId] = useState<RetailerArchetypeId>("grocery");
+  const [knowledgePosture, setKnowledgePosture] =
+    useState<KnowledgePosture>("Hybrid");
+  const [strategicObjectives, setStrategicObjectives] = useState<
+    StrategicObjectiveId[]
+  >([]);
+  const [categoryHint, setCategoryHint] = useState("Laundry detergent");
   const [competitors, setCompetitors] = useState<CompetitorEntry[]>([]);
   const [totalRevenueInput, setTotalRevenueInput] = useState("");
   const [addressablePercentInput, setAddressablePercentInput] = useState("");
@@ -55,10 +71,37 @@ export default function Home() {
     (c) => c.selectedForPeerView,
   ).length;
 
+  const knowledgeContext = useMemo(
+    () => ({
+      archetypeId,
+      pricingPosture: knowledgePosture,
+      strategicObjectives,
+      categoryHint,
+    }),
+    [archetypeId, knowledgePosture, strategicObjectives, categoryHint],
+  );
+
   const handlePopulateRetailer = () => {
     const trimmed = retailerInput.trim();
     setConfirmedRetailer(trimmed || "");
     setCompetitors(createSuggestedCompetitors(retailerFormat));
+    setArchetypeId(formatToArchetypeId(retailerFormat));
+  };
+
+  const handleRetailerFormatChange = (format: RetailerFormat) => {
+    setRetailerFormat(format);
+    setArchetypeId(formatToArchetypeId(format));
+  };
+
+  const handleLegacyPostureChange = (posture: PricingPosture) => {
+    setPricingPosture(posture);
+    setKnowledgePosture(legacyPostureToKnowledge(posture));
+  };
+
+  const toggleStrategicObjective = (id: StrategicObjectiveId) => {
+    setStrategicObjectives((prev) =>
+      prev.includes(id) ? prev.filter((o) => o !== id) : [...prev, id],
+    );
   };
 
   const handleEprScoreChange = (dimension: EprDimension, score: number) => {
@@ -127,13 +170,21 @@ export default function Home() {
             retailerFormat={retailerFormat}
             strategicContext={strategicContext}
             competitors={competitors}
+            archetypeId={archetypeId}
+            knowledgePosture={knowledgePosture}
+            strategicObjectives={strategicObjectives}
+            categoryHint={categoryHint}
             onRetailerNameChange={setRetailerInput}
             onPopulateRetailer={handlePopulateRetailer}
             onEprScoreChange={handleEprScoreChange}
-            onPricingPostureChange={setPricingPosture}
-            onRetailerFormatChange={setRetailerFormat}
+            onPricingPostureChange={handleLegacyPostureChange}
+            onRetailerFormatChange={handleRetailerFormatChange}
             onStrategicContextChange={setStrategicContext}
             onCompetitorsChange={setCompetitors}
+            onArchetypeChange={setArchetypeId}
+            onKnowledgePostureChange={setKnowledgePosture}
+            onToggleObjective={toggleStrategicObjective}
+            onCategoryHintChange={setCategoryHint}
           />
         );
       case "client_uploads":
@@ -165,7 +216,13 @@ export default function Home() {
           />
         );
       case "observed_pricing_patterns":
-        return <ObservedPricingPatternsPanel />;
+        return (
+          <ObservedPricingPatternsPanel
+            knowledgeContext={knowledgeContext}
+            categoryHint={categoryHint}
+            onCategoryHintChange={setCategoryHint}
+          />
+        );
       case "opportunity_size":
         return (
           <OpportunitySizePanel

@@ -36,10 +36,16 @@
 - Compute feature values from normalized rows after live ingestion
 - Map computed features to evidence items in `DiagnosticRunOutput`
 
-### Step 5 — Knowledge source review
+### Step 5B — Pricing knowledge registry (complete)
+
+- Ontology types, data catalogs, deterministic role inference
+- Knowledge Registry UI on Client Context; context on Observed Pricing Patterns
+- Benchmark concepts and future rule candidates (scaffold only)
+
+### Step 5 — Knowledge source review (next)
 
 - Review local knowledge documents (not in Git)
-- Produce approved concept manifest
+- Produce approved concept manifest aligned to `data/benchmarkConcepts.ts`
 - Link concepts to disabled rule slots in `data/ruleLibraryPlaceholder.ts`
 
 ### Step 6 — First diagnostic rules
