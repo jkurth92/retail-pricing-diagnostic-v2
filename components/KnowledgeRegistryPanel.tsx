@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Disclosure } from "@/components/Disclosure";
 import { OntologyReferenceSection } from "@/components/OntologyReferenceSection";
 import { RetailerArchetypeCard } from "@/components/RetailerArchetypeCard";
 import { RoleInferencePreview } from "@/components/RoleInferencePreview";
@@ -28,6 +29,7 @@ type KnowledgeRegistryPanelProps = {
   onPostureChange: (posture: PricingPosture) => void;
   onToggleObjective: (id: StrategicObjectiveId) => void;
   onCategoryHintChange: (value: string) => void;
+  compact?: boolean;
 };
 
 export function KnowledgeRegistryPanel({
@@ -39,6 +41,7 @@ export function KnowledgeRegistryPanel({
   onPostureChange,
   onToggleObjective,
   onCategoryHintChange,
+  compact = false,
 }: KnowledgeRegistryPanelProps) {
   const archetype = getArchetype(archetypeId);
   const objectiveNotes = useMemo(
@@ -53,14 +56,21 @@ export function KnowledgeRegistryPanel({
     categoryHint,
   };
 
-  return (
-    <div className="space-y-6">
-      <Card>
-        <p className="micro-label mb-2">Strategic inputs</p>
-        <h3 className="section-title">Retailer archetype & objectives</h3>
+  const inputsBlock = (
+    <>
+        {!compact && (
+          <>
+            <p className="micro-label mb-2">Retailer profile inputs</p>
+            <h3 className="section-title">Archetype & objectives</h3>
+          </>
+        )}
+        {compact && (
+          <h3 className="text-base font-semibold text-[var(--text-navy)] mb-4">
+            Archetype & objectives
+          </h3>
+        )}
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          These selections feed role inference and expected-structure previews
-          across the workflow.
+          Shapes the pricing profile and structural themes in the readout.
         </p>
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
           <div>
@@ -112,7 +122,7 @@ export function KnowledgeRegistryPanel({
               htmlFor="category-hint-registry"
               className="mb-2 block text-sm font-medium text-[var(--text-navy)]"
             >
-              Example category (inference)
+              Example category
             </label>
             <input
               id="category-hint-registry"
@@ -155,9 +165,14 @@ export function KnowledgeRegistryPanel({
             ))}
           </ul>
         )}
-      </Card>
+    </>
+  );
 
-      {archetype && (
+  return (
+    <div className="space-y-6">
+      {compact ? <div>{inputsBlock}</div> : <Card>{inputsBlock}</Card>}
+
+      {!compact && archetype && (
         <RetailerArchetypeCard
           archetype={archetype}
           selectedPosture={pricingPosture}
@@ -165,9 +180,21 @@ export function KnowledgeRegistryPanel({
         />
       )}
 
-      <RoleInferencePreview context={context} />
+      <Disclosure
+        title="View role structure preview"
+        summary="How category and item roles are inferred for this retailer"
+        variant="subtle"
+      >
+        <RoleInferencePreview context={context} />
+      </Disclosure>
 
-      <OntologyReferenceSection archetypeId={archetypeId} />
+      <Disclosure
+        title="View reference definitions"
+        summary="Role and benchmark reference material"
+        variant="subtle"
+      >
+        <OntologyReferenceSection archetypeId={archetypeId} />
+      </Disclosure>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import type { CompetitorEntry } from "@/types/competitors";
 type RetailerOverviewPanelProps = {
   retailerName: string;
   competitors: CompetitorEntry[];
+  embedded?: boolean;
 };
 
 const FINANCIAL_METRICS = [
@@ -26,16 +27,18 @@ const NEWS_PLACEHOLDER_COUNT = 3;
 export function RetailerOverviewPanel({
   retailerName,
   competitors,
+  embedded = false,
 }: RetailerOverviewPanelProps) {
   const displayName = retailerName.trim() || "Not selected";
   const selectedPeers = getSelectedPeerNames(competitors);
 
-  return (
-    <div className="space-y-6">
-      <Card>
-        <p className="micro-label mb-2">Retailer overview</p>
-        <h3 className="section-title">{displayName}</h3>
-        <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  const headerBlock = (
+    <>
+      {!embedded && <p className="micro-label mb-2">Market context</p>}
+      <h3 className={embedded ? "text-base font-semibold" : "section-title"}>
+        {displayName}
+      </h3>
+      <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <dt className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
               Ticker
@@ -69,7 +72,26 @@ export function RetailerOverviewPanel({
             </dd>
           </div>
         </dl>
-      </Card>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="space-y-4">
+        {headerBlock}
+        <p className="text-sm text-[var(--text-muted)]">
+          Peers:{" "}
+          {selectedPeers.length > 0
+            ? selectedPeers.join(", ")
+            : "None selected — configure on Client context"}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>{headerBlock}</Card>
 
       <Card>
         <p className="micro-label mb-2">Financial performance</p>
@@ -113,7 +135,7 @@ export function RetailerOverviewPanel({
           <p className="mt-1 text-sm text-[var(--text-muted)]">
             {selectedPeers.length > 0
               ? selectedPeers.join(", ")
-              : "No peers selected for overview. Select competitors in Client Context."}
+              : "No peers selected — configure on Client context"}
           </p>
         </div>
         <div className="mt-6 overflow-x-auto">

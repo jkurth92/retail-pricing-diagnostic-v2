@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Card } from "@/components/Card";
+import { Disclosure } from "@/components/Disclosure";
 import { DataReadinessPanel } from "@/components/DataReadinessPanel";
 import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
 import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
@@ -24,10 +25,12 @@ function normalizationLabel(
 
 type ClientUploadsPanelProps = {
   knowledgeContext: KnowledgeRegistryContext;
+  embedded?: boolean;
 };
 
 export function ClientUploadsPanel({
   knowledgeContext,
+  embedded = false,
 }: ClientUploadsPanelProps) {
   const dataset = useMemo(() => buildPlaceholderIngestionDataset(), []);
   const allMappings = dataset.uploadedFiles.flatMap((f) => f.mappedColumns);
@@ -36,32 +39,35 @@ export function ClientUploadsPanel({
   );
 
   return (
-    <div className="space-y-8">
-      <PocGuardrailBanner
-        title="Evidence & readiness — preview only"
-        detail="Upload preview shows how normalized fields unlock pattern features and future diagnostics. Files are not parsed or stored."
-        variant="neutral"
-      />
+    <div className={embedded ? "space-y-6" : "space-y-8"}>
+      {!embedded && (
+        <>
+          <PocGuardrailBanner
+            title="Client data — preview only"
+            detail="Upload preview shows readiness for future diagnostics. Files are not parsed or stored."
+            variant="neutral"
+          />
+          <DiagnosticFrameworkStrip
+            context={knowledgeContext}
+            workflowLabel="Data"
+          />
+          <RoleInferenceSummaryCard
+            context={knowledgeContext}
+            title="Expected category roles (preview)"
+          />
+        </>
+      )}
 
-      <DiagnosticFrameworkStrip
-        context={knowledgeContext}
-        workflowLabel="Client Uploads"
-      />
-
-      <RoleInferenceSummaryCard
-        context={knowledgeContext}
-        title="Expected roles while evidence is in preview"
-      />
-
-      <Card>
-        <p className="micro-label mb-2">Evidence intake</p>
-        <h3 className="section-title">Client Uploads</h3>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
-          Ingestion and normalization scaffolding is active as a deterministic
-          preview. Files are not parsed, stored, or persisted. Column matching
-          uses exact, synonym, and fuzzy rules only — no AI inference.
-        </p>
-      </Card>
+      {!embedded && (
+        <Card>
+          <p className="micro-label mb-2">Evidence intake</p>
+          <h3 className="section-title">Client uploads</h3>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
+            Deterministic column-matching preview only — no file parsing or
+            storage in this build.
+          </p>
+        </Card>
+      )}
 
       <IngestionUploadSummary dataset={dataset} />
 
@@ -150,11 +156,25 @@ export function ClientUploadsPanel({
         </Card>
       ) : null}
 
-      <MappingConfidenceTable mappings={allMappings} />
-
-      <DiagnosticAvailabilityMatrix leverUnlocks={dataset.leverUnlocks} />
-
-      <DataReadinessPanel ingestionDataset={dataset} />
+      {embedded ? (
+        <Disclosure
+          title="View data readiness detail"
+          summary="Column mapping, lever availability, and coverage"
+          variant="subtle"
+        >
+          <div className="space-y-6">
+            <MappingConfidenceTable mappings={allMappings} />
+            <DiagnosticAvailabilityMatrix leverUnlocks={dataset.leverUnlocks} />
+            <DataReadinessPanel ingestionDataset={dataset} />
+          </div>
+        </Disclosure>
+      ) : (
+        <>
+          <MappingConfidenceTable mappings={allMappings} />
+          <DiagnosticAvailabilityMatrix leverUnlocks={dataset.leverUnlocks} />
+          <DataReadinessPanel ingestionDataset={dataset} />
+        </>
+      )}
     </div>
   );
 }

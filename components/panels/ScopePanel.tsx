@@ -33,6 +33,7 @@ type ScopePanelProps = {
   onToggleIncludedCategory: (category: string) => void;
   onToggleExcludedCategory: (category: string) => void;
   onToggleLever: (leverKey: LeverKey) => void;
+  embedded?: boolean;
 };
 
 function formatCurrency(value: number | null): string {
@@ -60,6 +61,7 @@ export function ScopePanel({
   onToggleIncludedCategory,
   onToggleExcludedCategory,
   onToggleLever,
+  embedded = false,
 }: ScopePanelProps) {
   const totalRevenue = parseNumericInput(totalRevenueInput);
   const addressablePercent = parseNumericInput(addressablePercentInput);
@@ -113,26 +115,30 @@ export function ScopePanel({
     "w-full max-w-md rounded-md border border-[var(--border)] px-4 py-2.5 text-sm focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]";
 
   return (
-    <div className="space-y-8">
-      <PocGuardrailBanner
-        title="Scope of diagnostic — denominator only"
-        detail="Revenue and lever scope define the sizing denominator. Opportunity ranges elsewhere are illustrative placeholders, not calculated."
-        variant="neutral"
-      />
-
-      <DiagnosticFrameworkStrip
-        context={knowledgeContext}
-        workflowLabel="Scope"
-      />
-
-      <RoleInferenceSummaryCard
-        context={knowledgeContext}
-        title="Role structure informing scope categories"
-      />
+    <div className={embedded ? "space-y-6" : "space-y-8"}>
+      {!embedded && (
+        <>
+          <PocGuardrailBanner
+            title="Diagnostic scope — denominator only"
+            detail="Revenue and lever selections define a future sizing base. Thematic opportunity ranges are not calculated from these inputs in this build."
+            variant="neutral"
+          />
+          <DiagnosticFrameworkStrip
+            context={knowledgeContext}
+            workflowLabel="Scope"
+          />
+          <RoleInferenceSummaryCard
+            context={knowledgeContext}
+            title="Category role structure for scope"
+          />
+        </>
+      )}
 
       <Card>
-        <p className="micro-label mb-2">Revenue scope</p>
-        <h3 className="section-title">Revenue scope</h3>
+        {!embedded && <p className="micro-label mb-2">Revenue scope</p>}
+        <h3 className={embedded ? "text-base font-semibold text-[var(--text-navy)]" : "section-title"}>
+          Revenue in scope
+        </h3>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
           {scopeSummary.scopeMathNote}
         </p>

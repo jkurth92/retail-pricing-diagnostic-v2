@@ -19,7 +19,7 @@ const ALIGNMENT_NOTE =
 export const PLACEHOLDER_DIAGNOSTIC_OUTPUT: DiagnosticRunOutput = {
   runId: "placeholder-run",
   status: "setup_in_progress",
-  workflowStep: "client_context",
+  workflowStep: "client_context" as const,
   clientContext: {
     retailerName: null,
     retailerFormat: null,

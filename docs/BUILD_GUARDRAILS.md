@@ -79,6 +79,17 @@
 - `thresholdConfig` and `formulaConfig` must remain `null` until alignment.
 - No elasticity, opportunity rates, or AI recommendations in this build.
 
+## UX & productization (Step 8)
+
+- **Narrative-first UX** — conclusions and executive narratives before supporting diagnostics.
+- **Progressive disclosure required** — signals, rationale, maturity scoring, ingestion detail, and reference material behind expandable sections.
+- **Avoid framework-heavy UI** — no ontology explorers, layer progress strips, or implementation terminology in default views.
+- **Avoid dashboard clutter** — restrained cards, fewer status pills, no duplicate storyline blocks per step.
+- **Executive readability prioritized** — spacious sections, clear hierarchy, consulting-style copy.
+- **Primary insights before supporting diagnostics** — journey steps 3–6 are readout; step 7 is evidence-only.
+- **Do not expose implementation mechanics** unnecessarily (engine version, scaffold labels, step IDs) in client-facing copy.
+- Primary module tabs (pricing / promotions / markdown) remain **out of default navigation** until aligned.
+
 ## Executive deliverable (Step 7)
 
 - Executive outputs must remain **explainable** — themes, hypotheses, signals, and section narratives traceable to prior engine steps.

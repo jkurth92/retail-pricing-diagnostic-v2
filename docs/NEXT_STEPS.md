@@ -36,6 +36,13 @@
 - Compute feature values from normalized rows after live ingestion
 - Map computed features to evidence items in `DiagnosticRunOutput`
 
+### Step 8 — UX & productization pass (complete)
+
+- Seven-step executive journey navigation (sidebar + stepper)
+- Progressive disclosure for evidence, ingestion, maturity, and reference material
+- Narrative-first panels; supporting diagnostics consolidated on final step
+- Primary module tabs removed from default experience
+
 ### Step 7 — Executive deliverable & storyline system (complete)
 
 - Executive summary, retailer profile, seven-section storyline, opportunity overview, strategic implications

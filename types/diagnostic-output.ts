@@ -6,11 +6,12 @@ import type { ScopeDefinition } from "@/types/scope";
 
 export type WorkflowStep =
   | "client_context"
-  | "client_uploads"
-  | "retailer_overview"
-  | "scope"
-  | "observed_pricing_patterns"
-  | "opportunity_size";
+  | "data_scope"
+  | "pricing_profile"
+  | "structural_themes"
+  | "opportunity_overview"
+  | "strategic_implications"
+  | "supporting_diagnostics";
 
 export type LeverKey =
   | "kvis"

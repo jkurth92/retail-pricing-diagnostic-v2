@@ -11,7 +11,7 @@ export type IllustrativeOpportunityRange = {
 };
 
 export const POC_DISCLAIMER =
-  "POC scaffolding — illustrative structure only. Not a pricing recommendation, benchmark verdict, or final opportunity estimate.";
+  "Preview build — structural diagnostic only. Not a pricing recommendation, benchmark verdict, or final opportunity estimate.";
 
 export const DIAGNOSTIC_HYPOTHESIS_THEMES: {
   id: string;
@@ -114,10 +114,11 @@ export const ILLUSTRATIVE_OPPORTUNITY_RANGES: IllustrativeOpportunityRange[] = [
 ];
 
 export const FRAMEWORK_LAYER_LABELS = [
-  { step: 1, name: "Client context", status: "Active (POC)" },
-  { step: 2, name: "Evidence & normalization", status: "Preview only" },
-  { step: 3, name: "Pattern features", status: "Defined, not calculated" },
-  { step: 4, name: "Knowledge & inference", status: "Active (POC)" },
-  { step: 5, name: "Hypothesis engine", status: "Active (POC)" },
-  { step: 6, name: "Storyline & opportunity", status: "Active (POC)" },
+  { step: 1, name: "Client context", status: "Setup" },
+  { step: 2, name: "Data & scope", status: "Setup" },
+  { step: 3, name: "Pricing profile", status: "Readout" },
+  { step: 4, name: "Structural themes", status: "Readout" },
+  { step: 5, name: "Opportunity overview", status: "Readout" },
+  { step: 6, name: "Strategic implications", status: "Readout" },
+  { step: 7, name: "Supporting diagnostics", status: "Evidence" },
 ] as const;

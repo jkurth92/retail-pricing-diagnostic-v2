@@ -3,15 +3,14 @@
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { HeaderSummary } from "@/components/HeaderSummary";
-import { PrimaryTabs } from "@/components/PrimaryTabs";
-import { WorkflowTabs } from "@/components/WorkflowTabs";
+import { JourneyStepper } from "@/components/JourneyStepper";
 import { ClientContextPanel } from "@/components/panels/ClientContextPanel";
-import { ClientUploadsPanel } from "@/components/panels/ClientUploadsPanel";
-import { ObservedPricingPatternsPanel } from "@/components/panels/ObservedPricingPatternsPanel";
-import { ExecutiveDeliverablePanel } from "@/components/ExecutiveDeliverablePanel";
-import { OpportunitySizePanel } from "@/components/panels/OpportunitySizePanel";
-import { RetailerOverviewPanel } from "@/components/panels/RetailerOverviewPanel";
-import { ScopePanel } from "@/components/panels/ScopePanel";
+import { DataScopePanel } from "@/components/panels/DataScopePanel";
+import { PricingProfilePanel } from "@/components/panels/PricingProfilePanel";
+import { StructuralThemesPanel } from "@/components/panels/StructuralThemesPanel";
+import { OpportunityOverviewPanel } from "@/components/panels/OpportunityOverviewPanel";
+import { StrategicImplicationsPanel } from "@/components/panels/StrategicImplicationsPanel";
+import { SupportingDiagnosticsPanel } from "@/components/panels/SupportingDiagnosticsPanel";
 import { createSuggestedCompetitors } from "@/lib/competitors";
 import {
   formatToArchetypeId,
@@ -32,19 +31,16 @@ import type { LeverKey } from "@/types/diagnostic-output";
 import {
   DEFAULT_EPR_SCORES,
   DEFAULT_SELECTED_LEVER_KEYS,
-  LEVER_LABEL_BY_KEY,
   WORKFLOW_TABS,
   workflowTabToSidebarStep,
   type EprDimension,
   type EprScores,
-  type PrimaryModule,
   type PricingPosture,
   type RetailerFormat,
   type WorkflowTab,
 } from "@/types/ui";
 
 export default function Home() {
-  const [primaryModule, setPrimaryModule] = useState<PrimaryModule>("overview");
   const [workflowTab, setWorkflowTab] =
     useState<WorkflowTab>("client_context");
   const [retailerInput, setRetailerInput] = useState("");
@@ -198,27 +194,6 @@ export default function Home() {
     });
   };
 
-  const scopeStatusLabel = useMemo(() => {
-    const hasRevenue = parseNumericInput(revenueInScopeInput) !== null;
-    const hasLevers = selectedLeverKeys.size > 0;
-    return hasRevenue && hasLevers ? "Scope defined" : "Needs inputs";
-  }, [revenueInScopeInput, selectedLeverKeys]);
-
-  const revenueInScopeLabel = useMemo(() => {
-    const value = parseNumericInput(revenueInScopeInput);
-    if (value === null) return "Pending";
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(value);
-  }, [revenueInScopeInput]);
-
-  const selectedLeverLabels = useMemo(
-    () => Array.from(selectedLeverKeys).map((key) => LEVER_LABEL_BY_KEY[key]),
-    [selectedLeverKeys],
-  );
-
   const workflowStepLabel = useMemo(() => {
     const tab = WORKFLOW_TABS.find((t) => t.id === workflowTab);
     return tab?.label ?? "Workflow";
@@ -230,13 +205,11 @@ export default function Home() {
         return (
           <ClientContextPanel
             retailerName={retailerInput}
-            eprScores={eprScores}
             pricingPosture={pricingPosture}
             retailerFormat={retailerFormat}
             strategicContext={strategicContext}
             competitors={competitors}
             knowledgeContext={knowledgeContext}
-            hypothesisOutput={hypothesisOutput}
             executiveDeliverable={executiveDeliverable}
             archetypeId={archetypeId}
             knowledgePosture={knowledgePosture}
@@ -244,7 +217,6 @@ export default function Home() {
             categoryHint={categoryHint}
             onRetailerNameChange={setRetailerInput}
             onPopulateRetailer={handlePopulateRetailer}
-            onEprScoreChange={handleEprScoreChange}
             onPricingPostureChange={handleLegacyPostureChange}
             onRetailerFormatChange={handleRetailerFormatChange}
             onStrategicContextChange={setStrategicContext}
@@ -255,18 +227,9 @@ export default function Home() {
             onCategoryHintChange={setCategoryHint}
           />
         );
-      case "client_uploads":
-        return <ClientUploadsPanel knowledgeContext={knowledgeContext} />;
-      case "retailer_overview":
+      case "data_scope":
         return (
-          <RetailerOverviewPanel
-            retailerName={confirmedRetailer}
-            competitors={competitors}
-          />
-        );
-      case "scope":
-        return (
-          <ScopePanel
+          <DataScopePanel
             knowledgeContext={knowledgeContext}
             retailerName={confirmedRetailer}
             selectedPeerCount={selectedPeerCount}
@@ -284,27 +247,47 @@ export default function Home() {
             onToggleLever={toggleLever}
           />
         );
-      case "observed_pricing_patterns":
+      case "pricing_profile":
         return (
-          <ObservedPricingPatternsPanel
+          <PricingProfilePanel
             knowledgeContext={knowledgeContext}
+            executiveDeliverable={executiveDeliverable}
             eprScores={eprScores}
-            storylineResult={storylineResult}
+            onEprScoreChange={handleEprScoreChange}
           />
         );
-      case "opportunity_size":
+      case "structural_themes":
         return (
-          <OpportunitySizePanel
+          <StructuralThemesPanel
+            knowledgeContext={knowledgeContext}
+            executiveDeliverable={executiveDeliverable}
+            hypothesisOutput={hypothesisOutput}
+          />
+        );
+      case "opportunity_overview":
+        return (
+          <OpportunityOverviewPanel
+            knowledgeContext={knowledgeContext}
+            executiveDeliverable={executiveDeliverable}
+          />
+        );
+      case "strategic_implications":
+        return (
+          <StrategicImplicationsPanel
+            knowledgeContext={knowledgeContext}
+            executiveDeliverable={executiveDeliverable}
+          />
+        );
+      case "supporting_diagnostics":
+        return (
+          <SupportingDiagnosticsPanel
             knowledgeContext={knowledgeContext}
             hypothesisOutput={hypothesisOutput}
             storylineResult={storylineResult}
             executiveDeliverable={executiveDeliverable}
+            eprScores={eprScores}
             retailerName={confirmedRetailer}
             competitors={competitors}
-            revenueInScopeLabel={revenueInScopeLabel}
-            scopeStatusLabel={scopeStatusLabel}
-            scopeDefined={scopeStatusLabel === "Scope defined"}
-            runId="local-diagnostic-run"
           />
         );
       default:
@@ -312,27 +295,11 @@ export default function Home() {
     }
   };
 
-  const renderModulePlaceholder = () => {
-    if (primaryModule === "overview") {
-      return (
-        <div className="mb-8">
-          <ExecutiveDeliverablePanel
-            readout={executiveDeliverable}
-            exportPackage={executiveDeliverable.exportPackage}
-          />
-        </div>
-      );
-    }
-    return (
-      <div className="mb-6 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-6 text-sm text-[var(--text-muted)]">
-        {primaryModule.charAt(0).toUpperCase() + primaryModule.slice(1)} module
-        content requires alignment before implementation.
-      </div>
-    );
-  };
-
   return (
-    <AppShell activeStep={workflowTabToSidebarStep(workflowTab)}>
+    <AppShell
+      activeStep={workflowTabToSidebarStep(workflowTab)}
+      onNavigate={setWorkflowTab}
+    >
       <HeaderSummary
         retailerDisplay={retailerDisplay}
         knowledgeContext={knowledgeContext}
@@ -341,9 +308,7 @@ export default function Home() {
           storylineResult.storyline.marginOpportunityTotalRange
         }
       />
-      <PrimaryTabs active={primaryModule} onChange={setPrimaryModule} />
-      {renderModulePlaceholder()}
-      <WorkflowTabs active={workflowTab} onChange={setWorkflowTab} />
+      <JourneyStepper active={workflowTab} onChange={setWorkflowTab} />
       {renderWorkflowPanel()}
     </AppShell>
   );

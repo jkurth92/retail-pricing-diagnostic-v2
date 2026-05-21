@@ -9,6 +9,7 @@ import { ExecutiveStorylinePanel } from "@/components/ExecutiveStorylinePanel";
 import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
 import { RoleInferenceSummaryCard } from "@/components/RoleInferenceSummaryCard";
 import { Card } from "@/components/Card";
+import { Disclosure } from "@/components/Disclosure";
 import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
 import { buildObservedPatternsOutput } from "@/lib/patternFeatureBuilder";
 import { runDiagnosticHypothesisEngine } from "@/lib/hypothesisEngine";
@@ -28,13 +29,15 @@ import type { EprScores } from "@/types/ui";
 type ObservedPricingPatternsPanelProps = {
   knowledgeContext: KnowledgeRegistryContext;
   eprScores: EprScores;
-  storylineResult: StorylineSynthesisResult & { guardrailMessage: string };
+  storylineResult: StorylineSynthesisResult;
+  embedded?: boolean;
 };
 
 export function ObservedPricingPatternsPanel({
   knowledgeContext,
   eprScores,
   storylineResult,
+  embedded = false,
 }: ObservedPricingPatternsPanelProps) {
   const dataset = useMemo(() => buildPlaceholderIngestionDataset(), []);
 
@@ -86,25 +89,48 @@ export function ObservedPricingPatternsPanel({
     output.markdownPatterns,
   ];
 
+  if (embedded) {
+    return (
+      <div className="space-y-6">
+        <p className="text-sm text-[var(--text-muted)]">
+          {output.readinessSummary} · {PATTERN_FEATURE_COUNT} descriptive
+          pattern features catalogued (values not computed in this build).
+        </p>
+        <div className="space-y-6">
+          {sections.map((section) => (
+            <PatternFeatureLeverCard key={section.leverKey} section={section} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <PocGuardrailBanner
-        title="Patterns → hypotheses → storyline (6A / 6B)"
-        detail="Pattern features are descriptive. Hypotheses and executive storyline provide thematic margin framing — not recommendations or optimized prices."
+        title="Observed pricing patterns"
+        detail="Pattern features are descriptive only — they support themes and narratives, not price recommendations."
+        variant="neutral"
       />
 
       <DiagnosticFrameworkStrip
         context={knowledgeContext}
-        workflowLabel="Observed Pricing Patterns"
+        workflowLabel="Patterns"
       />
 
-      <ExecutiveStorylinePanel result={storylineResult} />
+      <ExecutiveStorylinePanel result={storylineResult} compact />
 
-      <DiagnosticHypothesesPanel
-        output={hypothesisOutput}
-        title="Underlying structural hypotheses"
-        showArchitectureNote={false}
-      />
+      <Disclosure
+        title="View underlying hypotheses"
+        summary="Structural hypotheses behind themes"
+        variant="subtle"
+      >
+        <DiagnosticHypothesesPanel
+          output={hypothesisOutput}
+          title="Structural hypotheses"
+          showArchitectureNote={false}
+        />
+      </Disclosure>
 
       <Card>
         <p className="micro-label mb-2">Contextualized preview</p>
@@ -158,13 +184,19 @@ export function ObservedPricingPatternsPanel({
         title="Role context feeding hypotheses"
       />
 
-      <BenchmarkConceptExplorer
-        concepts={archetypeConcepts}
-        title="Benchmark concept families (descriptive)"
-      />
+      <Disclosure
+        title="View benchmark reference concepts"
+        summary="Descriptive concept families — no thresholds"
+        variant="subtle"
+      >
+        <BenchmarkConceptExplorer
+          concepts={archetypeConcepts}
+          title="Reference concepts (descriptive)"
+        />
+      </Disclosure>
 
       <div>
-        <p className="micro-label mb-3">Pattern feature inventory by lever</p>
+        <p className="micro-label mb-3">Pattern inventory by lever</p>
         <div className="space-y-6">
           {sections.map((section) => (
             <PatternFeatureLeverCard key={section.leverKey} section={section} />

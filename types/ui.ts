@@ -2,7 +2,7 @@ import type { WorkflowStep } from "@/types/diagnostic-output";
 
 export type WorkflowTab = WorkflowStep;
 
-export type SidebarFlowStep = "setup" | "context" | "analysis" | "opportunity";
+export type SidebarFlowStep = WorkflowTab;
 
 export type PrimaryModule = "overview" | "pricing" | "promotions" | "markdown";
 
@@ -34,13 +34,54 @@ export type DiagnosticLever =
   | "Promotions"
   | "Markdown";
 
-export const WORKFLOW_TABS: { id: WorkflowTab; label: string }[] = [
-  { id: "client_context", label: "Client Context" },
-  { id: "client_uploads", label: "Client Uploads" },
-  { id: "retailer_overview", label: "Retailer Overview" },
-  { id: "scope", label: "Scope of Diagnostic" },
-  { id: "observed_pricing_patterns", label: "Observed Pricing Patterns" },
-  { id: "opportunity_size", label: "Opportunity Size" },
+export const WORKFLOW_TABS: {
+  id: WorkflowTab;
+  label: string;
+  description: string;
+  sidebarGroup: "setup" | "readout" | "evidence";
+}[] = [
+  {
+    id: "client_context",
+    label: "Client context",
+    description: "Retailer type, posture, and objectives",
+    sidebarGroup: "setup",
+  },
+  {
+    id: "data_scope",
+    label: "Data & scope",
+    description: "Upload readiness and revenue in scope",
+    sidebarGroup: "setup",
+  },
+  {
+    id: "pricing_profile",
+    label: "Pricing profile",
+    description: "Inferred structure and maturity",
+    sidebarGroup: "readout",
+  },
+  {
+    id: "structural_themes",
+    label: "Structural themes",
+    description: "Prioritized pricing narratives",
+    sidebarGroup: "readout",
+  },
+  {
+    id: "opportunity_overview",
+    label: "Opportunity overview",
+    description: "Margin-led thematic opportunity",
+    sidebarGroup: "readout",
+  },
+  {
+    id: "strategic_implications",
+    label: "Strategic implications",
+    description: "What the structure means",
+    sidebarGroup: "readout",
+  },
+  {
+    id: "supporting_diagnostics",
+    label: "Supporting diagnostics",
+    description: "Signals, patterns, and evidence",
+    sidebarGroup: "evidence",
+  },
 ];
 
 export const LEVER_KEY_BY_LABEL: Record<DiagnosticLever, import("@/types/diagnostic-output").LeverKey> = {
@@ -129,14 +170,5 @@ export const DIAGNOSTIC_LEVERS: DiagnosticLever[] = [
 ];
 
 export function workflowTabToSidebarStep(tab: WorkflowTab): SidebarFlowStep {
-  if (tab === "opportunity_size") return "opportunity";
-  if (
-    tab === "retailer_overview" ||
-    tab === "scope" ||
-    tab === "observed_pricing_patterns"
-  ) {
-    return "analysis";
-  }
-  if (tab === "client_uploads") return "context";
-  return "context";
+  return tab;
 }

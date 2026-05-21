@@ -26,7 +26,7 @@ export function OntologyReferenceSection({
       >
         <div>
           <p className="micro-label">Reference library</p>
-          <p className="section-title">Ontology & benchmark concept catalog</p>
+          <p className="section-title">Reference definitions</p>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
             Expand to browse category roles, item roles, and {concepts.length}{" "}
             benchmark concepts for this archetype.

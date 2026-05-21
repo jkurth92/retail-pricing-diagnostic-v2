@@ -1,16 +1,12 @@
 import { CompetitorSuggestionPanel } from "@/components/CompetitorSuggestionPanel";
-import { DiagnosticHypothesesPanel } from "@/components/DiagnosticHypothesesPanel";
+import { Disclosure } from "@/components/Disclosure";
+import { DiagnosticSection } from "@/components/DiagnosticSection";
 import { ExecutiveDeliverablePanel } from "@/components/ExecutiveDeliverablePanel";
-import type { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
-import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
-import { DiagnosticFrameworkStrip } from "@/components/DiagnosticFrameworkStrip";
-import { EprScoringCard } from "@/components/EprScoringCard";
-import { FrameworkLayerProgress } from "@/components/FrameworkLayerProgress";
+import { JourneyContextStrip } from "@/components/JourneyContextStrip";
 import { KnowledgeRegistryPanel } from "@/components/KnowledgeRegistryPanel";
-import { PocGuardrailBanner } from "@/components/PocGuardrailBanner";
 import { RetailerInputCard } from "@/components/RetailerInputCard";
-import { RoleInferenceSummaryCard } from "@/components/RoleInferenceSummaryCard";
 import { StrategicContextCard } from "@/components/StrategicContextCard";
+import type { runExecutiveDeliverableEngine } from "@/lib/executiveDeliverableEngine";
 import type { CompetitorEntry } from "@/types/competitors";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { StrategicObjectiveId } from "@/types/knowledge-client";
@@ -19,21 +15,17 @@ import type {
   RetailerArchetypeId,
 } from "@/types/retailer-archetypes";
 import type {
-  EprDimension,
-  EprScores,
   PricingPosture as LegacyPricingPosture,
   RetailerFormat,
 } from "@/types/ui";
 
 type ClientContextPanelProps = {
   retailerName: string;
-  eprScores: EprScores;
   pricingPosture: LegacyPricingPosture;
   retailerFormat: RetailerFormat;
   strategicContext: string;
   competitors: CompetitorEntry[];
   knowledgeContext: KnowledgeRegistryContext;
-  hypothesisOutput: DiagnosticHypothesisOutput;
   executiveDeliverable: ReturnType<typeof runExecutiveDeliverableEngine>;
   archetypeId: RetailerArchetypeId;
   knowledgePosture: PricingPosture;
@@ -41,7 +33,6 @@ type ClientContextPanelProps = {
   categoryHint: string;
   onRetailerNameChange: (value: string) => void;
   onPopulateRetailer: () => void;
-  onEprScoreChange: (dimension: EprDimension, score: number) => void;
   onPricingPostureChange: (value: LegacyPricingPosture) => void;
   onRetailerFormatChange: (value: RetailerFormat) => void;
   onStrategicContextChange: (value: string) => void;
@@ -54,13 +45,11 @@ type ClientContextPanelProps = {
 
 export function ClientContextPanel({
   retailerName,
-  eprScores,
   pricingPosture,
   retailerFormat,
   strategicContext,
   competitors,
   knowledgeContext,
-  hypothesisOutput,
   executiveDeliverable,
   archetypeId,
   knowledgePosture,
@@ -68,7 +57,6 @@ export function ClientContextPanel({
   categoryHint,
   onRetailerNameChange,
   onPopulateRetailer,
-  onEprScoreChange,
   onPricingPostureChange,
   onRetailerFormatChange,
   onStrategicContextChange,
@@ -79,25 +67,29 @@ export function ClientContextPanel({
   onCategoryHintChange,
 }: ClientContextPanelProps) {
   return (
-    <div className="space-y-8">
-      <PocGuardrailBanner
-        title="Diagnostic cockpit — client context"
-        detail="Configure retailer archetype, pricing posture, and strategic objectives. All inference is deterministic POC logic."
-      />
-
-      <DiagnosticFrameworkStrip
+    <div className="max-w-3xl space-y-10">
+      <JourneyContextStrip
         context={knowledgeContext}
-        workflowLabel="Client Context"
+        stepLabel="Client context"
       />
 
       <ExecutiveDeliverablePanel
         readout={executiveDeliverable}
         exportPackage={executiveDeliverable.exportPackage}
-        compact
+        view="compact"
       />
 
-      <div className="grid gap-8 xl:grid-cols-3">
-        <div className="space-y-8 xl:col-span-2">
+      <DiagnosticSection
+        eyebrow="Setup"
+        title="Who we are diagnosing"
+        lead="Set the retailer, commercial posture, and strategic objectives that frame the diagnostic narrative."
+      >
+        <div className="space-y-6">
+          <RetailerInputCard
+            retailerName={retailerName}
+            onRetailerNameChange={onRetailerNameChange}
+            onPopulate={onPopulateRetailer}
+          />
           <KnowledgeRegistryPanel
             archetypeId={archetypeId}
             pricingPosture={knowledgePosture}
@@ -107,24 +99,10 @@ export function ClientContextPanel({
             onPostureChange={onKnowledgePostureChange}
             onToggleObjective={onToggleObjective}
             onCategoryHintChange={onCategoryHintChange}
-          />
-          <RoleInferenceSummaryCard context={knowledgeContext} />
-          <DiagnosticHypothesesPanel
-            output={hypothesisOutput}
-            title="Live hypothesis preview"
-            showArchitectureNote
+            compact
           />
         </div>
-        <div className="space-y-8">
-          <FrameworkLayerProgress />
-          <RetailerInputCard
-            retailerName={retailerName}
-            onRetailerNameChange={onRetailerNameChange}
-            onPopulate={onPopulateRetailer}
-          />
-          <EprScoringCard scores={eprScores} onScoreChange={onEprScoreChange} />
-        </div>
-      </div>
+      </DiagnosticSection>
 
       <StrategicContextCard
         pricingPosture={pricingPosture}
@@ -134,10 +112,17 @@ export function ClientContextPanel({
         onRetailerFormatChange={onRetailerFormatChange}
         onStrategicContextChange={onStrategicContextChange}
       />
-      <CompetitorSuggestionPanel
-        competitors={competitors}
-        onCompetitorsChange={onCompetitorsChange}
-      />
+
+      <Disclosure
+        title="View peer suggestions (optional)"
+        summary="Market context only — not used in opportunity sizing"
+        variant="subtle"
+      >
+        <CompetitorSuggestionPanel
+          competitors={competitors}
+          onCompetitorsChange={onCompetitorsChange}
+        />
+      </Disclosure>
     </div>
   );
 }

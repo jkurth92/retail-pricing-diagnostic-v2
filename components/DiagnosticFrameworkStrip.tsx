@@ -38,7 +38,7 @@ export function DiagnosticFrameworkStrip({
     <div className="card-surface overflow-hidden">
       <div className="border-b border-[var(--border)] bg-[var(--surface-muted)] px-5 py-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="micro-label">Diagnostic framework context</p>
+          <p className="micro-label">Current context</p>
           {workflowLabel && (
             <span className="text-xs font-medium text-[var(--accent)]">
               {workflowLabel}
