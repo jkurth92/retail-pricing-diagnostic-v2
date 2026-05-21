@@ -19,6 +19,13 @@ export {
 export { computeRecoverableValuePool } from "@/lib/recoverableValue";
 export { computeCategoryExposures } from "@/lib/categoryExposure";
 
+export {
+  runBenchmarkCalibrationEngine,
+  benchmarkBandForFamily,
+} from "@/lib/benchmarkCalibration";
+export { buildNormativeStructureSnapshot } from "@/lib/normativeStructures";
+export { buildContextualInterpretations } from "@/lib/contextualBenchmarks";
+
 export type {
   OpportunityCalculationTrace,
   OpportunityFinalRange,
@@ -30,3 +37,9 @@ export type {
   OpportunityExposureBundle,
   ThemeExposureContext,
 } from "@/types/opportunity-exposure";
+
+export type {
+  BenchmarkCalibrationBundle,
+  BenchmarkInterpretation,
+  NormativeStructureSnapshot,
+} from "@/types/benchmark-calibration";

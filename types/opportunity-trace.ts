@@ -30,4 +30,6 @@ export type OpportunityCalculationTrace = {
   exposureSummaries?: string[];
   /** Nested hypothesis-level traces when scope is executive_theme or portfolio */
   childTraces?: OpportunityCalculationTrace[];
+  /** Step 14B — benchmark context (secondary / consultant-facing) */
+  benchmarkContext?: OpportunityTraceRow[];
 };

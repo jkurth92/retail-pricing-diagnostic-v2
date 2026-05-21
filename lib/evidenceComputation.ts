@@ -1,7 +1,9 @@
 import { SIGNAL_BY_ID } from "@/data/signalDefinitions";
+import { runBenchmarkCalibrationEngine } from "@/lib/benchmarkCalibration";
 import { computeArchitectureSignals } from "@/lib/architectureSignals";
 import { computeCategorySignals } from "@/lib/categorySignals";
 import { computeKviSignals } from "@/lib/kviSignals";
+import { legacyPostureToKnowledge } from "@/lib/archetypeContext";
 import {
   synthesizePricingRows,
   type PricingRowSynthesisInput,
@@ -14,7 +16,7 @@ import type {
 } from "@/types/evidence-computation";
 import type { CanonicalFieldKey } from "@/types/upload-schema";
 
-const ENGINE_VERSION = "13.0.0";
+const ENGINE_VERSION = "14B.0.0";
 
 const FRAMEWORK_ARCH_SIGNAL_IDS = new Set([
   "sig-ladder-compression",
@@ -37,6 +39,7 @@ const FRAMEWORK_ARCH_SIGNAL_IDS = new Set([
 export type EvidenceComputationInput = PricingRowSynthesisInput & {
   normalizedFields: CanonicalFieldKey[];
   retailerDisplayName?: string | null;
+  eprAverage?: number | null;
 };
 
 function toSignal(
@@ -60,8 +63,9 @@ function buildEvidenceSummaries(
   kvi: ReturnType<typeof computeKviSignals>,
   cat: ReturnType<typeof computeCategorySignals>,
   categories: string[],
+  benchmarkLines: string[] = [],
 ): string[] {
-  const lines: string[] = [];
+  const lines: string[] = [...benchmarkLines];
 
   if (arch.premiumMainstreamGapPct !== null) {
     lines.push(
@@ -100,9 +104,17 @@ function buildEvidenceBackedThemes(
   arch: ReturnType<typeof computeArchitectureSignals>,
   kvi: ReturnType<typeof computeKviSignals>,
   retailerName: string | null,
+  benchmarkNarratives: string[],
 ): EvidenceBackedThemeLine[] {
   const who = retailerName?.trim() || "The portfolio";
   const themes: EvidenceBackedThemeLine[] = [];
+
+  for (const phrase of benchmarkNarratives.slice(0, 2)) {
+    themes.push({
+      headline: phrase.split(".")[0]?.slice(0, 72) ?? phrase,
+      detail: phrase,
+    });
+  }
 
   if (arch.compressionCategories.length >= 1) {
     const cats = arch.compressionCategories.slice(0, 2).join(" and ");
@@ -139,7 +151,7 @@ function buildEvidenceBackedThemes(
     });
   }
 
-  return themes.slice(0, 3);
+  return themes.slice(0, 4);
 }
 
 function resolveEligibleHypotheses(
@@ -283,8 +295,23 @@ export function runEvidenceComputation(
     input.normalizedFields.includes("promoPrice") ||
     input.normalizedFields.includes("markdownFlag");
 
+  const benchmarkCalibration = runBenchmarkCalibrationEngine({
+    archetypeId: input.archetypeId,
+    pricingPosture: legacyPostureToKnowledge(input.pricingPosture),
+    arch,
+    kvi,
+    categories,
+    eprAverage: input.eprAverage ?? null,
+  });
+
   const metrics = [...arch.metrics, ...kvi.metrics, ...cat.metrics];
-  const summaries = buildEvidenceSummaries(arch, kvi, cat, categories);
+  const summaries = buildEvidenceSummaries(
+    arch,
+    kvi,
+    cat,
+    categories,
+    benchmarkCalibration.exposureSummaryLines,
+  );
   const computedSignals = buildComputedSignals(
     arch,
     kvi,
@@ -301,6 +328,7 @@ export function runEvidenceComputation(
     arch,
     kvi,
     input.retailerDisplayName ?? null,
+    benchmarkCalibration.executiveContextLines,
   );
 
   return {
@@ -317,6 +345,7 @@ export function runEvidenceComputation(
     rowCount: pricingRows.length,
     categoriesAnalyzed: categories,
     normalizedFields: input.normalizedFields,
+    benchmarkCalibration,
   };
 }
 

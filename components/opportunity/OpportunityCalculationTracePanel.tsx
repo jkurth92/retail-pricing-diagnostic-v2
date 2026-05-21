@@ -84,6 +84,20 @@ export function OpportunityCalculationTracePanel({
         />
         <TraceSection heading="Intermediate steps" rows={trace.intermediateSteps} />
 
+        {trace.benchmarkContext && trace.benchmarkContext.length > 0 && (
+          <Disclosure
+            title="Compared to expected structure"
+            summary="Benchmark context (directional reference)"
+            variant="subtle"
+            defaultOpen={false}
+          >
+            <TraceSection
+              heading="Benchmark context"
+              rows={trace.benchmarkContext}
+            />
+          </Disclosure>
+        )}
+
         {trace.exposureSummaries && trace.exposureSummaries.length > 0 && (
           <ul className="opp-trace-exposure-summaries">
             {trace.exposureSummaries.map((s) => (

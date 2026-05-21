@@ -1,4 +1,5 @@
 import type { SupportingSignal } from "@/types/diagnostic-hypotheses";
+import type { BenchmarkCalibrationBundle } from "@/types/benchmark-calibration";
 import type { CanonicalFieldKey } from "@/types/upload-schema";
 
 export type EvidenceMetricId =
@@ -45,4 +46,6 @@ export type ComputedEvidenceBundle = {
   rowCount: number;
   categoriesAnalyzed: string[];
   normalizedFields: CanonicalFieldKey[];
+  /** Step 14B — benchmark-informed contextual interpretation */
+  benchmarkCalibration?: BenchmarkCalibrationBundle;
 };

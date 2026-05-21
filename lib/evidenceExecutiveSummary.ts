@@ -3,6 +3,12 @@ import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 
+export function buildBenchmarkPrimaryDrivers(
+  benchmarkLines: string[],
+): string[] {
+  return benchmarkLines.slice(0, 3);
+}
+
 export function buildExposurePrimaryDrivers(
   exposure: OpportunityExposureBundle,
 ): string[] {

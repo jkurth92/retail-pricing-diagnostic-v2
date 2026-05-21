@@ -4,6 +4,7 @@ import {
   buildStructuralPictureSummary,
 } from "@/lib/strategicNarrative";
 import {
+  buildBenchmarkPrimaryDrivers,
   buildExposurePrimaryDrivers,
   buildOpportunityHeadline,
   buildStrategicImplicationOneLiner,
@@ -90,13 +91,18 @@ export function buildExecutiveSummaryBlock(
 
   const exposureBundle = opportunityExposure ?? null;
 
+  const benchmarkLines =
+    evidenceBundle.benchmarkCalibration?.executiveContextLines ?? [];
+
   const supportingEvidenceMetrics = polishEvidenceMetrics(
     [
+      ...benchmarkLines,
       ...(exposureBundle?.causalFramingLines ?? []),
       ...(exposureBundle?.exposureSummaries ?? []),
       ...evidenceBundle.summaries,
     ].length > 0
       ? [
+          ...benchmarkLines,
           ...(exposureBundle?.causalFramingLines ?? []),
           ...(exposureBundle?.exposureSummaries ?? []),
           ...evidenceBundle.summaries,
@@ -131,12 +137,19 @@ export function buildExecutiveSummaryBlock(
       evidenceBundle,
       exposureBundle,
     ),
-    primaryDrivers:
-      exposureBundle && buildExposurePrimaryDrivers(exposureBundle).length > 0
+    primaryDrivers: (() => {
+      const benchmarkDrivers = buildBenchmarkPrimaryDrivers(benchmarkLines);
+      const exposureDrivers = exposureBundle
         ? buildExposurePrimaryDrivers(exposureBundle)
-        : evidenceBundle.primaryDrivers.length > 0
-          ? evidenceBundle.primaryDrivers
-          : archThemes.slice(0, 3).map((t) => t.themeFamily),
+        : [];
+      if (benchmarkDrivers.length > 0 || exposureDrivers.length > 0) {
+        return [...benchmarkDrivers, ...exposureDrivers].slice(0, 4);
+      }
+      if (evidenceBundle.primaryDrivers.length > 0) {
+        return evidenceBundle.primaryDrivers;
+      }
+      return archThemes.slice(0, 3).map((t) => t.themeFamily);
+    })(),
     evidenceBackedThemes,
     supportingEvidenceMetrics,
     strategicImplicationOneLiner,

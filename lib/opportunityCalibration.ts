@@ -7,6 +7,7 @@ import {
 import type { HypothesisFamily } from "@/types/diagnostic-hypotheses";
 import type { ElasticitySensitivity } from "@/types/diagnostic-hypotheses";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
+import type { BenchmarkCalibrationBundle } from "@/types/benchmark-calibration";
 import type { OpportunityTheme } from "@/types/opportunity-themes";
 
 function bandForFamily(family: HypothesisFamily) {
@@ -58,6 +59,7 @@ export function calibrateOpportunityTheme(
     evidenceStrength: calibrationContext?.evidenceStrength,
     evidenceMetrics: calibrationContext?.evidenceMetrics,
     themeExposure: calibrationContext?.themeExposure,
+    benchmarkCalibration: calibrationContext?.benchmarkCalibration,
   });
 
   const template = OPPORTUNITY_THEME_TEMPLATES[themeId];

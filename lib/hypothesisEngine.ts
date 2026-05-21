@@ -29,6 +29,7 @@ import {
   runOpportunityExposureEngine,
 } from "@/lib/opportunityExposure";
 import type { ComputedEvidenceBundle, EvidenceStrength } from "@/types/evidence-computation";
+import type { BenchmarkCalibrationBundle } from "@/types/benchmark-calibration";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 
 export type HypothesisEngineInput = {
@@ -70,6 +71,7 @@ function buildCandidate(
   evidenceStrength: EvidenceStrength,
   evidenceMetrics: ComputedEvidenceBundle["metrics"],
   exposureBundle: OpportunityExposureBundle,
+  benchmarkCalibration?: BenchmarkCalibrationBundle,
 ): DiagnosticHypothesis {
   const supporting = matchSignals(fired, entry.triggerSignalIds);
   const conflicting = conflictingSignals(fired, entry.conflictingSignalIds);
@@ -100,6 +102,7 @@ function buildCandidate(
       evidenceStrength,
       evidenceMetrics,
       themeExposure,
+      benchmarkCalibration,
     },
   );
 
@@ -218,6 +221,7 @@ export function runDiagnosticHypothesisEngine(
         evidence.evidenceStrength,
         evidence.metrics,
         exposureBundle,
+        evidence.benchmarkCalibration,
       ),
     );
   }

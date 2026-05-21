@@ -1,6 +1,9 @@
+import { MAX_PORTFOLIO_HIGH_PCT } from "@/data/benchmarkOpportunityBands";
 import { OPPORTUNITY_CALIBRATION_BANDS } from "@/data/opportunityCalibrationBands";
 import { OUTPUT_CALIBRATION_RULES } from "@/data/outputCalibrationRules";
+import { benchmarkBandForFamily } from "@/lib/benchmarkCalibration";
 import type { CalibrationBand } from "@/data/opportunityCalibrationBands";
+import type { BenchmarkCalibrationBundle } from "@/types/benchmark-calibration";
 import type { ConfidenceScore } from "@/types/confidence-scoring";
 import type { SupportingSignal } from "@/types/diagnostic-hypotheses";
 import type { HypothesisFamily } from "@/types/diagnostic-hypotheses";
@@ -27,6 +30,7 @@ export type OpportunityCalibrationInputs = {
   supportingSignals: SupportingSignal[];
   evidenceMetrics?: EvidenceMetric[];
   themeExposure?: ThemeExposureContext;
+  benchmarkCalibration?: BenchmarkCalibrationBundle;
 };
 
 function confidenceWidthMultiplier(
@@ -51,8 +55,22 @@ function confidenceWidthMultiplier(
   };
 }
 
-function bandForFamily(family: HypothesisFamily): CalibrationBand | undefined {
-  return OPPORTUNITY_CALIBRATION_BANDS.find((b) => b.families.includes(family));
+function bandForFamily(
+  family: HypothesisFamily,
+  benchmark?: BenchmarkCalibrationBundle,
+): CalibrationBand | undefined {
+  const legacy = OPPORTUNITY_CALIBRATION_BANDS.find((b) =>
+    b.families.includes(family),
+  );
+  if (!benchmark) return legacy;
+  const bench = benchmarkBandForFamily(family, benchmark);
+  if (!legacy) return undefined;
+  return {
+    ...legacy,
+    marginRangeLowPct: bench.lowPct,
+    marginRangeHighPct: bench.highPct,
+    themeLabel: `${bench.label} (benchmark-calibrated)`,
+  };
 }
 
 function elasticityTraceRow(
@@ -86,7 +104,7 @@ function buildCategoryExposureRows(
 export function buildHypothesisOpportunityTrace(
   input: OpportunityCalibrationInputs,
 ): OpportunityCalculationTrace {
-  const band = bandForFamily(input.family);
+  const band = bandForFamily(input.family, input.benchmarkCalibration);
   const mult = confidenceWidthMultiplier(
     input.confidenceLevel,
     input.evidenceStrength,
@@ -231,6 +249,16 @@ export function buildHypothesisOpportunityTrace(
     ? input.themeExposure.themeElasticityMultiplier
     : 1;
 
+  const benchmarkMult = input.benchmarkCalibration?.benchmarkWidthMultiplier ?? 1;
+
+  if (input.benchmarkCalibration) {
+    weightsApplied.push({
+      label: "Benchmark calibration",
+      value: `Severity: ${input.benchmarkCalibration.portfolioSeverity}`,
+      detail: `Width ×${benchmarkMult.toFixed(3)} — directional McKinsey-style reference, not optimization.`,
+    });
+  }
+
   const recoverable = computeRecoverableValuePool({
     band,
     confidenceLevel: input.confidenceLevel,
@@ -238,6 +266,7 @@ export function buildHypothesisOpportunityTrace(
     confidenceWidthMult: mult.combined,
     exposureWidthMult: exposureMult,
     elasticityWidthMult: elasticityMult,
+    benchmarkWidthMult: benchmarkMult,
     themeAffectedRevenuePct: input.themeExposure?.themeAffectedRevenuePct ?? 0,
   });
 
@@ -266,9 +295,9 @@ export function buildHypothesisOpportunityTrace(
       value: `${recoverable.rawLowPct}% – ${recoverable.rawHighPct}%`,
     },
     {
-      label: "2. Confidence × exposure × elasticity",
+      label: "2. Confidence × exposure × elasticity × benchmark",
       value: `× ${recoverable.combinedMultiplier.toFixed(3)}`,
-      detail: `confidence ${mult.combined.toFixed(3)} · exposure ${exposureMult.toFixed(3)} · elasticity ${elasticityMult.toFixed(3)}`,
+      detail: `confidence ${mult.combined.toFixed(3)} · exposure ${exposureMult.toFixed(3)} · elasticity ${elasticityMult.toFixed(3)} · benchmark ${benchmarkMult.toFixed(3)}`,
     },
     {
       label: "3. Round endpoints",
@@ -308,6 +337,7 @@ export function buildHypothesisOpportunityTrace(
       display: `${recoverable.roundedLowPct}%–${recoverable.roundedHighPct}% margin opportunity (thematic, bounded)`,
     },
     formulaSummary: `band[${recoverable.rawLowPct},${recoverable.rawHighPct}] × ${recoverable.combinedMultiplier.toFixed(3)} → [${recoverable.roundedLowPct},${recoverable.roundedHighPct}]%`,
+    benchmarkContext: input.benchmarkCalibration?.traceRows,
   };
 }
 
@@ -391,7 +421,7 @@ export function buildPortfolioOpportunityTrace(
     archThemes.length > 0 ? Math.max(...archThemes.map((t) => t.high)) : 0;
 
   const MIN_TOTAL_LOW_PCT = 0.4;
-  const MAX_TOTAL_HIGH_PCT = 2.8;
+  const MAX_TOTAL_HIGH_PCT = MAX_PORTFOLIO_HIGH_PCT;
 
   const totalLow = Math.max(
     MIN_TOTAL_LOW_PCT,

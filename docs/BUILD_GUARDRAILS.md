@@ -126,6 +126,19 @@
 - Margin opportunity is **primary**; revenue sensitivity is **secondary and directional** only.
 - Strategic implications are interpretive **“what this means”** lines — not action plans.
 
+## Benchmark calibration & normative structure (Step 14B)
+
+- **Benchmarks are contextual guides, not hard rules** — no pass/fail, threshold breach, or rigid scoring.
+- **Maintain explainability** — benchmark assumptions visible in traces, not giant tables in executive UX.
+- **Prioritize structural coherence** over exact benchmark matching.
+- **Architecture-first prioritization** — regular-price tiers, PL/NB, KVI before promo/markdown (out of v1 scope).
+- **Maturity-adjusted interpretation** — EPR informs severity, not dollar optimization.
+- **Avoid fake precision** — max 1.5% single theme, 3.0% portfolio indicative; directional bands only.
+- **Suppress unsupported narratives** — benchmark phrases require measured observed values.
+- **Category-specific realism** — sensitivity profiles inform language, not SKU-level actions.
+- **Benchmark UX remains secondary** — “Compared to expected structure” expandable only.
+- **No optimization, exact recommendations, competitor matching, or econometric modeling.**
+
 ## Opportunity exposure & calculation trace (Step 14A)
 
 - **Opportunity ranges must be traceable** — every thematic range includes an auditable “How this was calculated” path.

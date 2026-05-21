@@ -1,3 +1,6 @@
+import {
+  MAX_SINGLE_THEME_HIGH_PCT,
+} from "@/data/benchmarkOpportunityBands";
 import type { CalibrationBand } from "@/data/opportunityCalibrationBands";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
 import type { EvidenceStrength } from "@/types/evidence-computation";
@@ -9,6 +12,7 @@ export type RecoverableValueInput = {
   confidenceWidthMult: number;
   exposureWidthMult: number;
   elasticityWidthMult: number;
+  benchmarkWidthMult?: number;
   themeAffectedRevenuePct: number;
 };
 
@@ -32,15 +36,19 @@ export function computeRecoverableValuePool(
   const rawLow = input.band.marginRangeLowPct;
   const rawHigh = input.band.marginRangeHighPct;
 
+  const benchmarkMult = input.benchmarkWidthMult ?? 1;
   const combined =
     input.confidenceWidthMult *
     input.exposureWidthMult *
-    input.elasticityWidthMult;
+    input.elasticityWidthMult *
+    benchmarkMult;
 
   const adjustedLow = rawLow * combined;
-  const adjustedHigh = rawHigh * combined;
+  const adjustedHigh = Math.min(rawHigh * combined, MAX_SINGLE_THEME_HIGH_PCT);
   const roundedLow = parseFloat(adjustedLow.toFixed(1));
-  const roundedHigh = parseFloat(adjustedHigh.toFixed(1));
+  const roundedHigh = parseFloat(
+    Math.max(adjustedHigh, roundedLow + 0.1).toFixed(1),
+  );
 
   const note =
     input.themeAffectedRevenuePct > 0

@@ -163,6 +163,11 @@ export default function Home() {
 
   const computedEvidence = useMemo(() => {
     if (!diagnosticReady) return null;
+    const eprAvg =
+      Object.values(eprScores).length > 0
+        ? Object.values(eprScores).reduce((a, b) => a + b, 0) /
+          Object.values(eprScores).length
+        : null;
     return runEvidenceComputation({
       archetypeId,
       pricingPosture: knowledgePosture,
@@ -170,6 +175,7 @@ export default function Home() {
       retailerTicker: retailerEnrichment.context.ticker,
       normalizedFields: ingestionPreview.normalizedFields,
       retailerDisplayName: confirmedRetailer || retailerInput,
+      eprAverage: eprAvg,
     });
   }, [
     diagnosticReady,
@@ -180,6 +186,7 @@ export default function Home() {
     ingestionPreview.normalizedFields,
     confirmedRetailer,
     retailerInput,
+    eprScores,
   ]);
 
   const opportunityExposure = useMemo(() => {
@@ -224,6 +231,11 @@ export default function Home() {
         retailerTicker: retailerEnrichment.context.ticker,
         normalizedFields: ingestionPreview.normalizedFields,
         retailerDisplayName: confirmedRetailer || retailerInput,
+        eprAverage:
+          Object.values(eprScores).length > 0
+            ? Object.values(eprScores).reduce((a, b) => a + b, 0) /
+              Object.values(eprScores).length
+            : null,
       },
       opportunityExposure: opportunityExposure ?? undefined,
     });
