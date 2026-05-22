@@ -32,24 +32,33 @@ export function OverallOpportunityHero({
       : undefined;
 
   return (
-    <article className="ent-hero-card">
-      <header className="ent-hero-card-head">
-        <h2 className="ent-hero-label">Potential pricing opportunity</h2>
+    <article className="ent-hero-card relative w-full overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--accent-deep)_14%,var(--border))] bg-gradient-to-br from-white to-[var(--accent-light)] p-8 shadow-[0_20px_50px_rgba(26,53,104,0.08)]">
+      <header>
+        <h2 className="ent-hero-label m-0 text-xs font-semibold uppercase tracking-wider text-[var(--accent-mid)]">
+          Potential pricing opportunity
+        </h2>
       </header>
 
-      <div className="ent-hero-body">
-        <div className="ent-hero-focal">
+      <div className="ent-hero-body mt-6 grid items-end gap-8 lg:grid-cols-2">
+        <div className="ent-hero-focal min-w-0">
           {marginDisplay ? (
-            <p className="ent-hero-range" aria-label="Margin opportunity range">
+            <p
+              className="ent-hero-range m-0 text-5xl font-semibold leading-none tracking-tight text-[var(--accent-deep)] sm:text-6xl lg:text-7xl"
+              aria-label="Margin opportunity range"
+            >
               {marginDisplay}
             </p>
           ) : (
-            <p className="ent-hero-range">{exec.marginOpportunitySummary}</p>
+            <p className="ent-hero-range m-0 text-4xl font-semibold text-[var(--accent-deep)]">
+              {exec.marginOpportunitySummary}
+            </p>
           )}
-          <p className="ent-hero-unit">Indicative margin uplift</p>
+          <p className="ent-hero-unit mt-2 text-sm font-medium text-[var(--text-muted)]">
+            Indicative margin uplift
+          </p>
         </div>
 
-        <div className="ent-hero-visual">
+        <div className="ent-hero-visual min-w-0 pb-1">
           {lowPct != null && highPct != null && (
             <OpportunityRangeVisual
               lowPct={lowPct}
@@ -61,12 +70,16 @@ export function OverallOpportunityHero({
         </div>
       </div>
 
-      <footer className="ent-hero-meta">
-        <ul className="ent-hero-chips">
+      <footer className="ent-hero-meta mt-7 border-t border-[var(--border)] pt-5">
+        <ul className="ent-hero-chips m-0 flex list-none flex-wrap gap-2 p-0">
           {chips.map((c) => (
             <li
               key={c.label}
-              className={c.tone === "primary" ? "ent-chip ent-chip-primary" : "ent-chip"}
+              className={
+                c.tone === "primary"
+                  ? "ent-chip ent-chip-primary rounded-full border px-3 py-1.5 text-xs font-semibold"
+                  : "ent-chip rounded-full border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--text-navy)]"
+              }
             >
               {c.label}
             </li>

@@ -41,8 +41,8 @@ export function ExecutivePilotSummary({
   const highPct = margin ? parseFloat(margin.high) : null;
 
   return (
-    <div className="ent-compose">
-      <div className="ent-row ent-row-hero">
+    <div className="ent-compose flex w-full flex-col gap-5">
+      <div className="ent-row ent-row-hero w-full">
         <OverallOpportunityHero
           exec={exec}
           marginDisplay={margin?.display ?? null}
@@ -54,12 +54,18 @@ export function ExecutivePilotSummary({
 
       {(drivers.length > 0 || (exposure?.categoryExposures.length ?? 0) > 0) && (
         <div
-          className={`ent-row ent-row-split ${(exposure?.categoryExposures.length ?? 0) > 0 ? "ent-row-split-64" : ""}`}
+          className={`ent-row ent-row-split grid w-full gap-5 ${
+            (exposure?.categoryExposures.length ?? 0) > 0
+              ? "lg:grid-cols-[1.55fr_1fr]"
+              : ""
+          }`}
         >
           {drivers.length > 0 && (
-            <section className="ent-panel ent-panel-drivers">
-              <h2 className="ent-section-title">Key structural drivers</h2>
-              <div className="ent-driver-grid">
+            <section className="ent-panel ent-panel-drivers h-full rounded-2xl border bg-white p-6 shadow-sm">
+              <h2 className="ent-section-title mb-4 text-sm font-semibold text-[var(--text-navy)]">
+                Key structural drivers
+              </h2>
+              <div className="ent-driver-grid grid gap-3 sm:grid-cols-2">
                 {drivers.map((d) => (
                   <StrategicDriverCard key={d.id} driver={d} />
                 ))}
@@ -68,23 +74,24 @@ export function ExecutivePilotSummary({
           )}
 
           {exposure && exposure.categoryExposures.length > 0 && (
-            <aside className="ent-panel ent-panel-exposure">
-              <h2 className="ent-section-title">Category exposure</h2>
-              <CategoryContributionChart
-                categories={exposure.categoryExposures}
-                embedded
-              />
+            <aside className="ent-panel ent-panel-exposure h-full rounded-2xl border bg-[color-mix(in_srgb,var(--accent-light)_35%,white)] p-6 shadow-sm">
+              <h2 className="ent-section-title mb-4 text-sm font-semibold text-[var(--text-navy)]">
+                Category exposure
+              </h2>
+              <CategoryContributionChart categories={exposure.categoryExposures} />
             </aside>
           )}
         </div>
       )}
 
       {(insights.length > 0 || implications.length > 0) && (
-        <div className="ent-row ent-row-split ent-row-split-50">
+        <div className="ent-row ent-row-split grid w-full gap-5 lg:grid-cols-2">
           {insights.length > 0 && (
-            <section className="ent-panel ent-panel-evidence">
-              <h2 className="ent-section-title">Supporting evidence</h2>
-              <div className="ent-evidence-grid">
+            <section className="ent-panel ent-panel-evidence h-full rounded-2xl border bg-white p-6 shadow-sm">
+              <h2 className="ent-section-title mb-4 text-sm font-semibold text-[var(--text-navy)]">
+                Supporting evidence
+              </h2>
+              <div className="ent-evidence-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {insights.map((t) => (
                   <InsightSourceTile key={t.id} tile={t} />
                 ))}
@@ -93,23 +100,25 @@ export function ExecutivePilotSummary({
           )}
 
           {implications.length > 0 && (
-            <section className="ent-panel ent-panel-implications">
-              <h2 className="ent-section-title">Strategic implications</h2>
+            <section className="ent-panel ent-panel-implications h-full rounded-2xl border bg-gradient-to-b from-[var(--accent-light)]/30 to-white p-6 shadow-sm">
+              <h2 className="ent-section-title mb-4 text-sm font-semibold text-[var(--text-navy)]">
+                Strategic implications
+              </h2>
               <StrategicImplicationCallouts implications={implications} />
             </section>
           )}
         </div>
       )}
 
-      <div className="ent-row ent-row-consultant">
+      <div className="ent-row ent-row-consultant mt-2 w-full">
         <Disclosure
           title="Consultant detail"
           summary="Calculation trace · hypotheses · technical diagnostics"
           variant="subtle"
           defaultOpen={false}
-          className="ent-consultant-disclosure"
+          className="ent-consultant-disclosure rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)]"
         >
-          <div className="ent-consultant-body">
+          <div className="ent-consultant-body flex flex-col gap-4">
             {exec.marginOpportunityTotalTrace && (
               <OpportunityCalculationTracePanel
                 trace={exec.marginOpportunityTotalTrace}

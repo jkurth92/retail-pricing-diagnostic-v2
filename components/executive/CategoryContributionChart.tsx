@@ -5,13 +5,11 @@ import type { CategoryExposureRecord } from "@/types/opportunity-exposure";
 type CategoryContributionChartProps = {
   categories: CategoryExposureRecord[];
   maxItems?: number;
-  embedded?: boolean;
 };
 
 export function CategoryContributionChart({
   categories,
   maxItems = 6,
-  embedded = false,
 }: CategoryContributionChartProps) {
   const sorted = [...categories]
     .sort((a, b) => b.revenueWeightPct - a.revenueWeightPct)
@@ -21,21 +19,31 @@ export function CategoryContributionChart({
   if (sorted.length === 0) return null;
 
   return (
-    <div className={embedded ? "ent-exposure-inner" : "ent-exposure-card"}>
-      <ul className="ent-exposure-list">
+    <div className="ent-exposure-inner mt-1">
+      <ul className="ent-exposure-list m-0 list-none space-y-3 p-0">
         {sorted.map((c, i) => (
-          <li key={c.category} className="ent-exposure-row">
-            <span className="ent-exposure-rank">{i + 1}</span>
-            <span className="ent-exposure-name" title={c.category}>
+          <li
+            key={c.category}
+            className="flex items-center gap-3"
+          >
+            <span className="ent-exposure-rank w-5 shrink-0 text-xs font-bold text-[var(--accent-mid)]">
+              {i + 1}
+            </span>
+            <span
+              className="ent-exposure-name w-28 shrink-0 truncate text-sm font-semibold text-[var(--text-navy)]"
+              title={c.category}
+            >
               {c.category}
             </span>
-            <span className="ent-exposure-track">
+            <span className="ent-exposure-track min-w-0 flex-1 h-1.5 overflow-hidden rounded-full bg-[var(--accent-light)]">
               <span
-                className="ent-exposure-fill"
+                className="ent-exposure-fill block h-full min-w-[4px] rounded-full bg-gradient-to-r from-[var(--accent-mid)] to-[var(--accent-deep)]"
                 style={{ width: `${(c.revenueWeightPct / maxPct) * 100}%` }}
               />
             </span>
-            <span className="ent-exposure-val">{c.revenueWeightPct}%</span>
+            <span className="ent-exposure-val w-11 shrink-0 text-right text-sm font-semibold tabular-nums text-[var(--accent-deep)]">
+              {c.revenueWeightPct}%
+            </span>
           </li>
         ))}
       </ul>

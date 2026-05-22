@@ -6,7 +6,6 @@ type InsightSourceTileProps = {
   tile: TileModel;
 };
 
-/** Pull a prominent stat from metric string for display (presentation only). */
 function primaryStat(metric: string): string | null {
   const m = metric.match(/~?(\d+(?:\.\d+)?)\s*%/);
   if (m) return `${m[1]}%`;
@@ -21,16 +20,30 @@ export function InsightSourceTile({ tile }: InsightSourceTileProps) {
     tile.metric && stat && tile.metric !== stat ? tile.metric : null;
 
   return (
-    <article className={`ent-evidence-tile ${tile.strength ? `ent-evidence-${tile.strength}` : ""}`}>
-      <p className="ent-evidence-label">{tile.title}</p>
+    <article
+      className={`ent-evidence-tile flex min-h-[6.5rem] flex-col gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 ${
+        tile.strength === "strong" ? "ent-evidence-strong border-[var(--accent-deep)]/25 bg-white" : ""
+      }`}
+    >
+      <p className="ent-evidence-label m-0 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+        {tile.title}
+      </p>
       {stat ? (
-        <p className="ent-evidence-stat">{stat}</p>
+        <p className="ent-evidence-stat m-0 mt-1 text-3xl font-semibold leading-none tracking-tight text-[var(--accent-deep)]">
+          {stat}
+        </p>
       ) : subMetric ? (
-        <p className="ent-evidence-stat ent-evidence-stat-sm">{subMetric}</p>
+        <p className="ent-evidence-stat ent-evidence-stat-sm m-0 text-lg font-semibold text-[var(--accent-deep)]">
+          {subMetric}
+        </p>
       ) : null}
-      <p className="ent-evidence-sub">{tile.subtext}</p>
+      <p className="ent-evidence-sub m-0 mt-1 line-clamp-2 flex-1 text-xs leading-snug text-[var(--text-muted)]">
+        {tile.subtext}
+      </p>
       {tile.benchmarkHint && (
-        <span className="ent-chip ent-chip-xs">{tile.benchmarkHint}</span>
+        <span className="ent-chip ent-chip-xs mt-2 inline-block w-fit rounded border border-[var(--border)] px-2 py-0.5 text-[0.6875rem] text-[var(--text-muted)]">
+          {tile.benchmarkHint}
+        </span>
       )}
     </article>
   );
