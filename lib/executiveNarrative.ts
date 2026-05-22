@@ -5,7 +5,8 @@ import {
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { RetailerArchetypeId } from "@/types/retailer-archetypes";
 import type { ExecutiveThemeDefinition } from "@/data/executiveThemes";
-import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
+import type { ComputedEvidenceBundle, EvidenceStrength } from "@/types/evidence-computation";
+import { buildAlignedConfidenceSummary } from "@/lib/narrativeRefinement";
 
 export function buildThemeNarrativeSnippet(
   definition: ExecutiveThemeDefinition,
@@ -78,12 +79,7 @@ export function buildStorylineNarrative(
 
 export function buildConfidenceSummary(
   primaryThemes: ExecutiveTheme[],
+  evidenceStrength?: EvidenceStrength,
 ): string {
-  if (primaryThemes.length === 0) {
-    return "No primary themes met medium-or-higher confidence.";
-  }
-  const levels = primaryThemes.map((t) => t.confidence.level);
-  const high = levels.filter((l) => l === "high" || l === "medium_high").length;
-  const coverage = primaryThemes[0]?.confidence.evidenceCoverage ?? "partial";
-  return `${high} of ${primaryThemes.length} primary themes carry medium-high or high confidence. Evidence coverage: ${coverage}. Low-confidence hypotheses excluded from storyline.`;
+  return buildAlignedConfidenceSummary(primaryThemes, evidenceStrength);
 }

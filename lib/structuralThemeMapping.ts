@@ -5,6 +5,10 @@
 
 import type { BenchmarkInterpretation } from "@/types/benchmark-calibration";
 import type { ArchitectureSignalResult } from "@/lib/architectureSignals";
+import {
+  calibrateValueConcentrationPhrase,
+  kviEvidenceFromResult,
+} from "@/lib/narrativeRefinement";
 import type { KviSignalResult } from "@/lib/kviSignals";
 
 export type StructuralThemeMapping = {
@@ -72,7 +76,9 @@ export function mapStructuralThemes(
   ) {
     mappings.push({
       themeId: "kvi_over_investment",
-      themeLabel: "Broad value concentration",
+      themeLabel:
+        calibrateValueConcentrationPhrase(kviEvidenceFromResult(kvi)) ??
+        "Moderate value concentration",
       evidenceHooks: [`KVI-like revenue weight ~${kvi.kviRevenueSharePct}%`],
       benchmarkHook: kviInterp?.narrativePhrase,
     });

@@ -19,11 +19,18 @@ export function InsightSourceTile({ tile }: InsightSourceTileProps) {
   const subMetric =
     tile.metric && stat && tile.metric !== stat ? tile.metric : null;
 
+  const isPrimary = tile.emphasis === "primary";
+  const isSecondary = tile.emphasis === "secondary";
+
   return (
     <article
-      className={`ent-evidence-tile flex min-h-[6.5rem] flex-col gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 ${
-        tile.strength === "strong" ? "ent-evidence-strong border-[var(--accent-deep)]/25 bg-white" : ""
-      }`}
+      className={`ent-evidence-tile flex min-h-[6.5rem] flex-col gap-1 rounded-xl border p-4 ${
+        isPrimary
+          ? "ent-evidence-primary border-[var(--accent-deep)]/35 bg-white shadow-sm ring-1 ring-[var(--accent-deep)]/10"
+          : isSecondary
+            ? "ent-evidence-secondary border-[var(--accent-deep)]/20 bg-white"
+            : "border-[var(--border)] bg-[var(--surface-muted)] opacity-95"
+      } ${tile.strength === "strong" && !isPrimary ? "ent-evidence-strong" : ""}`}
     >
       <p className="ent-evidence-label m-0 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
         {tile.title}

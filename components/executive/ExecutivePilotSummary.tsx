@@ -37,6 +37,7 @@ export function ExecutivePilotSummary({
   const consultingSummary = buildExecutiveConsultingSummary(
     exec,
     exec.strategicImplications,
+    exposure,
   );
 
   const lowPct = margin ? parseFloat(margin.low) : null;
@@ -94,8 +95,8 @@ export function ExecutivePilotSummary({
               Executive summary
             </h2>
             <p className="mb-5 text-xs leading-relaxed text-[var(--text-muted)]">
-              AI-style synthesis for client discussion — opportunity framing, strategic
-              implications, and suggested follow-ups. Validate with client-owned data.
+              Concise strategic synthesis for client discussion — opportunity framing,
+              structural interpretation, and discussion prompts.
             </p>
             <ExecutiveConsultingSummary summary={consultingSummary} />
           </div>

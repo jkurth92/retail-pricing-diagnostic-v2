@@ -47,7 +47,7 @@ export function metricToConciseImplication(metric: string): string | null {
     return "Selective PL/NB compression may reduce monetization flexibility where observed.";
   }
   if (m.includes("kvi")) {
-    return "Broad value concentration may dilute recoverable margin.";
+    return "Visible value investment may dilute recoverable margin where breadth exceeds trip-role needs.";
   }
   if (m.includes("compressed") || m.includes("tier spacing")) {
     return "Compressed tier spacing may cap trade-up in key categories.";
@@ -86,7 +86,7 @@ export function buildConciseExecutiveImplications(
   const one = polishNarrativeText(fallbackOneLiner);
   if (one && !seen.has(one) && !isGenericFallbackPhrase(one)) out.push(one);
 
-  return filterGenericNarrativeLines(out).slice(0, 3);
+  return filterGenericNarrativeLines(out).slice(0, 2);
 }
 
 export function parseMarginRangeDisplay(range: string): {

@@ -9,20 +9,11 @@ export function buildOpeningExecutiveNarrative(
   storyline: StorylineSummary,
   enrichment?: RetailerEnrichmentBundle | null,
 ): string {
-  const topNames = primaryThemes
-    .slice(0, 2)
-    .map((t) => t.themeName.toLowerCase())
-    .join(" and ");
-
-  const themePhrase =
-    topNames.length > 0
-      ? topNames
-      : "structural pricing themes";
-
-  const scaleHint =
-    enrichment?.context.storeCount || enrichment?.context.revenue
-      ? " Scale context informs narrative framing only."
-      : "";
+  const archTheme = primaryThemes.find((t) => t.themeFamily === "Architecture");
+  const lead =
+    archTheme?.themeName.toLowerCase() ??
+    primaryThemes[0]?.themeName.toLowerCase() ??
+    "compressed premium architecture";
 
   const publicHint =
     enrichment?.context.publicCompany && enrichment.context.ticker
@@ -30,9 +21,8 @@ export function buildOpeningExecutiveNarrative(
       : "";
 
   return (
-    `The retailer${publicHint} appears to maintain a ${profile.posture.toLowerCase()} posture within a ${profile.archetype.toLowerCase()} context.${scaleHint} ` +
-    `Broad visible value investment may be preserved in traffic-driving areas, though pricing architecture may be limiting effective monetization separation — especially where ${themePhrase} dominate the storyline. ` +
-    `${storyline.executiveSummary.split(".")[0]}.`
+    `The retailer${publicHint} maintains a ${profile.posture.toLowerCase()} posture in a ${profile.archetype.toLowerCase()} context. ` +
+    `Measured structure points to ${lead} as the lead pricing story, with opportunity bounded rather than portfolio-wide.`
   );
 }
 

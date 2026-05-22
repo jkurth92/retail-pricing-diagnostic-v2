@@ -7,8 +7,11 @@ import {
   buildBenchmarkPrimaryDrivers,
   buildExposurePrimaryDrivers,
   buildOpportunityHeadline,
-  buildStrategicImplicationOneLiner,
 } from "@/lib/evidenceExecutiveSummary";
+import {
+  buildAlignedConfidenceSummary,
+  refineStrategicImplicationOneLiner,
+} from "@/lib/narrativeRefinement";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 import {
   buildConciseExecutiveImplications,
@@ -70,7 +73,7 @@ export function buildExecutiveSummaryBlock(
     normalizedFields: [],
   };
 
-  const strategicImplicationOneLiner = buildStrategicImplicationOneLiner(
+  const strategicImplicationOneLiner = refineStrategicImplicationOneLiner(
     evidenceBundle,
     storyline.primaryThemes,
   );
@@ -134,7 +137,10 @@ export function buildExecutiveSummaryBlock(
     marginOpportunitySummary: storyline.marginOpportunityTotalRange,
     marginOpportunityTotalTrace: storyline.marginOpportunityTotalTrace,
     revenueSensitivitySummary: storyline.revenueSensitivitySummary,
-    confidenceSummary: storyline.confidenceSummary,
+    confidenceSummary: buildAlignedConfidenceSummary(
+      storyline.primaryThemes,
+      evidenceBundle.evidenceStrength,
+    ),
     maturitySummary,
     strategicImplications: filterGenericNarrativeLines(implications),
     opportunityHeadline: buildOpportunityHeadline(

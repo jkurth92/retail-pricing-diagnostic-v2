@@ -3,6 +3,7 @@ import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import { localizedDriverPrefix } from "@/lib/signalPrioritization";
+import { calibrateKviExposureDriver } from "@/lib/narrativeRefinement";
 
 export function buildBenchmarkPrimaryDrivers(
   benchmarkLines: string[],
@@ -26,8 +27,12 @@ export function buildExposurePrimaryDrivers(
     );
   }
 
-  if (exposure.kviAffectedRevenuePct >= 15) {
-    drivers.push(`Broad KVI concentration (~${exposure.kviAffectedRevenuePct}% revenue weight)`);
+  if (exposure.kviAffectedRevenuePct >= 12) {
+    const kviLabel = calibrateKviExposureDriver(
+      exposure.kviAffectedRevenuePct,
+      exposure.categoryExposures.filter((c) => c.kviElevated).length,
+    );
+    if (kviLabel) drivers.push(kviLabel);
   }
 
   const plCats = exposure.categoryExposures

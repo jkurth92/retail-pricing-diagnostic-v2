@@ -9,6 +9,13 @@ import {
   softenExecutiveDriverPhrase,
 } from "@/lib/interpretationCalibration";
 import {
+  buildPortfolioConfidenceChipLabel,
+  buildStrategicDiscussionPrompts,
+  calibrateValueConcentrationPhrase,
+  dedupeNarrativeLines,
+  insightTileEmphasis,
+} from "@/lib/narrativeRefinement";
+import {
   classifyTextFamilyRank,
   filterGenericNarrativeLines,
   orderThemesByNarrativeDominance,
@@ -36,6 +43,7 @@ export type InsightSourceTile = {
   subtext: string;
   benchmarkHint?: string;
   strength?: "strong" | "moderate" | "weak";
+  emphasis?: "primary" | "secondary" | "supporting";
 };
 
 /** Composed executive narrative for client-facing discussion (presentation only). */
@@ -65,7 +73,9 @@ function driverTitleFromText(raw: string): string {
   if (/weak pl\/nb|pl\/nb separation/i.test(s)) return "Weak monetization separation";
   if (/compressed premium|premium spacing|tier spacing|architecture compression/i.test(s))
     return "Compressed premium architecture";
-  if (/kvi|visible value|value concentration/i.test(s)) return "Broad value concentration";
+  if (/kvi|visible value|value concentration/i.test(s)) {
+    return calibrateValueConcentrationPhrase({}) ?? "Moderate value concentration";
+  }
   if (/trade-up|premium\/mainstream|tier/i.test(s)) return "Limited trade-up clarity";
   if (/pl\/nb/i.test(s)) return "Narrow PL/NB separation";
   return shortenThemeTitle(s.split(".")[0] ?? s);
@@ -135,7 +145,7 @@ function metricToInsight(m: ComputedEvidenceBundle["metrics"][0]): InsightSource
       ? "Strong measured signal in upload proxy."
       : m.strength === "moderate"
         ? "Moderate signal — directionally meaningful."
-        : "Directional signal — validate with client data.";
+        : "Supporting directional signal.";
 
   return {
     id: m.id,
@@ -143,6 +153,7 @@ function metricToInsight(m: ComputedEvidenceBundle["metrics"][0]): InsightSource
     metric: m.value,
     subtext,
     strength: m.strength,
+    emphasis: insightTileEmphasis(m.label, m.strength, 0),
   };
 }
 
@@ -163,10 +174,13 @@ export function buildInsightSourceTiles(
   };
 
   if (evidence?.metrics) {
-    for (const m of sortMetricsByFamilyPriority(evidence.metrics)) {
+    const sorted = sortMetricsByFamilyPriority(evidence.metrics);
+    sorted.forEach((m, idx) => {
       const t = metricToInsight(m);
-      if (t) push(t);
-    }
+      if (!t) return;
+      t.emphasis = insightTileEmphasis(m.label, m.strength, idx);
+      push(t);
+    });
   }
 
   for (const line of filterGenericNarrativeLines(exec.supportingEvidenceMetrics)) {
@@ -231,10 +245,22 @@ export function buildInsightSourceTiles(
     });
   }
 
-  return tiles
+  const ordered = tiles
     .slice()
-    .sort((a, b) => classifyTextFamilyRank(a.title) - classifyTextFamilyRank(b.title))
+    .sort((a, b) => {
+      const rankDiff = classifyTextFamilyRank(a.title) - classifyTextFamilyRank(b.title);
+      if (rankDiff !== 0) return rankDiff;
+      const strengthOrder = { strong: 0, moderate: 1, weak: 2 };
+      const sa = strengthOrder[a.strength ?? "moderate"];
+      const sb = strengthOrder[b.strength ?? "moderate"];
+      return sa - sb;
+    })
     .slice(0, max);
+
+  return ordered.map((t, i) => ({
+    ...t,
+    emphasis: t.emphasis ?? insightTileEmphasis(t.title, t.strength, i),
+  }));
 }
 
 export function heroContextChips(
@@ -243,13 +269,13 @@ export function heroContextChips(
 ): { label: string; tone: "primary" | "neutral" }[] {
   const chips: { label: string; tone: "primary" | "neutral" }[] = [];
 
-  const conf =
-    exec.evidenceStrength === "strong"
-      ? "High confidence"
-      : exec.evidenceStrength === "moderate"
-        ? "Medium confidence"
-        : "Directional confidence";
-  chips.push({ label: conf, tone: "primary" });
+  chips.push({
+    label: buildPortfolioConfidenceChipLabel(
+      exec.evidenceStrength,
+      exec.topThemes,
+    ),
+    tone: "primary",
+  });
 
   if (exposure && exposure.monetizableExposurePct > 0) {
     chips.push({
@@ -269,13 +295,6 @@ export function heroContextChips(
   return chips.slice(0, 4);
 }
 
-function discussionStepFromImplication(line: string): string {
-  const clean = polishNarrativeText(line);
-  if (!clean) return "";
-  const lower = clean.charAt(0).toLowerCase() + clean.slice(1);
-  return `Validate and scope implications of ${lower.replace(/\.$/, "")} with the client's category and role data.`;
-}
-
 /**
  * Synthesizes existing executive fields into a discussion-ready summary.
  * Does not invoke diagnostic engines or alter sizing / evidence logic.
@@ -283,62 +302,43 @@ function discussionStepFromImplication(line: string): string {
 export function buildExecutiveConsultingSummary(
   exec: ExecutiveSummary,
   implications: string[] = exec.strategicImplications,
+  exposure?: OpportunityExposureBundle | null,
 ): ExecutiveConsultingSummary {
   const paragraphs: string[] = [];
 
-  const opportunityParts = [
-    exec.opportunityHeadline,
-    exec.marginOpportunitySummary,
-  ].filter((s) => s?.trim());
-  if (opportunityParts.length > 0) {
-    paragraphs.push(polishNarrativeText(opportunityParts.join(" ")));
-  } else if (exec.executiveNarrative.trim()) {
-    paragraphs.push(polishNarrativeText(exec.executiveNarrative.slice(0, 420)));
-  }
-
-  const implicationParts = [
-    exec.strategicImplicationOneLiner,
-    ...implications.slice(0, 3),
-  ].filter((s) => s?.trim());
-  if (implicationParts.length > 0) {
-    const joined = implicationParts
-      .map((s, i) => (i === 0 ? s : s.replace(/\.$/, "")))
-      .join(implicationParts.length > 1 ? " " : "");
-    paragraphs.push(polishNarrativeText(joined));
+  if (exec.opportunityHeadline?.trim()) {
+    paragraphs.push(polishNarrativeText(exec.opportunityHeadline));
   }
 
   if (exec.primaryDrivers.length > 0) {
-    const drivers = exec.primaryDrivers
-      .slice(0, 3)
+    const lead = exec.primaryDrivers
+      .slice(0, 2)
       .map((d) => softenBenchmarkPhrase(d))
-      .join("; ");
+      .join(" and ");
     paragraphs.push(
       polishNarrativeText(
-        `Primary structural drivers in scope include ${drivers}. ${exec.confidenceSummary}`,
+        `${lead} remain the primary structural opportunities in measured scope.`,
       ),
     );
-  } else if (exec.confidenceSummary.trim()) {
-    paragraphs.push(polishNarrativeText(exec.confidenceSummary));
+  } else if (exec.executiveNarrative.trim()) {
+    paragraphs.push(polishNarrativeText(exec.executiveNarrative.slice(0, 220)));
+  }
+
+  if (exec.strategicImplicationOneLiner?.trim()) {
+    paragraphs.push(polishNarrativeText(exec.strategicImplicationOneLiner));
+  } else if (implications[0]?.trim()) {
+    paragraphs.push(polishNarrativeText(implications[0]));
   }
 
   const nextSteps =
     exec.nextFocusAreas.length > 0
       ? exec.nextFocusAreas.slice(0, 5).map((s) => polishNarrativeText(s))
-      : implications
-          .slice(0, 4)
-          .map(discussionStepFromImplication)
-          .filter(Boolean);
-
-  if (nextSteps.length === 0 && exec.topThemes.length > 0) {
-    for (const theme of exec.topThemes.slice(0, 3)) {
-      nextSteps.push(
-        `Align on ${theme.themeName.toLowerCase()} — confirm evidence and commercial boundaries before sizing actions.`,
-      );
-    }
-  }
+      : buildStrategicDiscussionPrompts(exec, exposure ?? exec.opportunityExposure);
 
   return {
-    paragraphs: filterGenericNarrativeLines(paragraphs.filter(Boolean)).slice(0, 4),
+    paragraphs: dedupeNarrativeLines(
+      filterGenericNarrativeLines(paragraphs.filter(Boolean)),
+    ).slice(0, 4),
     nextSteps: filterGenericNarrativeLines(nextSteps.filter(Boolean)).slice(0, 5),
   };
 }

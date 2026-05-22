@@ -15,13 +15,13 @@ import type { RetailerArchetypeId } from "@/types/retailer-archetypes";
 const THEME_LABEL_MAP: Record<string, string> = {
   "weak premiumization": "Limited premium separation",
   "weak trade-up structure": "Limited trade-up clarity",
-  "excessive kvi breadth": "Broad value concentration",
-  "weak kvi concentration": "Diffuse KVI concentration",
+  "excessive kvi breadth": "Moderate value concentration",
+  "weak kvi concentration": "Modest KVI breadth",
   "architecture compression": "Compressed premium architecture",
   "weak pl/nb monetization separation": "Weak monetization separation",
   "flat monetization ladders": "Moderately flat monetization ladders",
   "architecture incoherence across categories": "Selective architecture inconsistency",
-  "over-investment in visible value (kvi)": "Broad value concentration",
+  "over-investment in visible value (kvi)": "Selective visible value investment",
 };
 
 const SEVERE_HEADLINE_RE =

@@ -232,7 +232,7 @@ export function synthesizeStoryline(
     marginOpportunityTotalRange: aggregated.rangeText,
     marginOpportunityTotalTrace: aggregated.trace ?? undefined,
     revenueSensitivitySummary,
-    confidenceSummary: buildConfidenceSummary(primary),
+    confidenceSummary: buildConfidenceSummary(primary, evidence?.evidenceStrength),
     narrative: buildStorylineNarrative(primary, defMap, archetypeId),
     notes: [...STORYLINE_NOTES],
   };

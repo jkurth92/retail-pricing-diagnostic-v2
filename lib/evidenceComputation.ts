@@ -14,6 +14,10 @@ import {
   softenExecutiveDriverPhrase,
 } from "@/lib/interpretationCalibration";
 import { sortLinesByFamilyPriority } from "@/lib/signalPrioritization";
+import {
+  calibrateValueConcentrationPhrase,
+  kviEvidenceFromResult,
+} from "@/lib/narrativeRefinement";
 import { runRobustDataInterpretation } from "@/lib/robustDataInterpretation";
 import type { RobustDataInterpretationBundle } from "@/types/data-interpretation";
 import {
@@ -161,15 +165,14 @@ function buildEvidenceBackedThemes(
     });
   }
 
-  if (kvi.broadKviBreadth || kvi.kviRevenueSharePct >= 18) {
+  const kviLabel = calibrateValueConcentrationPhrase(kviEvidenceFromResult(kvi));
+  if (kviLabel) {
     themes.push({
-      headline: "Broad KVI-like investment",
-      detail: `KVI-like investment appears distributed across traffic-driving categories (~${kvi.kviRevenueSharePct}% inferred revenue weight).`,
-    });
-  } else if (kvi.weakKviConcentration) {
-    themes.push({
-      headline: "Diffuse KVI concentration",
-      detail: `KVI-like signals are present but not sharply concentrated (~${kvi.kviRevenueSharePct}% revenue weight across multiple categories).`,
+      headline: kviLabel,
+      detail:
+        kvi.broadKviBreadth && kvi.kviRevenueSharePct >= 22
+          ? `Visible value investment spans multiple traffic categories (~${kvi.kviRevenueSharePct}% inferred revenue weight).`
+          : `KVI-like signals are present at modest breadth (~${kvi.kviRevenueSharePct}% inferred revenue weight).`,
     });
   }
 
@@ -285,12 +288,18 @@ function buildComputedSignals(
   return fired;
 }
 
-function primaryDrivers(metrics: ComputedEvidenceBundle["metrics"]): string[] {
+function primaryDrivers(
+  metrics: ComputedEvidenceBundle["metrics"],
+  kvi?: ReturnType<typeof computeKviSignals>,
+): string[] {
   const drivers: string[] = [];
   if (metrics.some((m) => m.family === "architecture" && !m.id.includes("pl_nb"))) {
     drivers.push("Compressed premium architecture");
   }
-  if (metrics.some((m) => m.family === "kvi")) drivers.push("Broad value concentration");
+  if (metrics.some((m) => m.family === "kvi") && kvi) {
+    const label = calibrateValueConcentrationPhrase(kviEvidenceFromResult(kvi));
+    if (label) drivers.push(label);
+  }
   if (metrics.some((m) => m.id === "pl_nb_gap" || m.id === "pl_nb_categories_narrow")) {
     drivers.push("Selective PL/NB compression");
   }
@@ -384,7 +393,7 @@ export function runEvidenceComputation(
     computedSignals,
     eligibleHypothesisIds,
     evidenceBackedThemes,
-    primaryDrivers: primaryDrivers(metrics),
+    primaryDrivers: primaryDrivers(metrics, kvi),
     promoMarkdownEligible,
     rowCount: pricingRows.length,
     categoriesAnalyzed: categories,
