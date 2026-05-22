@@ -8,6 +8,12 @@ import {
   calibrateEvidenceHeadline,
   softenExecutiveDriverPhrase,
 } from "@/lib/interpretationCalibration";
+import {
+  classifyTextFamilyRank,
+  filterGenericNarrativeLines,
+  orderThemesByNarrativeDominance,
+  sortMetricsByFamilyPriority,
+} from "@/lib/signalPrioritization";
 import { shortenThemeTitle } from "@/lib/executiveUxHelpers";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { ExecutiveSummary } from "@/types/executive-summary";
@@ -102,14 +108,25 @@ export function buildStrategicDriverCards(
     });
   };
 
-  exec.topThemes.slice(0, 2).forEach((t) => add(t.id, t.summary, t));
-  exec.primaryDrivers.forEach((d, i) => add(`driver-${i}`, d));
-  exec.evidenceBackedThemes.slice(0, 2).forEach((t, i) => {
+  orderThemesByNarrativeDominance(exec.topThemes)
+    .slice(0, 2)
+    .forEach((t) => add(t.id, t.summary, t));
+
+  exec.primaryDrivers
+    .slice()
+    .sort((a, b) => classifyTextFamilyRank(a) - classifyTextFamilyRank(b))
+    .forEach((d, i) => add(`driver-${i}`, d));
+
+  exec.evidenceBackedThemes.slice(0, 3).forEach((t, i) => {
     if (cards.length >= max) return;
+    if (classifyTextFamilyRank(t.headline) >= 5) return;
     add(`ebt-${i}`, `${t.headline}. ${t.detail}`);
   });
 
-  return cards.slice(0, max);
+  return cards
+    .slice()
+    .sort((a, b) => classifyTextFamilyRank(a.title) - classifyTextFamilyRank(b.title))
+    .slice(0, max);
 }
 
 function metricToInsight(m: ComputedEvidenceBundle["metrics"][0]): InsightSourceTile | null {
@@ -146,13 +163,13 @@ export function buildInsightSourceTiles(
   };
 
   if (evidence?.metrics) {
-    for (const m of evidence.metrics) {
+    for (const m of sortMetricsByFamilyPriority(evidence.metrics)) {
       const t = metricToInsight(m);
       if (t) push(t);
     }
   }
 
-  for (const line of exec.supportingEvidenceMetrics) {
+  for (const line of filterGenericNarrativeLines(exec.supportingEvidenceMetrics)) {
     const soft = softenBenchmarkPhrase(line);
     const colon = soft.indexOf(":");
     if (colon > 0) {
@@ -214,7 +231,10 @@ export function buildInsightSourceTiles(
     });
   }
 
-  return tiles.slice(0, max);
+  return tiles
+    .slice()
+    .sort((a, b) => classifyTextFamilyRank(a.title) - classifyTextFamilyRank(b.title))
+    .slice(0, max);
 }
 
 export function heroContextChips(
@@ -318,7 +338,7 @@ export function buildExecutiveConsultingSummary(
   }
 
   return {
-    paragraphs: paragraphs.filter(Boolean).slice(0, 4),
-    nextSteps: nextSteps.filter(Boolean).slice(0, 5),
+    paragraphs: filterGenericNarrativeLines(paragraphs.filter(Boolean)).slice(0, 4),
+    nextSteps: filterGenericNarrativeLines(nextSteps.filter(Boolean)).slice(0, 5),
   };
 }

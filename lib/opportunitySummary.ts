@@ -2,6 +2,7 @@ import {
   OPPORTUNITY_CAVEATS,
   OPPORTUNITY_STATUS_NOTES,
 } from "@/data/opportunitySummaryTemplates";
+import { governanceEligibleForEnabler } from "@/lib/signalPrioritization";
 import { aggregateMarginOpportunity } from "@/lib/opportunityAggregator";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type {
@@ -47,6 +48,7 @@ export function buildOpportunitySummary(
   const enablers: OpportunityDriver[] = [];
   if (
     governance &&
+    governanceEligibleForEnabler([...primaryThemes, ...secondaryThemes]) &&
     !primaryDrivers.some((d) => d.label === governance.themeName)
   ) {
     enablers.push({

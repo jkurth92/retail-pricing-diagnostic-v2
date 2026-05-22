@@ -20,6 +20,7 @@ import {
 } from "@/lib/opportunityAggregator";
 import { buildOpportunitySummary } from "@/lib/opportunitySummary";
 import { calibrateStorylineResult } from "@/lib/outputCalibration";
+import { orderThemesByNarrativeDominance } from "@/lib/signalPrioritization";
 import { rankExecutiveThemes } from "@/lib/themeRanker";
 import type { DiagnosticHypothesisOutput } from "@/types/diagnostic-hypotheses";
 import type { DiagnosticHypothesis } from "@/types/diagnostic-hypotheses";
@@ -169,7 +170,7 @@ export function synthesizeStoryline(
   const coverage = evidence?.dataInterpretation?.evidenceCoverage;
 
   const { primary, secondary, suppressed } = rankExecutiveThemes(
-    candidateThemes,
+    orderThemesByNarrativeDominance(candidateThemes),
     defMap,
     coverage,
   );

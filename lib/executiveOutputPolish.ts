@@ -2,6 +2,10 @@ import {
   calibrateEvidenceHeadline,
   softenExecutiveDriverPhrase,
 } from "@/lib/interpretationCalibration";
+import {
+  filterGenericNarrativeLines,
+  isGenericFallbackPhrase,
+} from "@/lib/signalPrioritization";
 import type { EvidenceBackedThemeLine } from "@/types/evidence-computation";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { LeverPatternFeaturesSection } from "@/types/pattern-features";
@@ -80,9 +84,9 @@ export function buildConciseExecutiveImplications(
   }
 
   const one = polishNarrativeText(fallbackOneLiner);
-  if (one && !seen.has(one)) out.push(one);
+  if (one && !seen.has(one) && !isGenericFallbackPhrase(one)) out.push(one);
 
-  return out.slice(0, 3);
+  return filterGenericNarrativeLines(out).slice(0, 3);
 }
 
 export function parseMarginRangeDisplay(range: string): {

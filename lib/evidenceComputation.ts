@@ -13,6 +13,7 @@ import {
   plNbAttributionLine,
   softenExecutiveDriverPhrase,
 } from "@/lib/interpretationCalibration";
+import { sortLinesByFamilyPriority } from "@/lib/signalPrioritization";
 import { runRobustDataInterpretation } from "@/lib/robustDataInterpretation";
 import type { RobustDataInterpretationBundle } from "@/types/data-interpretation";
 import {
@@ -286,13 +287,15 @@ function buildComputedSignals(
 
 function primaryDrivers(metrics: ComputedEvidenceBundle["metrics"]): string[] {
   const drivers: string[] = [];
-  if (metrics.some((m) => m.family === "architecture")) drivers.push("Price architecture");
-  if (metrics.some((m) => m.id === "pl_nb_gap" || m.id === "pl_nb_categories_narrow")) {
-    drivers.push("PL/NB separation");
+  if (metrics.some((m) => m.family === "architecture" && !m.id.includes("pl_nb"))) {
+    drivers.push("Compressed premium architecture");
   }
-  if (metrics.some((m) => m.family === "kvi")) drivers.push("KVI concentration");
+  if (metrics.some((m) => m.family === "kvi")) drivers.push("Broad value concentration");
+  if (metrics.some((m) => m.id === "pl_nb_gap" || m.id === "pl_nb_categories_narrow")) {
+    drivers.push("Selective PL/NB compression");
+  }
   if (metrics.some((m) => m.family === "category")) drivers.push("Category mix");
-  return drivers.slice(0, 4);
+  return sortLinesByFamilyPriority(drivers).slice(0, 4);
 }
 
 export function runEvidenceComputation(

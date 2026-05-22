@@ -15,6 +15,11 @@ import {
   polishEvidenceMetrics,
   polishEvidenceThemes,
 } from "@/lib/executiveOutputPolish";
+import {
+  filterGenericNarrativeLines,
+  orderThemesByNarrativeDominance,
+  sortLinesByFamilyPriority,
+} from "@/lib/signalPrioritization";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
 import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
@@ -42,10 +47,10 @@ export function buildExecutiveSummaryBlock(
     enrichment,
   );
 
-  const topThemes = [
+  const topThemes = orderThemesByNarrativeDominance([
     ...storyline.primaryThemes,
     ...storyline.secondaryThemes,
-  ].slice(0, 5);
+  ]).slice(0, 5);
 
   const archThemes = topThemes.filter((t) => ARCH_FAMILIES.has(t.themeFamily));
 
@@ -131,7 +136,7 @@ export function buildExecutiveSummaryBlock(
     revenueSensitivitySummary: storyline.revenueSensitivitySummary,
     confidenceSummary: storyline.confidenceSummary,
     maturitySummary,
-    strategicImplications: implications,
+    strategicImplications: filterGenericNarrativeLines(implications),
     opportunityHeadline: buildOpportunityHeadline(
       storylineResult,
       evidenceBundle,
@@ -143,12 +148,17 @@ export function buildExecutiveSummaryBlock(
         ? buildExposurePrimaryDrivers(exposureBundle)
         : [];
       if (benchmarkDrivers.length > 0 || exposureDrivers.length > 0) {
-        return [...benchmarkDrivers, ...exposureDrivers].slice(0, 4);
+        return sortLinesByFamilyPriority([
+          ...benchmarkDrivers,
+          ...exposureDrivers,
+        ]).slice(0, 4);
       }
       if (evidenceBundle.primaryDrivers.length > 0) {
-        return evidenceBundle.primaryDrivers;
+        return sortLinesByFamilyPriority(evidenceBundle.primaryDrivers).slice(0, 4);
       }
-      return archThemes.slice(0, 3).map((t) => t.themeFamily);
+      return orderThemesByNarrativeDominance(archThemes)
+        .slice(0, 3)
+        .map((t) => t.themeName);
     })(),
     evidenceBackedThemes,
     supportingEvidenceMetrics,

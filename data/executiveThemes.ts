@@ -122,7 +122,7 @@ export const EXECUTIVE_THEME_DEFINITIONS: ExecutiveThemeDefinition[] = [
       "hyp-role-alignment",
       "hyp-weak-opp",
     ],
-    strategicImportanceWeight: 45,
+    strategicImportanceWeight: 22,
     architecturePriority: false,
     narrativeKey: "strategic-consistency",
     revenueSensitivityNote: "Enabler theme — capture modifier, not primary volume lever",

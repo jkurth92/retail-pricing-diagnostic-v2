@@ -1,3 +1,4 @@
+import { hypothesisSortScore } from "@/lib/signalPrioritization";
 import type { DiagnosticHypothesis } from "@/types/diagnostic-hypotheses";
 import { OUTPUT_CALIBRATION_RULES } from "@/data/outputCalibrationRules";
 import type { HypothesisRegistryEntry } from "@/data/diagnosticHypotheses";
@@ -30,10 +31,14 @@ export function prioritizeHypotheses(
   surfaced: DiagnosticHypothesis[];
   suppressed: DiagnosticHypothesis[];
 } {
-  const scored = candidates.map((h) => ({
-    h,
-    score: computeSortScore(registry.get(h.id)!, h),
-  }));
+  const scored = candidates.map((h) => {
+    const entry = registry.get(h.id)!;
+    const base = computeSortScore(entry, h);
+    return {
+      h,
+      score: hypothesisSortScore(entry, h, base),
+    };
+  });
   scored.sort((a, b) => b.score - a.score);
 
   const surfaced: DiagnosticHypothesis[] = [];

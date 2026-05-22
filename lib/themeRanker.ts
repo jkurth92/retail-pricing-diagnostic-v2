@@ -1,4 +1,8 @@
 import { confidenceMeetsDirectionalBar } from "@/lib/gracefulDegradation";
+import {
+  compareThemesByDominance,
+  dominanceScoreBoost,
+} from "@/lib/signalPrioritization";
 import type { EvidenceCoverageAssessment } from "@/types/data-interpretation";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
@@ -39,6 +43,7 @@ export function computeThemeScore(
   score += RECOVERABILITY_SCORE[theme.recoverability] ?? 0;
   score += theme.supportingHypotheses.length * 2;
   score += Math.min(theme.supportingSignals.length, 6);
+  score += dominanceScoreBoost(theme.themeFamily);
   return score;
 }
 
@@ -62,7 +67,11 @@ export function rankExecutiveThemes(
     theme: t,
     score: computeThemeScore(t, definitions.get(t.id)!),
   }));
-  scored.sort((a, b) => b.score - a.score);
+  scored.sort((a, b) => {
+    const dominance = compareThemesByDominance(a.theme, b.theme);
+    if (dominance !== 0) return dominance;
+    return b.score - a.score;
+  });
 
   const primary = scored
     .slice(0, MAX_PRIMARY_THEMES)

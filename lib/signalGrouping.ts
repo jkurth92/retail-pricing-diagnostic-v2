@@ -107,9 +107,7 @@ export function evaluateStructuralSignals(
     }
   }
 
-  if (!hasAny(present, ["promoFlag", "promoPrice"])) {
-    add("sig-promo-dependency", "weak");
-  } else {
+  if (hasAny(present, ["promoFlag", "promoPrice"])) {
     add("sig-promo-dependency", "moderate");
     add("sig-weak-base-price", "moderate");
     if (posture === "HiLo" || posture === "Hybrid") {
@@ -131,19 +129,15 @@ export function evaluateStructuralSignals(
     add("sig-incoherent-ladder", "moderate");
   }
 
-  if (knowledge.strategicObjectives.length >= 3) {
-    add("sig-governance-weak", "moderate");
-  }
-
   if (ctx.eprAverage !== null && ctx.eprAverage < 3) {
-    add("sig-sophistication-limited", "moderate");
+    add("sig-sophistication-limited", "weak");
   }
 
   const coverage =
     ctx.patternFeaturesTotal > 0
       ? ctx.patternFeaturesDefined / ctx.patternFeaturesTotal
       : 0;
-  if (coverage < 0.5) add("sig-execution-leakage", "moderate");
+  if (coverage < 0.5) add("sig-execution-leakage", "weak");
 
   const expectedTraffic =
     archId === "mass" || archId === "discount" || archId === "grocery";
@@ -152,6 +146,14 @@ export function evaluateStructuralSignals(
     roleInference.categorySuggestion.roleId === "profit_driver"
   ) {
     add("sig-role-mismatch", "moderate");
+  }
+
+  if (
+    roleInference.categorySuggestion.roleId === "profit_driver" &&
+    expectedTraffic &&
+    knowledge.strategicObjectives.length >= 2
+  ) {
+    add("sig-governance-weak", "weak");
   }
 
   return fired;

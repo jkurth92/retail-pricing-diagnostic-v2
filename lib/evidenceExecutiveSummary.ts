@@ -2,6 +2,7 @@ import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
+import { localizedDriverPrefix } from "@/lib/signalPrioritization";
 
 export function buildBenchmarkPrimaryDrivers(
   benchmarkLines: string[],
@@ -14,6 +15,21 @@ export function buildExposurePrimaryDrivers(
 ): string[] {
   const drivers: string[] = [];
 
+  if (exposure.architectureAffectedRevenuePct > 0) {
+    const archCats = exposure.categoryExposures
+      .filter((c) => c.architectureCompression)
+      .map((c) => c.category);
+    const localized = localizedDriverPrefix(archCats, "architecture");
+    drivers.push(
+      localized ??
+        `Moderately compressed premium architecture in categories representing ~${exposure.architectureAffectedRevenuePct}% of in-scope revenue${archCats.length > 0 ? ` (${archCats.slice(0, 2).join(", ")})` : ""}`,
+    );
+  }
+
+  if (exposure.kviAffectedRevenuePct >= 15) {
+    drivers.push(`Broad KVI concentration (~${exposure.kviAffectedRevenuePct}% revenue weight)`);
+  }
+
   const plCats = exposure.categoryExposures
     .filter((c) => c.plNbNarrow)
     .map((c) => c.category);
@@ -24,19 +40,6 @@ export function buildExposurePrimaryDrivers(
         ? `Selective PL/NB compression in ${plCats.slice(0, 2).join(" and ")}`
         : `PL/NB separation below expected range in ${plCats.slice(0, 2).join(" and ")}${plCats.length > 2 ? "…" : ""}`,
     );
-  }
-
-  if (exposure.architectureAffectedRevenuePct > 0) {
-    const archCats = exposure.categoryExposures
-      .filter((c) => c.architectureCompression)
-      .map((c) => c.category);
-    drivers.push(
-      `Moderately compressed premium architecture in categories representing ~${exposure.architectureAffectedRevenuePct}% of in-scope revenue${archCats.length > 0 ? ` (${archCats.slice(0, 2).join(", ")})` : ""}`,
-    );
-  }
-
-  if (exposure.kviAffectedRevenuePct >= 15) {
-    drivers.push(`Broad KVI concentration (~${exposure.kviAffectedRevenuePct}% revenue weight)`);
   }
 
   return drivers.slice(0, 4);
@@ -69,7 +72,7 @@ export function buildStrategicImplicationOneLiner(
   primaryThemes: ExecutiveTheme[],
 ): string {
   if (evidence.evidenceStrength === "weak") {
-    return "Measured structural evidence is still partial — treat opportunity framing as directional until upload fields fully align.";
+    return "Architecture and tier-spacing signals remain the lead story; treat ranges as directional while upload alignment completes.";
   }
   if (evidence.primaryDrivers.includes("PL/NB separation")) {
     return "Selective PL/NB and tier-spacing gaps are the most credible discussion topics before broader promotional moves.";
@@ -80,5 +83,5 @@ export function buildStrategicImplicationOneLiner(
   if (primaryThemes.some((t) => t.themeFamily === "Architecture")) {
     return "Closing measured tier-spacing gaps is the most credible path to thematic margin recovery.";
   }
-  return "Opportunity is bounded and explainable — validate category evidence before tactical moves.";
+  return "Architecture-led opportunity is bounded and explainable — validate category evidence before tactical moves.";
 }

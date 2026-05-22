@@ -10,6 +10,11 @@ import {
   type SignalEvaluationContext,
 } from "@/lib/signalGrouping";
 import { prioritizeHypotheses, MAX_SURFACED_HYPOTHESES } from "@/lib/hypothesisPrioritization";
+import {
+  architectureSignalStrength,
+  shouldConsiderGovernanceHypothesis,
+  shouldConsiderPromoHypothesis,
+} from "@/lib/signalPrioritization";
 import { buildObservedPatternsOutput } from "@/lib/patternFeatureBuilder";
 import {
   isHypothesisEvidenceEligible,
@@ -222,9 +227,36 @@ export function runDiagnosticHypothesisEngine(
     if (!isHypothesisEvidenceEligible(entry.id, evidence)) continue;
 
     const supporting = matchSignals(fired, entry.triggerSignalIds);
+    const archScore = architectureSignalStrength(evidence);
+
+    if (
+      !shouldConsiderPromoHypothesis(
+        entry.id,
+        evidence,
+        fired,
+        supporting.length,
+      )
+    ) {
+      continue;
+    }
+
+    if (
+      !shouldConsiderGovernanceHypothesis(
+        entry,
+        fired,
+        input.knowledge,
+        roleInference,
+        archScore,
+      )
+    ) {
+      continue;
+    }
+
     const minSignals =
       evidence.dataInterpretation?.evidenceCoverage.allowsDirectionalOpportunity &&
-      entry.minSignalsToSurface > 1
+      entry.minSignalsToSurface > 1 &&
+      entry.hypothesisFamily !== "Governance" &&
+      entry.hypothesisFamily !== "Promotions"
         ? entry.minSignalsToSurface - 1
         : entry.minSignalsToSurface;
     if (supporting.length < minSignals) continue;
