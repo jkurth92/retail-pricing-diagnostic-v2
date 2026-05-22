@@ -15,15 +15,21 @@ export function buildOpportunitySummary(
   secondaryThemes: ExecutiveTheme[],
   revenueSensitivitySummary: string,
   hasRevenueInScope: boolean,
+  totalMarginOverride?: string,
+  usedGracefulFallback?: boolean,
 ): OpportunitySummary {
+  const totalMargin =
+    totalMarginOverride ??
+    aggregateMarginOpportunity(primaryThemes, secondaryThemes);
+
   const status: OpportunitySummaryStatus =
     primaryThemes.length === 0
-      ? "insufficient_hypotheses"
+      ? usedGracefulFallback || /directional/i.test(totalMargin)
+        ? "thematic_only"
+        : "insufficient_hypotheses"
       : hasRevenueInScope
         ? "pending_scope_dollars"
         : "thematic_only";
-
-  const totalMargin = aggregateMarginOpportunity(primaryThemes, secondaryThemes);
 
   const primaryDrivers = primaryThemes.map((t) => ({
     label: t.themeName,

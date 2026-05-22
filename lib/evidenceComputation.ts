@@ -4,6 +4,7 @@ import { computeArchitectureSignals } from "@/lib/architectureSignals";
 import { computeCategorySignals } from "@/lib/categorySignals";
 import { computeKviSignals } from "@/lib/kviSignals";
 import { legacyPostureToKnowledge } from "@/lib/archetypeContext";
+import { proxySignalsToSupportingSignals } from "@/lib/implicitStructureSignals";
 import {
   architectureAttributionLine,
   calibrateEvidenceHeadline,
@@ -12,6 +13,8 @@ import {
   plNbAttributionLine,
   softenExecutiveDriverPhrase,
 } from "@/lib/interpretationCalibration";
+import { runRobustDataInterpretation } from "@/lib/robustDataInterpretation";
+import type { RobustDataInterpretationBundle } from "@/types/data-interpretation";
 import {
   synthesizePricingRows,
   type PricingRowSynthesisInput,
@@ -23,7 +26,7 @@ import type {
 } from "@/types/evidence-computation";
 import type { CanonicalFieldKey } from "@/types/upload-schema";
 
-const ENGINE_VERSION = "14B.0.0";
+const ENGINE_VERSION = "15.0.0";
 
 const FRAMEWORK_ARCH_SIGNAL_IDS = new Set([
   "sig-ladder-compression",
@@ -47,6 +50,8 @@ export type EvidenceComputationInput = PricingRowSynthesisInput & {
   normalizedFields: CanonicalFieldKey[];
   retailerDisplayName?: string | null;
   eprAverage?: number | null;
+  dataInterpretation?: RobustDataInterpretationBundle;
+  detectedColumns?: string[];
 };
 
 function toSignal(
@@ -293,6 +298,18 @@ function primaryDrivers(metrics: ComputedEvidenceBundle["metrics"]): string[] {
 export function runEvidenceComputation(
   input: EvidenceComputationInput,
 ): ComputedEvidenceBundle {
+  const dataInterpretation =
+    input.dataInterpretation ??
+    runRobustDataInterpretation({
+      detectedColumns: input.detectedColumns ?? [],
+      normalizedFields: input.normalizedFields,
+      categoryNames: input.categoryRows.map((r) => r.category),
+      archetypeId: input.archetypeId,
+      retailerTicker: input.retailerTicker,
+    });
+
+  const effectiveFields = dataInterpretation.effectiveNormalizedFields;
+
   const pricingRows = synthesizePricingRows(input);
   const categories = input.categoryRows.map((r) => r.category);
 
@@ -304,9 +321,9 @@ export function runEvidenceComputation(
     arch.packSizeConsistencyPct !== null && arch.packSizeConsistencyPct < 72;
 
   const promoMarkdownEligible =
-    input.normalizedFields.includes("promoFlag") ||
-    input.normalizedFields.includes("promoPrice") ||
-    input.normalizedFields.includes("markdownFlag");
+    effectiveFields.includes("promoFlag") ||
+    effectiveFields.includes("promoPrice") ||
+    effectiveFields.includes("markdownFlag");
 
   const benchmarkCalibration = runBenchmarkCalibrationEngine({
     archetypeId: input.archetypeId,
@@ -329,12 +346,10 @@ export function runEvidenceComputation(
     categories,
     benchmarkCalibration.exposureSummaryLines,
   );
-  const computedSignals = buildComputedSignals(
-    arch,
-    kvi,
-    promoMarkdownEligible,
-    packInconsistent,
-  );
+  const computedSignals = [
+    ...buildComputedSignals(arch, kvi, promoMarkdownEligible, packInconsistent),
+    ...proxySignalsToSupportingSignals(dataInterpretation.proxySignals),
+  ];
   const eligibleHypothesisIds = resolveEligibleHypotheses(
     arch,
     kvi,
@@ -370,8 +385,9 @@ export function runEvidenceComputation(
     promoMarkdownEligible,
     rowCount: pricingRows.length,
     categoriesAnalyzed: categories,
-    normalizedFields: input.normalizedFields,
+    normalizedFields: effectiveFields,
     benchmarkCalibration,
+    dataInterpretation,
   };
 }
 

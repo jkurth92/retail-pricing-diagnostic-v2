@@ -1,88 +1,29 @@
-import { FIELD_SYNONYMS } from "@/data/fieldSynonyms";
-import type {
-  ColumnCandidate,
-  MappingMethod,
-} from "@/types/column-mapping";
+import { normalizeColumnHeader } from "@/lib/fieldNormalization";
+import type { ColumnCandidate, MappingMethod } from "@/types/column-mapping";
 import type { CanonicalFieldKey } from "@/types/upload-schema";
 
 const REVIEW_CONFIDENCE_THRESHOLD = 0.85;
 
-function normalizeHeader(header: string): string {
-  return header.trim().toLowerCase().replace(/\s+/g, "_");
-}
-
-function findExactMatch(
-  normalizedHeader: string,
-): { field: CanonicalFieldKey; method: MappingMethod } | null {
-  for (const [field, synonyms] of Object.entries(FIELD_SYNONYMS) as [
-    CanonicalFieldKey,
-    string[],
-  ][]) {
-    if (field === normalizedHeader) {
-      return { field, method: "exact_match" };
-    }
-    if (synonyms.some((s) => s === normalizedHeader)) {
-      return { field, method: "synonym_match" };
-    }
-  }
-  return null;
-}
-
-function findFuzzyMatch(
-  normalizedHeader: string,
-): { field: CanonicalFieldKey; confidence: number } | null {
-  let best: { field: CanonicalFieldKey; confidence: number } | null = null;
-  for (const [field, synonyms] of Object.entries(FIELD_SYNONYMS) as [
-    CanonicalFieldKey,
-    string[],
-  ][]) {
-    const candidates = [field, ...synonyms];
-    for (const candidate of candidates) {
-      if (
-        normalizedHeader.includes(candidate) ||
-        candidate.includes(normalizedHeader)
-      ) {
-        const longer = Math.max(normalizedHeader.length, candidate.length);
-        const shorter = Math.min(normalizedHeader.length, candidate.length);
-        const confidence = shorter / longer;
-        if (confidence >= 0.6 && (!best || confidence > best.confidence)) {
-          best = { field, confidence };
-        }
-      }
-    }
-  }
-  return best;
-}
-
 export function matchColumn(sourceColumn: string): ColumnCandidate {
-  const normalizedHeader = normalizeHeader(sourceColumn);
-  const exact = findExactMatch(normalizedHeader);
-  if (exact) {
-    const confidence = exact.method === "exact_match" ? 1 : 0.95;
-    return {
-      sourceColumn,
-      normalizedField: exact.field,
-      confidence,
-      mappingMethod: exact.method,
-      requiresReview: confidence < REVIEW_CONFIDENCE_THRESHOLD,
-    };
-  }
-  const fuzzy = findFuzzyMatch(normalizedHeader);
-  if (fuzzy) {
-    return {
-      sourceColumn,
-      normalizedField: fuzzy.field,
-      confidence: fuzzy.confidence,
-      mappingMethod: "fuzzy_match",
-      requiresReview: true,
-    };
-  }
+  const resolved = normalizeColumnHeader(sourceColumn);
+  const method: MappingMethod =
+    resolved.method === "semantic_inference" || !resolved.canonicalField
+      ? "unmapped"
+      : resolved.method === "exact_match" ||
+          resolved.method === "synonym_match" ||
+          resolved.method === "fuzzy_match"
+        ? resolved.method
+        : "fuzzy_match";
+  const confidence = resolved.confidence;
   return {
     sourceColumn,
-    normalizedField: null,
-    confidence: null,
-    mappingMethod: "unmapped",
-    requiresReview: true,
+    normalizedField: resolved.canonicalField,
+    confidence: resolved.canonicalField ? confidence : null,
+    mappingMethod: method,
+    requiresReview:
+      resolved.canonicalField != null
+        ? confidence < REVIEW_CONFIDENCE_THRESHOLD
+        : true,
   };
 }
 

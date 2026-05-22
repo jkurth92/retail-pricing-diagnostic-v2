@@ -106,6 +106,12 @@ export function scoreHypothesisConfidence(input: ConfidenceInput): ConfidenceSco
   };
 }
 
-export function shouldSuppressHypothesis(confidence: ConfidenceScore): boolean {
+export function shouldSuppressHypothesis(
+  confidence: ConfidenceScore,
+  weightedSufficiency?: number,
+): boolean {
+  if (weightedSufficiency !== undefined && weightedSufficiency >= 0.35) {
+    return confidence.level === "low" && weightedSufficiency < 0.22;
+  }
   return confidence.level === "low";
 }

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { ObservedPricingPatternsPanel } from "@/components/panels/ObservedPricingPatternsPanel";
 import { DiagnosticHypothesesPanel } from "@/components/DiagnosticHypothesesPanel";
 import { Disclosure } from "@/components/Disclosure";
+import { DataInterpretationDetail } from "@/components/consultant/DataInterpretationDetail";
 import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
 import { runDiagnosticHypothesisEngine } from "@/lib/hypothesisEngine";
 import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
@@ -30,7 +31,15 @@ export function TechnicalDiagnosticsPanel({
   computedEvidence,
   opportunityExposure,
 }: TechnicalDiagnosticsPanelProps) {
-  const dataset = useMemo(() => buildPlaceholderIngestionDataset(), []);
+  const dataset = useMemo(
+    () =>
+      buildPlaceholderIngestionDataset({
+        categoryNames: categoryRoles.map((r) => r.category),
+        archetypeId: knowledgeContext.archetypeId,
+        retailerTicker: retailerTicker ?? null,
+      }),
+    [categoryRoles, knowledgeContext.archetypeId, retailerTicker],
+  );
 
   const hypothesisOutput = useMemo(
     () =>
@@ -45,6 +54,8 @@ export function TechnicalDiagnosticsPanel({
           categoryRows: categoryRoles,
           retailerTicker: retailerTicker ?? null,
           normalizedFields: dataset.normalizedFields,
+          detectedColumns: dataset.detectedColumns,
+          dataInterpretation: dataset.dataInterpretation,
           retailerDisplayName,
         },
         opportunityExposure: opportunityExposure ?? undefined,
@@ -66,6 +77,8 @@ export function TechnicalDiagnosticsPanel({
         Internal consultant view — pattern inventories, hypotheses, and reference
         material. Not shown in the executive readout.
       </p>
+
+      <DataInterpretationDetail interpretation={dataset.dataInterpretation} />
 
       <ObservedPricingPatternsPanel
         knowledgeContext={knowledgeContext}

@@ -15,6 +15,8 @@ import {
   evaluateDiagnosticUnlocks,
   groupUnlocksByStatus,
 } from "@/lib/diagnosticUnlocks";
+import { runRobustDataInterpretation } from "@/lib/robustDataInterpretation";
+import type { RobustDataInterpretationBundle } from "@/types/data-interpretation";
 import type { NormalizedDatasetSummary } from "@/types/normalization";
 import type { UploadFileType } from "@/types/ingestion";
 
@@ -29,10 +31,18 @@ const PLACEHOLDER_FILE_NAMES: Record<UploadFileType, string> = {
   optional_context_document: "category_strategy_brief.pdf",
 };
 
-export function buildPlaceholderIngestionDataset(): NormalizedDatasetSummary & {
+export function buildPlaceholderIngestionDataset(
+  options?: {
+    categoryNames?: string[];
+    archetypeId?: import("@/types/retailer-archetypes").RetailerArchetypeId;
+    retailerTicker?: string | null;
+  },
+): NormalizedDatasetSummary & {
   previewNote: string;
   leverUnlocks: ReturnType<typeof evaluateDiagnosticUnlocks>;
   unlockGroups: ReturnType<typeof groupUnlocksByStatus>;
+  detectedColumns: string[];
+  dataInterpretation: RobustDataInterpretationBundle;
 } {
   const uploadedFiles = FILE_TYPE_DEFINITIONS.map((def) =>
     buildPreviewUploadFile(
@@ -43,18 +53,6 @@ export function buildPlaceholderIngestionDataset(): NormalizedDatasetSummary & {
   );
 
   const datasetEval = evaluateDatasetReadiness(uploadedFiles);
-  const leverUnlocks = evaluateDiagnosticUnlocks(datasetEval.normalizedFields);
-  const unlockGroups = groupUnlocksByStatus(leverUnlocks);
-  const diagnosticCoveragePct =
-    leverUnlocks.length > 0
-      ? Math.round(
-          (leverUnlocks.filter(
-            (u) => u.status === "available" || u.status === "ready",
-          ).length /
-            leverUnlocks.length) *
-            1000,
-        ) / 10
-      : null;
 
   const fieldMappings = FILE_TYPE_DEFINITIONS.flatMap((def) => {
     const candidates = matchDetectedColumns(
@@ -67,12 +65,40 @@ export function buildPlaceholderIngestionDataset(): NormalizedDatasetSummary & {
     );
   });
 
+  const detectedColumns = FILE_TYPE_DEFINITIONS.flatMap(
+    (def) => PLACEHOLDER_DETECTED_COLUMNS[def.fileType],
+  );
+
+  const dataInterpretation = runRobustDataInterpretation({
+    detectedColumns,
+    normalizedFields: datasetEval.normalizedFields,
+    categoryNames: options?.categoryNames ?? [],
+    archetypeId: options?.archetypeId ?? "mass",
+    retailerTicker: options?.retailerTicker ?? null,
+  });
+
+  const leverUnlocksResolved = evaluateDiagnosticUnlocks(
+    dataInterpretation.effectiveNormalizedFields,
+  );
+  const diagnosticCoveragePct =
+    leverUnlocksResolved.length > 0
+      ? Math.round(
+          (leverUnlocksResolved.filter(
+            (u) => u.status === "available" || u.status === "ready",
+          ).length /
+            leverUnlocksResolved.length) *
+            1000,
+        ) / 10
+      : null;
+
   return {
     previewNote: PLACEHOLDER_PREVIEW_NOTE,
-    leverUnlocks,
-    unlockGroups,
+    leverUnlocks: leverUnlocksResolved,
+    unlockGroups: groupUnlocksByStatus(leverUnlocksResolved),
+    detectedColumns,
+    dataInterpretation,
     uploadedFiles,
-    normalizedFields: datasetEval.normalizedFields,
+    normalizedFields: dataInterpretation.effectiveNormalizedFields,
     missingFields: datasetEval.missingFields,
     readinessSummary: datasetEval.readinessSummary,
     normalizationIssues: datasetEval.issues,

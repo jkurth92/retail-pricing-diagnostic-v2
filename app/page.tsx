@@ -157,8 +157,17 @@ export default function Home() {
   );
 
   const ingestionPreview = useMemo(
-    () => buildPlaceholderIngestionDataset(),
-    [],
+    () =>
+      buildPlaceholderIngestionDataset({
+        categoryNames: categoryRoles.map((r) => r.category),
+        archetypeId,
+        retailerTicker: retailerEnrichment.context.ticker,
+      }),
+    [
+      categoryRoles,
+      archetypeId,
+      retailerEnrichment.context.ticker,
+    ],
   );
 
   const computedEvidence = useMemo(() => {
@@ -174,6 +183,8 @@ export default function Home() {
       categoryRows: categoryRoles,
       retailerTicker: retailerEnrichment.context.ticker,
       normalizedFields: ingestionPreview.normalizedFields,
+      detectedColumns: ingestionPreview.detectedColumns,
+      dataInterpretation: ingestionPreview.dataInterpretation,
       retailerDisplayName: confirmedRetailer || retailerInput,
       eprAverage: eprAvg,
     });
@@ -230,6 +241,8 @@ export default function Home() {
         categoryRows: categoryRoles,
         retailerTicker: retailerEnrichment.context.ticker,
         normalizedFields: ingestionPreview.normalizedFields,
+        detectedColumns: ingestionPreview.detectedColumns,
+        dataInterpretation: ingestionPreview.dataInterpretation,
         retailerDisplayName: confirmedRetailer || retailerInput,
         eprAverage:
           Object.values(eprScores).length > 0

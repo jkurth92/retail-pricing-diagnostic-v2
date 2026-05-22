@@ -72,6 +72,17 @@
 - Diagnostic unlock states (`unavailable` / `limited` / `available` / `ready`) must **not** imply opportunity sizing.
 - No pricing logic, thresholds, or recommendations until explicit rule alignment.
 
+## Robust data interpretation (Step 15)
+
+- Avoid **brittle ingestion requirements** — messy headers and partial files must still support directional diagnostics.
+- **Preserve directional outputs** when weighted sufficiency allows; use graceful fallback ranges instead of hard “no estimate.”
+- **Suppress only unsupported themes** (e.g. promo without promo fields) — not themes with proxy architecture evidence.
+- **Support inferred structures** (tiers, KVI, PL/NB) with explicit consultant disclosure — never present proxies as measured facts.
+- Maintain **explainability and auditability** — mappings, proxies, and sufficiency dimensions visible in consultant detail.
+- **No black-box field mapping** — no embeddings or opaque ML matchers in normalization.
+- Proxy and sufficiency logic must **not** become optimization or exact price recommendations.
+- Real CSV parsing may remain placeholder; synthesis and inference must stay **deterministic** until parser alignment.
+
 ## Engine and rules scaffold (Steps 1–7)
 
 - `lib/diagnostic-engine/` returns pending/null outputs only.

@@ -13,6 +13,7 @@ import {
   buildExecutiveSummary,
   buildStorylineNarrative,
 } from "@/lib/executiveNarrative";
+import { applyGracefulOpportunityAggregation } from "@/lib/gracefulDegradation";
 import {
   computeAggregatedMarginOpportunity,
   buildRevenueSensitivitySummary,
@@ -165,9 +166,12 @@ export function synthesizeStoryline(
   }
 
   const defMap = EXECUTIVE_THEME_BY_ID;
+  const coverage = evidence?.dataInterpretation?.evidenceCoverage;
+
   const { primary, secondary, suppressed } = rankExecutiveThemes(
     candidateThemes,
     defMap,
+    coverage,
   );
 
   const archetypeId = input.knowledge.archetypeId;
@@ -179,7 +183,28 @@ export function synthesizeStoryline(
     `${getArchetype(archetypeId)?.archetypeName ?? archetypeId} archetype.`,
   );
 
-  const aggregated = computeAggregatedMarginOpportunity(primary, secondary);
+  const aggregated = applyGracefulOpportunityAggregation(
+    primary,
+    secondary,
+    archetypeId,
+    coverage ?? {
+      overallScore: 0.45,
+      sufficiencyLevel: "medium",
+      dimensions: [],
+      allowsDirectionalOpportunity: true,
+      rangeWidthMultiplier: 1.05,
+      narrativeSeverityScale: 0.9,
+    },
+    evidence?.evidenceStrength,
+    () => {
+      const base = computeAggregatedMarginOpportunity(primary, secondary);
+      return {
+        rangeText: base.rangeText,
+        trace: base.trace,
+        usedFallback: false,
+      };
+    },
+  );
 
   if (aggregated.trace && input.opportunityExposure) {
     aggregated.trace.exposureSummaries = input.opportunityExposure.exposureSummaries;
@@ -216,6 +241,8 @@ export function synthesizeStoryline(
     secondary,
     revenueSensitivitySummary,
     input.hasRevenueInScope ?? false,
+    aggregated.rangeText,
+    aggregated.usedFallback,
   );
 
   return {

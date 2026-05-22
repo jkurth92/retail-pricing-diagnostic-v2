@@ -1,3 +1,5 @@
+import { confidenceMeetsDirectionalBar } from "@/lib/gracefulDegradation";
+import type { EvidenceCoverageAssessment } from "@/types/data-interpretation";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
 import { OUTPUT_CALIBRATION_RULES } from "@/data/outputCalibrationRules";
@@ -43,13 +45,16 @@ export function computeThemeScore(
 export function rankExecutiveThemes(
   themes: ExecutiveTheme[],
   definitions: Map<string, ExecutiveThemeDefinition>,
+  evidenceCoverage?: EvidenceCoverageAssessment,
 ): {
   primary: ExecutiveTheme[];
   secondary: ExecutiveTheme[];
   suppressed: number;
 } {
   const eligible = themes.filter((t) =>
-    confidenceMeetsPrimaryBar(t.confidence.level),
+    evidenceCoverage
+      ? confidenceMeetsDirectionalBar(t.confidence.level, evidenceCoverage)
+      : confidenceMeetsPrimaryBar(t.confidence.level),
   );
   const suppressed = themes.length - eligible.length;
 

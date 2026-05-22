@@ -72,6 +72,7 @@ function buildCandidate(
   evidenceMetrics: ComputedEvidenceBundle["metrics"],
   exposureBundle: OpportunityExposureBundle,
   benchmarkCalibration?: BenchmarkCalibrationBundle,
+  weightedSufficiency?: number,
 ): DiagnosticHypothesis {
   const supporting = matchSignals(fired, entry.triggerSignalIds);
   const conflicting = conflictingSignals(fired, entry.conflictingSignalIds);
@@ -123,7 +124,7 @@ function buildCandidate(
     entry.hypothesisName,
   );
 
-  const status = shouldSuppressHypothesis(confidence)
+  const status = shouldSuppressHypothesis(confidence, weightedSufficiency)
     ? "suppressed_low_confidence"
     : "surfaced";
 
@@ -221,7 +222,12 @@ export function runDiagnosticHypothesisEngine(
     if (!isHypothesisEvidenceEligible(entry.id, evidence)) continue;
 
     const supporting = matchSignals(fired, entry.triggerSignalIds);
-    if (supporting.length < entry.minSignalsToSurface) continue;
+    const minSignals =
+      evidence.dataInterpretation?.evidenceCoverage.allowsDirectionalOpportunity &&
+      entry.minSignalsToSurface > 1
+        ? entry.minSignalsToSurface - 1
+        : entry.minSignalsToSurface;
+    if (supporting.length < minSignals) continue;
 
     candidates.push(
       buildCandidate(
@@ -233,6 +239,7 @@ export function runDiagnosticHypothesisEngine(
         evidence.metrics,
         exposureBundle,
         evidence.benchmarkCalibration,
+        evidence.dataInterpretation?.evidenceCoverage.overallScore,
       ),
     );
   }
