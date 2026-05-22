@@ -15,6 +15,11 @@ import type {
   OpportunityCalculationTrace,
   OpportunityTraceRow,
 } from "@/types/opportunity-trace";
+import {
+  calibratePortfolioRangeEndpoints,
+  portfolioOverlapFactor,
+  type ProportionalityContext,
+} from "@/lib/calibrationProportionality";
 import { computeRecoverableValuePool } from "@/lib/recoverableValue";
 import { signalStrengthScore } from "@/lib/signalGrouping";
 import type { ThemeExposureContext } from "@/types/opportunity-exposure";
@@ -38,15 +43,15 @@ function confidenceWidthMultiplier(
   evidenceStrength?: EvidenceStrength,
 ): { combined: number; confidenceBase: number; evidenceFactor: number } {
   let confidenceBase = 1;
-  if (level === "high") confidenceBase = 1;
-  else if (level === "medium_high") confidenceBase = 0.9;
-  else if (level === "medium") confidenceBase = 0.8;
-  else confidenceBase = 0.65;
+  if (level === "high") confidenceBase = 0.9;
+  else if (level === "medium_high") confidenceBase = 0.82;
+  else if (level === "medium") confidenceBase = 0.74;
+  else confidenceBase = 0.6;
 
   let evidenceFactor = 1;
-  if (evidenceStrength === "strong") evidenceFactor = 1;
-  else if (evidenceStrength === "moderate") evidenceFactor = 0.92;
-  else if (evidenceStrength === "weak") evidenceFactor = 0.78;
+  if (evidenceStrength === "strong") evidenceFactor = 0.95;
+  else if (evidenceStrength === "moderate") evidenceFactor = 0.86;
+  else if (evidenceStrength === "weak") evidenceFactor = 0.72;
 
   return {
     combined: confidenceBase * evidenceFactor,
@@ -408,6 +413,7 @@ export function buildPortfolioOpportunityTrace(
     low: number;
     high: number;
   }[],
+  proportionality?: ProportionalityContext,
 ): OpportunityCalculationTrace {
   const lows = themes.map((t) => t.low);
   const highs = themes.map((t) => t.high);
@@ -415,8 +421,9 @@ export function buildPortfolioOpportunityTrace(
     (t) => t.themeFamily === "Architecture" || t.themeFamily === "Premiumization",
   );
 
-  const rawLow = lows.reduce((a, b) => a + b, 0) * OUTPUT_CALIBRATION_RULES.marginOverlapFactor;
-  const rawHigh = highs.reduce((a, b) => a + b, 0) * OUTPUT_CALIBRATION_RULES.marginOverlapFactor;
+  const overlap = portfolioOverlapFactor(proportionality);
+  const rawLow = lows.reduce((a, b) => a + b, 0) * overlap;
+  const rawHigh = highs.reduce((a, b) => a + b, 0) * overlap;
   const archHigh =
     archThemes.length > 0 ? Math.max(...archThemes.map((t) => t.high)) : 0;
 
@@ -432,8 +439,13 @@ export function buildPortfolioOpportunityTrace(
     Math.max(rawHigh, archHigh > 0 ? archHigh * 0.85 : rawHigh),
   );
 
-  const roundedLow = Math.round(totalLow * 10) / 10;
-  const roundedHigh = Math.round(Math.max(totalHigh, roundedLow + 0.3) * 10) / 10;
+  const proportional = calibratePortfolioRangeEndpoints(
+    totalLow,
+    Math.max(totalHigh, totalLow + 0.3),
+    proportionality ?? {},
+  );
+  const roundedLow = proportional.lowPct;
+  const roundedHigh = proportional.highPct;
 
   const childTraces = themes
     .map((t) => t.trace)
@@ -449,7 +461,7 @@ export function buildPortfolioOpportunityTrace(
     weightsApplied: [
       {
         label: "Overlap factor",
-        value: String(OUTPUT_CALIBRATION_RULES.marginOverlapFactor),
+        value: overlap.toFixed(3),
         detail: "Sum of theme lows/highs × factor — themes are not independent.",
       },
       {

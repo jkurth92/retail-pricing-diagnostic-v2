@@ -28,9 +28,9 @@ export function calibrateValueConcentrationPhrase(
   const pct = kvi.kviRevenueSharePct ?? 0;
   const catCount = kvi.kviCategoryCount ?? 0;
 
-  if (pct < 8 && !kvi.broadKviBreadth && catCount === 0) return null;
+  if (pct < 10 && !kvi.broadKviBreadth && catCount === 0) return null;
 
-  if (kvi.broadKviBreadth && pct >= 22 && catCount >= 3) {
+  if (kvi.broadKviBreadth && pct >= 24 && catCount >= 3) {
     return "Broad value concentration";
   }
   if (kvi.broadKviBreadth && pct >= 18) {
@@ -111,7 +111,7 @@ export function buildAlignedConfidenceSummary(
 
   if (mediumOrHigherCount === 0) {
     if (evidenceStrength === "strong") {
-      return "High directional confidence on measured structure, while individual themes remain moderate or category-specific.";
+      return "Moderate directional confidence on measured structure; individual themes remain category-specific.";
     }
     if (evidenceStrength === "moderate") {
       return "Moderate portfolio confidence with selective structural signals; most themes remain category-specific.";
@@ -124,7 +124,7 @@ export function buildAlignedConfidenceSummary(
     return `${mediumOrHigherCount} of ${total} primary themes carry medium-or-higher confidence (max ${maxLevel.replace(/_/g, "-")}). Evidence coverage: ${coverage}.`;
   }
   if (evidenceStrength === "strong" && mediumOrHigherCount < total) {
-    return `High directional confidence overall; ${mediumOrHigherCount} of ${total} primary themes are medium-or-higher, with others category-specific.`;
+    return `Moderate directional confidence overall; ${mediumOrHigherCount} of ${total} primary themes are medium-or-higher, with others category-specific.`;
   }
   return `${mediumOrHigherCount} of ${total} primary themes carry medium-or-higher confidence. Evidence coverage: ${coverage}.`;
 }
@@ -133,27 +133,24 @@ export function buildPortfolioConfidenceChipLabel(
   evidenceStrength: EvidenceStrength,
   themes: ExecutiveTheme[],
 ): string {
-  const { mediumOrHigherCount, total } = summarizeThemeConfidence(themes);
+  const { mediumOrHigherCount, total, maxLevel } = summarizeThemeConfidence(themes);
+  const sparseCoverage = themes.some(
+    (t) => t.confidence.evidenceCoverage === "sparse" || t.confidence.evidenceCoverage === "partial",
+  );
 
   if (total > 0 && mediumOrHigherCount === 0) {
-    if (evidenceStrength === "strong") {
-      return "High directional confidence";
-    }
-    if (evidenceStrength === "moderate") {
-      return "Moderate directional confidence";
-    }
+    if (evidenceStrength === "strong") return "Moderate directional confidence";
     return "Directional confidence";
   }
 
-  if (evidenceStrength === "strong") {
-    return mediumOrHigherCount < total
-      ? "High directional confidence"
-      : "High confidence";
+  if (evidenceStrength === "strong" && maxLevel === "high" && !sparseCoverage && mediumOrHigherCount >= total) {
+    return "High confidence";
+  }
+  if (evidenceStrength === "strong" || mediumOrHigherCount >= Math.ceil(total / 2)) {
+    return "Moderate directional confidence";
   }
   if (evidenceStrength === "moderate") {
-    return mediumOrHigherCount >= total / 2
-      ? "Medium confidence"
-      : "Moderate directional confidence";
+    return "Moderate confidence";
   }
   return "Directional confidence";
 }
@@ -223,6 +220,30 @@ export function refineStrategicImplicationOneLiner(
   return "Structural pricing opportunity is bounded and architecture-led rather than a portfolio-wide monetization reset.";
 }
 
+/** Consultant-style executive summary sentence with correct grammar. */
+export function buildConsultingEvidenceSentence(drivers: string[]): string {
+  const arch = drivers.filter((d) =>
+    /architecture|premium|tier|spacing|compression|pl\/nb|monetization/i.test(d),
+  );
+  const kvi = drivers.filter((d) =>
+    /kvi|value concentration|visible value/i.test(d),
+  );
+  const lead = arch.slice(0, 2);
+  const support = kvi.slice(0, 1);
+
+  if (lead.length === 0 && support.length === 0) {
+    return "The primary opportunity appears concentrated in measured structural pricing gaps.";
+  }
+  if (lead.length >= 1 && support.length >= 1) {
+    const leadPhrase = lead.length === 1 ? lead[0] : `${lead[0]} and ${lead[1]}`;
+    return `The primary opportunity appears concentrated in ${leadPhrase.toLowerCase()}, with ${support[0].toLowerCase()} as a supporting factor.`;
+  }
+  if (lead.length === 1) {
+    return `The primary opportunity appears concentrated in ${lead[0].toLowerCase()}.`;
+  }
+  return `The primary opportunity appears concentrated in ${lead[0].toLowerCase()} and ${lead[1].toLowerCase()}.`;
+}
+
 export function buildStrategicDiscussionPrompts(
   exec: ExecutiveSummary,
   exposure?: OpportunityExposureBundle | null,
@@ -245,6 +266,11 @@ export function buildStrategicDiscussionPrompts(
       .map((c) => c.category)
       .join(" and ");
     push(`Assess whether premium architecture should widen in ${names}.`);
+    if (archCats.length === 1) {
+      push(
+        `Determine whether ${archCats[0].category} tier spacing should stay tight for traffic roles or allow broader trade-up.`,
+      );
+    }
   } else if (
     exec.primaryDrivers.some((d) => /architecture|premium|tier/i.test(d))
   ) {
@@ -256,12 +282,13 @@ export function buildStrategicDiscussionPrompts(
   const kviDriver = exec.primaryDrivers.find((d) =>
     /kvi|value concentration|visible value/i.test(d),
   );
-  if (kviDriver) {
+  if (kviDriver && !/modest|selective|localized|traffic-category/i.test(kviDriver)) {
     push(
-      "Confirm whether current value concentration is intentional or a legacy pricing pattern.",
+      "Determine whether current value investment reflects intentional strategy or legacy positioning.",
     );
+  } else if (kviDriver) {
     push(
-      "Review whether KVI investment is concentrated in the right traffic-driving categories.",
+      "Review whether modest visible value investment is aligned to the right traffic-driving categories.",
     );
   }
 
@@ -277,9 +304,9 @@ export function buildStrategicDiscussionPrompts(
 
   const posture = exec.retailerProfile.posture;
   const archetype = exec.retailerProfile.archetype;
-  if (posture && archetype) {
+  if (posture && archetype && archCats.length > 0) {
     push(
-      `Validate whether the current ${archetype} / ${posture} posture should preserve or widen selective tier gaps.`,
+      `Pressure-test whether the ${archetype} / ${posture} posture should preserve or widen selective tier gaps in ${archCats[0].category}.`,
     );
   }
 
@@ -300,20 +327,31 @@ export function buildStrategicDiscussionPrompts(
 
 export type InsightEmphasis = "primary" | "secondary" | "supporting";
 
+export function metricDisplayRank(title: string, metricId?: string): number {
+  const t = `${title} ${metricId ?? ""}`.toLowerCase();
+  if (/tier spacing|avg tier|architecture/i.test(t)) return 1;
+  if (/premium.*mainstream|premium\/mainstream/i.test(t)) return 2;
+  if (/entry.*mainstream|entry\/mainstream/i.test(t)) return 3;
+  if (/pl\/nb|private-label|monetization/i.test(t)) return 4;
+  if (/category concentration|revenue weight|in-scope/i.test(t)) return 5;
+  if (/kvi|visible value/i.test(t)) return 6;
+  return 7;
+}
+
 export function insightTileEmphasis(
   title: string,
   strength: "strong" | "moderate" | "weak" | undefined,
   index: number,
 ): InsightEmphasis {
   const rank = title.toLowerCase();
-  const isArch =
-    /premium|mainstream|tier|spacing|architecture|pl\/nb|monetization|gap/i.test(
-      rank,
-    );
+  const displayRank = metricDisplayRank(title);
   const isKvi = /kvi|value concentration|visible value/i.test(rank);
-  if (isArch && strength === "strong" && index < 2) return "primary";
-  if (isArch && strength !== "weak") return index === 0 ? "primary" : "secondary";
-  if (isKvi || /category concentration/i.test(rank)) return "supporting";
+  if (isKvi) return "supporting";
+  if (displayRank <= 2 && strength === "strong" && index < 2) return "primary";
+  if (displayRank <= 4 && strength !== "weak") {
+    return index === 0 && displayRank <= 3 ? "primary" : "secondary";
+  }
+  if (/category concentration/i.test(rank)) return "supporting";
   if (strength === "strong" && index < 1) return "secondary";
   return "supporting";
 }

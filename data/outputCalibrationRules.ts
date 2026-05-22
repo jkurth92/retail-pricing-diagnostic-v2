@@ -9,7 +9,7 @@ export const OUTPUT_CALIBRATION_RULES = {
   maxThemeMarginSpanPct: 2.8,
   /** Flag aggregated storyline span above this (percentage points). */
   maxAggregatedMarginSpanPct: 4.5,
-  marginOverlapFactor: 0.52,
+  marginOverlapFactor: 0.46,
   architectureFamilyBoost: 18,
   minPrimaryThemesPreferred: 2,
   maxStorylineSectionThemesListed: 3,

@@ -25,9 +25,9 @@ export type ConfidenceInput = {
 };
 
 function levelFromScore(score: number): DiagnosticConfidenceLevel {
-  if (score >= 8) return "high";
-  if (score >= 6) return "medium_high";
-  if (score >= 4) return "medium";
+  if (score >= 9) return "high";
+  if (score >= 7) return "medium_high";
+  if (score >= 5) return "medium";
   return "low";
 }
 
@@ -67,6 +67,8 @@ export function scoreHypothesisConfidence(input: ConfidenceInput): ConfidenceSco
 
   score -= input.conflictingSignals.length * 2;
   if (input.evidenceCoverageRatio < 0.35) score -= 2;
+  if (input.evidenceCoverageRatio < 0.5) score -= 1;
+  if (input.roleInference.categorySuggestion.confidence === "low") score -= 1;
 
   if (ARCH_FAMILIES.includes(input.hypothesisFamily)) {
     const below = input.benchmarkBelowCount ?? 0;

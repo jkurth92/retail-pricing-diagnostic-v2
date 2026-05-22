@@ -185,15 +185,17 @@ export function deriveOverallEvidenceStrength(
   if (withinCount >= 2) score -= 1.5;
   if (isolatedPl) score -= 1;
 
-  if (score >= 4) return "strong";
-  if (score >= 2) return "moderate";
+  if (score >= 5) return "strong";
+  if (score >= 3) return "moderate";
   return "weak";
 }
 
 export function softenExecutiveDriverPhrase(text: string): string {
   return text
     .replace(/\bweak premiumization\b/gi, "limited premium separation")
-    .replace(/\bweak monetization separation\b/gi, "moderate monetization compression")
+    .replace(/\bweak monetization separation\b/gi, "selective monetization compression")
+    .replace(/\bsignificant monetization weakness\b/gi, "selective architecture compression")
+    .replace(/\bbroad structural opportunity\b/gi, "moderate structural opportunity")
     .replace(/\bweak pl\/nb\b/gi, "selective PL/NB compression")
     .replace(/\bappears below the expected range\b/gi, "below expected spacing")
     .replace(/\bfor a [A-Za-z /-]+ retailer with [A-Za-z-]+ posture\.?/gi, "")

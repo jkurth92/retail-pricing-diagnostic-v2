@@ -1,3 +1,4 @@
+import type { ProportionalityContext } from "@/lib/calibrationProportionality";
 import { buildPortfolioOpportunityTrace } from "@/lib/opportunityCalculationTrace";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { ElasticitySensitivity } from "@/types/diagnostic-hypotheses";
@@ -19,6 +20,7 @@ export function formatMarginRange(low: number, high: number): string {
 export function computeAggregatedMarginOpportunity(
   primaryThemes: ExecutiveTheme[],
   secondaryThemes: ExecutiveTheme[],
+  proportionality?: ProportionalityContext,
 ): { rangeText: string; trace: OpportunityCalculationTrace | null } {
   const all = [...primaryThemes, ...secondaryThemes];
   if (all.length === 0) {
@@ -36,6 +38,7 @@ export function computeAggregatedMarginOpportunity(
       low: t.marginOpportunityLowPct,
       high: t.marginOpportunityHighPct,
     })),
+    proportionality,
   );
 
   return { rangeText: trace.finalRange.display, trace };

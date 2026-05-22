@@ -13,14 +13,14 @@ const ARCHETYPE_DIRECTIONAL_BANDS: Record<
   RetailerArchetypeId,
   { low: number; high: number }
 > = {
-  mass: { low: 0.8, high: 2.2 },
-  grocery: { low: 0.9, high: 2.4 },
-  discount: { low: 0.7, high: 1.8 },
-  premium_grocery: { low: 1.0, high: 2.8 },
-  club: { low: 0.6, high: 1.6 },
-  convenience: { low: 0.5, high: 1.5 },
-  specialty: { low: 1.1, high: 3.0 },
-  apparel_softlines: { low: 1.2, high: 3.2 },
+  mass: { low: 0.6, high: 1.4 },
+  grocery: { low: 0.7, high: 1.6 },
+  discount: { low: 0.5, high: 1.4 },
+  premium_grocery: { low: 0.8, high: 2.0 },
+  club: { low: 0.5, high: 1.3 },
+  convenience: { low: 0.4, high: 1.2 },
+  specialty: { low: 0.9, high: 2.2 },
+  apparel_softlines: { low: 1.0, high: 2.4 },
 };
 
 export function buildDirectionalFallbackRange(
@@ -63,15 +63,19 @@ export function applyGracefulOpportunityAggregation(
 ): GracefulOpportunityResult {
   const computed = existingCompute?.();
   if (computed && !computed.rangeText.includes("Not estimated")) {
-    if (coverage.rangeWidthMultiplier > 1 && computed.trace) {
+    if (computed.trace) {
       const match = computed.rangeText.match(
         /(\d+(?:\.\d+)?)\s*%?\s*[–-]\s*(\d+(?:\.\d+)?)\s*%/,
       );
-      if (match) {
-        const low = parseFloat(match[1]) * coverage.rangeWidthMultiplier;
-        const high = parseFloat(match[2]) * coverage.rangeWidthMultiplier;
+      if (match && coverage.sufficiencyLevel !== "high") {
+        const tighten =
+          coverage.rangeWidthMultiplier > 1
+            ? 1 / coverage.rangeWidthMultiplier
+            : 0.92;
+        const low = parseFloat(match[1]) * tighten;
+        const high = parseFloat(match[2]) * tighten;
         return {
-          rangeText: `${formatMarginRange(low, high)} (widened for partial evidence)`,
+          rangeText: `${formatMarginRange(low, high)} (calibrated for partial evidence)`,
           trace: computed.trace,
           usedFallback: false,
         };

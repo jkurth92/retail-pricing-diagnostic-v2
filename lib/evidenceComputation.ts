@@ -14,6 +14,7 @@ import {
   softenExecutiveDriverPhrase,
 } from "@/lib/interpretationCalibration";
 import { sortLinesByFamilyPriority } from "@/lib/signalPrioritization";
+import { categoryArchitectureFraming } from "@/lib/calibrationProportionality";
 import {
   calibrateValueConcentrationPhrase,
   kviEvidenceFromResult,
@@ -82,7 +83,7 @@ function buildEvidenceSummaries(
   categories: string[],
   benchmarkLines: string[] = [],
 ): string[] {
-  const lines: string[] = [...benchmarkLines];
+  const lines: string[] = [...categoryArchitectureFraming(arch), ...benchmarkLines];
 
   if (arch.premiumMainstreamGapPct !== null) {
     lines.push(
@@ -166,13 +167,17 @@ function buildEvidenceBackedThemes(
   }
 
   const kviLabel = calibrateValueConcentrationPhrase(kviEvidenceFromResult(kvi));
-  if (kviLabel) {
+  const archLead = themes.some((t) => /architecture|premium|spacing|compression/i.test(t.headline));
+  if (
+    kviLabel &&
+    (!archLead || (kvi.broadKviBreadth && kvi.kviRevenueSharePct >= 22))
+  ) {
     themes.push({
       headline: kviLabel,
       detail:
         kvi.broadKviBreadth && kvi.kviRevenueSharePct >= 22
           ? `Visible value investment spans multiple traffic categories (~${kvi.kviRevenueSharePct}% inferred revenue weight).`
-          : `KVI-like signals are present at modest breadth (~${kvi.kviRevenueSharePct}% inferred revenue weight).`,
+          : `KVI-like signals are present at modest breadth (~${kvi.kviRevenueSharePct}% inferred revenue weight) — supporting, not lead, versus architecture.`,
     });
   }
 

@@ -9,17 +9,18 @@ import {
   softenExecutiveDriverPhrase,
 } from "@/lib/interpretationCalibration";
 import {
+  buildConsultingEvidenceSentence,
   buildPortfolioConfidenceChipLabel,
   buildStrategicDiscussionPrompts,
   calibrateValueConcentrationPhrase,
   dedupeNarrativeLines,
   insightTileEmphasis,
+  metricDisplayRank,
 } from "@/lib/narrativeRefinement";
 import {
   classifyTextFamilyRank,
   filterGenericNarrativeLines,
   orderThemesByNarrativeDominance,
-  sortMetricsByFamilyPriority,
 } from "@/lib/signalPrioritization";
 import { shortenThemeTitle } from "@/lib/executiveUxHelpers";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
@@ -82,7 +83,8 @@ function driverTitleFromText(raw: string): string {
 }
 
 function impactFromText(text: string): "high" | "medium" {
-  if (/compressed|weak|below|broad kvi|~\d+% of in-scope/i.test(text)) return "high";
+  if (/kvi|value concentration|visible value|modest kvi/i.test(text)) return "medium";
+  if (/compressed|weak|below|~\d+% of in-scope/i.test(text)) return "high";
   return "medium";
 }
 
@@ -174,7 +176,14 @@ export function buildInsightSourceTiles(
   };
 
   if (evidence?.metrics) {
-    const sorted = sortMetricsByFamilyPriority(evidence.metrics);
+    const sorted = [...evidence.metrics].sort((a, b) => {
+      const rankDiff = metricDisplayRank(a.label, a.id) - metricDisplayRank(b.label, b.id);
+      if (rankDiff !== 0) return rankDiff;
+      const strengthOrder = { strong: 0, moderate: 1, weak: 2 };
+      return (
+        strengthOrder[a.strength ?? "moderate"] - strengthOrder[b.strength ?? "moderate"]
+      );
+    });
     sorted.forEach((m, idx) => {
       const t = metricToInsight(m);
       if (!t) return;
@@ -219,18 +228,31 @@ export function buildInsightSourceTiles(
       });
     }
 
-    for (const c of exposure.categoryExposures.filter(
-      (x) => x.architectureCompression || x.plNbNarrow,
-    ).slice(0, 2)) {
+    const archCats = exposure.categoryExposures.filter(
+      (x) => x.architectureCompression,
+    );
+    for (const c of archCats.slice(0, 3)) {
       push({
-        id: `cat-${c.category}`,
-        title: c.architectureCompression ? "Tier spacing" : "PL/NB gap",
-        metric: `${c.category} · ${c.revenueWeightPct}% revenue weight`,
-        subtext: c.architectureCompression
-          ? "Compressed spacing in measured categories."
-          : "Narrow private-label separation.",
+        id: `cat-arch-${c.category}`,
+        title: "Premium spacing",
+        metric: `${c.category} · ${c.revenueWeightPct}% revenue`,
+        subtext: "Compressed premium architecture in this category.",
         benchmarkHint: "In scope",
         strength: "moderate",
+        emphasis: "primary",
+      });
+    }
+    for (const c of exposure.categoryExposures
+      .filter((x) => x.plNbNarrow && !x.architectureCompression)
+      .slice(0, 2)) {
+      push({
+        id: `cat-pl-${c.category}`,
+        title: "PL/NB gap",
+        metric: `${c.category} · ${c.revenueWeightPct}% revenue`,
+        subtext: "Narrow private-label monetization separation.",
+        benchmarkHint: "In scope",
+        strength: "moderate",
+        emphasis: "secondary",
       });
     }
   }
@@ -248,12 +270,16 @@ export function buildInsightSourceTiles(
   const ordered = tiles
     .slice()
     .sort((a, b) => {
-      const rankDiff = classifyTextFamilyRank(a.title) - classifyTextFamilyRank(b.title);
+      const rankDiff = metricDisplayRank(a.title) - metricDisplayRank(b.title);
       if (rankDiff !== 0) return rankDiff;
+      const emphasisOrder = { primary: 0, secondary: 1, supporting: 2 };
+      const ea = emphasisOrder[a.emphasis ?? "supporting"];
+      const eb = emphasisOrder[b.emphasis ?? "supporting"];
+      if (ea !== eb) return ea - eb;
       const strengthOrder = { strong: 0, moderate: 1, weak: 2 };
-      const sa = strengthOrder[a.strength ?? "moderate"];
-      const sb = strengthOrder[b.strength ?? "moderate"];
-      return sa - sb;
+      return (
+        strengthOrder[a.strength ?? "moderate"] - strengthOrder[b.strength ?? "moderate"]
+      );
     })
     .slice(0, max);
 
@@ -311,13 +337,11 @@ export function buildExecutiveConsultingSummary(
   }
 
   if (exec.primaryDrivers.length > 0) {
-    const lead = exec.primaryDrivers
-      .slice(0, 2)
-      .map((d) => softenBenchmarkPhrase(d))
-      .join(" and ");
     paragraphs.push(
       polishNarrativeText(
-        `${lead} remain the primary structural opportunities in measured scope.`,
+        buildConsultingEvidenceSentence(
+          exec.primaryDrivers.map((d) => softenBenchmarkPhrase(d)),
+        ),
       ),
     );
   } else if (exec.executiveNarrative.trim()) {

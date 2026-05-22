@@ -4,6 +4,7 @@ import {
 import type { CalibrationBand } from "@/data/opportunityCalibrationBands";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
 import type { EvidenceStrength } from "@/types/evidence-computation";
+import { themeHighCapPct } from "@/lib/calibrationProportionality";
 
 export type RecoverableValueInput = {
   band: CalibrationBand;
@@ -44,7 +45,20 @@ export function computeRecoverableValuePool(
     benchmarkMult;
 
   const adjustedLow = rawLow * combined;
-  const adjustedHigh = Math.min(rawHigh * combined, MAX_SINGLE_THEME_HIGH_PCT);
+  const familyArch =
+    input.band.families?.includes("Architecture") ||
+    input.band.families?.includes("Premiumization") ||
+    /architecture|premium|monetization/i.test(input.band.themeLabel);
+  const highCap = themeHighCapPct(
+    input.evidenceStrength,
+    input.confidenceLevel,
+    familyArch,
+  );
+  const adjustedHigh = Math.min(
+    rawHigh * combined,
+    MAX_SINGLE_THEME_HIGH_PCT,
+    highCap,
+  );
   const roundedLow = parseFloat(adjustedLow.toFixed(1));
   const roundedHigh = parseFloat(
     Math.max(adjustedHigh, roundedLow + 0.1).toFixed(1),

@@ -13,6 +13,7 @@ import {
   buildExecutiveSummary,
   buildStorylineNarrative,
 } from "@/lib/executiveNarrative";
+import { proportionalityContextFromSignals } from "@/lib/calibrationProportionality";
 import { applyGracefulOpportunityAggregation } from "@/lib/gracefulDegradation";
 import {
   computeAggregatedMarginOpportunity,
@@ -184,21 +185,47 @@ export function synthesizeStoryline(
     `${getArchetype(archetypeId)?.archetypeName ?? archetypeId} archetype.`,
   );
 
+  const coverageResolved = coverage ?? {
+    overallScore: 0.45,
+    sufficiencyLevel: "medium" as const,
+    dimensions: [],
+    allowsDirectionalOpportunity: true,
+    rangeWidthMultiplier: 1.05,
+    narrativeSeverityScale: 0.9,
+  };
+
+  const archCompressionCount =
+    input.opportunityExposure?.categoryExposures.filter(
+      (c) => c.architectureCompression,
+    ).length ?? 0;
+  const strongMetrics =
+    evidence?.metrics.filter((m) => m.strength === "strong").length ?? 0;
+
+  const proportionality = proportionalityContextFromSignals(
+    evidence?.evidenceStrength,
+    undefined,
+    coverageResolved,
+    strongMetrics,
+  );
+  proportionality.architectureCompressionCategories = Math.max(
+    archCompressionCount,
+    proportionality.architectureCompressionCategories ?? 0,
+  );
+  proportionality.architectureAffectedRevenuePct =
+    input.opportunityExposure?.architectureAffectedRevenuePct;
+
   const aggregated = applyGracefulOpportunityAggregation(
     primary,
     secondary,
     archetypeId,
-    coverage ?? {
-      overallScore: 0.45,
-      sufficiencyLevel: "medium",
-      dimensions: [],
-      allowsDirectionalOpportunity: true,
-      rangeWidthMultiplier: 1.05,
-      narrativeSeverityScale: 0.9,
-    },
+    coverageResolved,
     evidence?.evidenceStrength,
     () => {
-      const base = computeAggregatedMarginOpportunity(primary, secondary);
+      const base = computeAggregatedMarginOpportunity(
+        primary,
+        secondary,
+        proportionality,
+      );
       return {
         rangeText: base.rangeText,
         trace: base.trace,
