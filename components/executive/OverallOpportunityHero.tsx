@@ -32,46 +32,47 @@ export function OverallOpportunityHero({
       : undefined;
 
   return (
-    <div className="dx-hero-grid">
-      <div className="dx-hero-left">
-        <p className="dx-flow-step-label">1 · Overall opportunity</p>
-        <p className="dx-hero-question">What is the opportunity?</p>
-        {marginDisplay ? (
-          <>
-            <p className="dx-hero-range-xl" aria-label="Margin opportunity range">
+    <article className="ent-hero-card">
+      <header className="ent-hero-card-head">
+        <h2 className="ent-hero-label">Potential pricing opportunity</h2>
+      </header>
+
+      <div className="ent-hero-body">
+        <div className="ent-hero-focal">
+          {marginDisplay ? (
+            <p className="ent-hero-range" aria-label="Margin opportunity range">
               {marginDisplay}
             </p>
-            <p className="dx-hero-range-caption">Indicative margin improvement</p>
-          </>
-        ) : (
-          <p className="dx-hero-range-xl">{exec.marginOpportunitySummary}</p>
-        )}
+          ) : (
+            <p className="ent-hero-range">{exec.marginOpportunitySummary}</p>
+          )}
+          <p className="ent-hero-unit">Indicative margin uplift</p>
+        </div>
+
+        <div className="ent-hero-visual">
+          {lowPct != null && highPct != null && (
+            <OpportunityRangeVisual
+              lowPct={lowPct}
+              highPct={highPct}
+              confidenceLabel={confidenceLabel}
+              className="ent-range-hero"
+            />
+          )}
+        </div>
       </div>
 
-      <div className="dx-hero-center">
-        {lowPct != null && highPct != null ? (
-          <OpportunityRangeVisual
-            lowPct={lowPct}
-            highPct={highPct}
-            confidenceLabel={confidenceLabel}
-          />
-        ) : null}
-      </div>
-
-      <div className="dx-hero-right">
-        <ul className="dx-hero-chips">
+      <footer className="ent-hero-meta">
+        <ul className="ent-hero-chips">
           {chips.map((c) => (
             <li
               key={c.label}
-              className={
-                c.tone === "primary" ? "dx-hero-chip dx-hero-chip-primary" : "dx-hero-chip"
-              }
+              className={c.tone === "primary" ? "ent-chip ent-chip-primary" : "ent-chip"}
             >
               {c.label}
             </li>
           ))}
         </ul>
-      </div>
-    </div>
+      </footer>
+    </article>
   );
 }

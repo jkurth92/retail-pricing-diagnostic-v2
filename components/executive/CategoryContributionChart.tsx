@@ -5,11 +5,13 @@ import type { CategoryExposureRecord } from "@/types/opportunity-exposure";
 type CategoryContributionChartProps = {
   categories: CategoryExposureRecord[];
   maxItems?: number;
+  embedded?: boolean;
 };
 
 export function CategoryContributionChart({
   categories,
   maxItems = 6,
+  embedded = false,
 }: CategoryContributionChartProps) {
   const sorted = [...categories]
     .sort((a, b) => b.revenueWeightPct - a.revenueWeightPct)
@@ -19,21 +21,21 @@ export function CategoryContributionChart({
   if (sorted.length === 0) return null;
 
   return (
-    <div className="dx-contrib">
-      <p className="dx-contrib-title">In-scope category weight</p>
-      <ul className="dx-contrib-list">
-        {sorted.map((c) => (
-          <li key={c.category} className="dx-contrib-row">
-            <span className="dx-contrib-label" title={c.category}>
+    <div className={embedded ? "ent-exposure-inner" : "ent-exposure-card"}>
+      <ul className="ent-exposure-list">
+        {sorted.map((c, i) => (
+          <li key={c.category} className="ent-exposure-row">
+            <span className="ent-exposure-rank">{i + 1}</span>
+            <span className="ent-exposure-name" title={c.category}>
               {c.category}
             </span>
-            <span className="dx-contrib-bar-wrap">
+            <span className="ent-exposure-track">
               <span
-                className="dx-contrib-bar"
+                className="ent-exposure-fill"
                 style={{ width: `${(c.revenueWeightPct / maxPct) * 100}%` }}
               />
             </span>
-            <span className="dx-contrib-pct">{c.revenueWeightPct}%</span>
+            <span className="ent-exposure-val">{c.revenueWeightPct}%</span>
           </li>
         ))}
       </ul>

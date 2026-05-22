@@ -6,12 +6,13 @@ import { CategoryContributionChart } from "@/components/executive/CategoryContri
 import { InsightSourceTile } from "@/components/executive/InsightSourceTile";
 import { OverallOpportunityHero } from "@/components/executive/OverallOpportunityHero";
 import { StrategicDriverCard } from "@/components/executive/StrategicDriverCard";
+import { StrategicImplicationCallouts } from "@/components/executive/StrategicImplicationCallouts";
 import { OpportunityCalculationTracePanel } from "@/components/opportunity/OpportunityCalculationTracePanel";
 import {
   buildInsightSourceTiles,
   buildStrategicDriverCards,
 } from "@/lib/narrativePresentation";
-import { parseMarginRangeDisplay, polishEvidenceMetrics } from "@/lib/executiveOutputPolish";
+import { parseMarginRangeDisplay } from "@/lib/executiveOutputPolish";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
@@ -21,7 +22,6 @@ type ExecutivePilotSummaryProps = {
   implications: string[];
   opportunityExposure?: OpportunityExposureBundle | null;
   computedEvidence?: ComputedEvidenceBundle | null;
-  /** Section 4 — hypotheses, patterns, technical panels */
   technicalDiagnosticsSlot?: ReactNode;
 };
 
@@ -35,16 +35,14 @@ export function ExecutivePilotSummary({
   const margin = parseMarginRangeDisplay(exec.marginOpportunitySummary);
   const exposure = opportunityExposure ?? exec.opportunityExposure ?? null;
   const drivers = buildStrategicDriverCards(exec, 4);
-  const insights = buildInsightSourceTiles(exec, exposure, computedEvidence, 8);
-  const metrics = polishEvidenceMetrics(exec.supportingEvidenceMetrics, 6);
+  const insights = buildInsightSourceTiles(exec, exposure, computedEvidence, 6);
 
   const lowPct = margin ? parseFloat(margin.low) : null;
   const highPct = margin ? parseFloat(margin.high) : null;
 
   return (
-    <div className="dx-flow">
-      {/* §1 Overall opportunity */}
-      <section className="dx-flow-section dx-flow-section-hero" aria-labelledby="dx-s1">
+    <div className="ent-compose">
+      <div className="ent-row ent-row-hero">
         <OverallOpportunityHero
           exec={exec}
           marginDisplay={margin?.display ?? null}
@@ -52,97 +50,76 @@ export function ExecutivePilotSummary({
           highPct={highPct}
           exposure={exposure}
         />
-      </section>
+      </div>
 
-      {/* §2 Drivers */}
-      {drivers.length > 0 && (
-        <section className="dx-flow-section" aria-labelledby="dx-s2">
-          <header className="dx-flow-header">
-            <p className="dx-flow-step-label" id="dx-s2">
-              2 · Drivers of opportunity
-            </p>
-            <h3 className="dx-flow-question">Why does the engine believe it exists?</h3>
-          </header>
-          <div className="dx-driver-grid">
-            {drivers.map((d) => (
-              <StrategicDriverCard key={d.id} driver={d} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* §3 Sources of insight */}
-      {(insights.length > 0 || exposure?.categoryExposures.length) && (
-        <section className="dx-flow-section dx-flow-section-insight" aria-labelledby="dx-s3">
-          <header className="dx-flow-header">
-            <p className="dx-flow-step-label" id="dx-s3">
-              3 · Sources of insight
-            </p>
-            <h3 className="dx-flow-question">What evidence supports it?</h3>
-          </header>
-
-          {exposure && exposure.categoryExposures.length > 0 && (
-            <div className="dx-insight-contrib">
-              <CategoryContributionChart categories={exposure.categoryExposures} />
-            </div>
+      {(drivers.length > 0 || (exposure?.categoryExposures.length ?? 0) > 0) && (
+        <div
+          className={`ent-row ent-row-split ${(exposure?.categoryExposures.length ?? 0) > 0 ? "ent-row-split-64" : ""}`}
+        >
+          {drivers.length > 0 && (
+            <section className="ent-panel ent-panel-drivers">
+              <h2 className="ent-section-title">Key structural drivers</h2>
+              <div className="ent-driver-grid">
+                {drivers.map((d) => (
+                  <StrategicDriverCard key={d.id} driver={d} />
+                ))}
+              </div>
+            </section>
           )}
 
+          {exposure && exposure.categoryExposures.length > 0 && (
+            <aside className="ent-panel ent-panel-exposure">
+              <h2 className="ent-section-title">Category exposure</h2>
+              <CategoryContributionChart
+                categories={exposure.categoryExposures}
+                embedded
+              />
+            </aside>
+          )}
+        </div>
+      )}
+
+      {(insights.length > 0 || implications.length > 0) && (
+        <div className="ent-row ent-row-split ent-row-split-50">
           {insights.length > 0 && (
-            <div className="dx-insight-grid">
-              {insights.map((t) => (
-                <InsightSourceTile key={t.id} tile={t} />
-              ))}
-            </div>
+            <section className="ent-panel ent-panel-evidence">
+              <h2 className="ent-section-title">Supporting evidence</h2>
+              <div className="ent-evidence-grid">
+                {insights.map((t) => (
+                  <InsightSourceTile key={t.id} tile={t} />
+                ))}
+              </div>
+            </section>
           )}
 
           {implications.length > 0 && (
-            <ul className="dx-insight-takeaways">
-              {implications.slice(0, 2).map((imp) => (
-                <li key={imp}>{imp}</li>
-              ))}
-            </ul>
+            <section className="ent-panel ent-panel-implications">
+              <h2 className="ent-section-title">Strategic implications</h2>
+              <StrategicImplicationCallouts implications={implications} />
+            </section>
           )}
-        </section>
+        </div>
       )}
 
-      {/* §4 Technical diagnostics */}
-      <section className="dx-flow-section dx-flow-section-technical" aria-labelledby="dx-s4">
-        <header className="dx-flow-header">
-          <p className="dx-flow-step-label" id="dx-s4">
-            4 · Technical diagnostics
-          </p>
-          <h3 className="dx-flow-question">How grounded is the conclusion?</h3>
-        </header>
-
+      <div className="ent-row ent-row-consultant">
         <Disclosure
-          title="Calculation & confidence"
-          summary="Trace, weighting, benchmark context"
+          title="Consultant detail"
+          summary="Calculation trace · hypotheses · technical diagnostics"
           variant="subtle"
           defaultOpen={false}
-          className="dx-tech-panel"
+          className="ent-consultant-disclosure"
         >
-          {exec.marginOpportunityTotalTrace ? (
-            <OpportunityCalculationTracePanel
-              trace={exec.marginOpportunityTotalTrace}
-              mode="executive"
-            />
-          ) : (
-            <p className="dx-tech-muted">{exec.confidenceSummary}</p>
-          )}
+          <div className="ent-consultant-body">
+            {exec.marginOpportunityTotalTrace && (
+              <OpportunityCalculationTracePanel
+                trace={exec.marginOpportunityTotalTrace}
+                mode="executive"
+              />
+            )}
+            {technicalDiagnosticsSlot}
+          </div>
         </Disclosure>
-
-        {(technicalDiagnosticsSlot || metrics.length > 0) && (
-          <Disclosure
-            title="Hypotheses, patterns & mechanics"
-            summary="Consultant-facing diagnostic detail"
-            variant="subtle"
-            defaultOpen={false}
-            className="dx-tech-panel"
-          >
-            <div className="dx-tech-inner">{technicalDiagnosticsSlot}</div>
-          </Disclosure>
-        )}
-      </section>
+      </div>
     </div>
   );
 }

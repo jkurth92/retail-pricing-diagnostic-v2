@@ -57,11 +57,8 @@ export function PricingDiagnosticPanel({
   }
 
   return (
-    <div className="max-w-5xl pilot-panel dx-diagnostic-page">
-      <DiagnosticSection
-        title="Pricing diagnostic"
-        lead="Opportunity → drivers → evidence → technical detail"
-      >
+    <div className="max-w-6xl pilot-panel ent-diagnostic-page">
+      <DiagnosticSection title="Pricing diagnostic">
         <ExecutiveDeliverablePanel
           readout={executiveDeliverable}
           exportPackage={executiveDeliverable.exportPackage}
