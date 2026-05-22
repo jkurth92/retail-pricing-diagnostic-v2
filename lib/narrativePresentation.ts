@@ -3,6 +3,7 @@
  * Does not alter opportunity, benchmark, evidence, or trace logic.
  */
 
+import { polishNarrativeText } from "@/lib/executiveOutputPolish";
 import { shortenThemeTitle } from "@/lib/executiveUxHelpers";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { ExecutiveSummary } from "@/types/executive-summary";
@@ -25,6 +26,12 @@ export type InsightSourceTile = {
   subtext: string;
   benchmarkHint?: string;
   strength?: "strong" | "moderate" | "weak";
+};
+
+/** Composed executive narrative for client-facing discussion (presentation only). */
+export type ExecutiveConsultingSummary = {
+  paragraphs: string[];
+  nextSteps: string[];
 };
 
 /** Shorten repetitive benchmark phrasing for executive scan. */
@@ -234,4 +241,78 @@ export function heroContextChips(
   chips.push({ label: profile, tone: "neutral" });
 
   return chips.slice(0, 4);
+}
+
+function discussionStepFromImplication(line: string): string {
+  const clean = polishNarrativeText(line);
+  if (!clean) return "";
+  const lower = clean.charAt(0).toLowerCase() + clean.slice(1);
+  return `Validate and scope implications of ${lower.replace(/\.$/, "")} with the client's category and role data.`;
+}
+
+/**
+ * Synthesizes existing executive fields into a discussion-ready summary.
+ * Does not invoke diagnostic engines or alter sizing / evidence logic.
+ */
+export function buildExecutiveConsultingSummary(
+  exec: ExecutiveSummary,
+  implications: string[] = exec.strategicImplications,
+): ExecutiveConsultingSummary {
+  const paragraphs: string[] = [];
+
+  const opportunityParts = [
+    exec.opportunityHeadline,
+    exec.marginOpportunitySummary,
+  ].filter((s) => s?.trim());
+  if (opportunityParts.length > 0) {
+    paragraphs.push(polishNarrativeText(opportunityParts.join(" ")));
+  } else if (exec.executiveNarrative.trim()) {
+    paragraphs.push(polishNarrativeText(exec.executiveNarrative.slice(0, 420)));
+  }
+
+  const implicationParts = [
+    exec.strategicImplicationOneLiner,
+    ...implications.slice(0, 3),
+  ].filter((s) => s?.trim());
+  if (implicationParts.length > 0) {
+    const joined = implicationParts
+      .map((s, i) => (i === 0 ? s : s.replace(/\.$/, "")))
+      .join(implicationParts.length > 1 ? " " : "");
+    paragraphs.push(polishNarrativeText(joined));
+  }
+
+  if (exec.primaryDrivers.length > 0) {
+    const drivers = exec.primaryDrivers
+      .slice(0, 3)
+      .map((d) => softenBenchmarkPhrase(d))
+      .join("; ");
+    paragraphs.push(
+      polishNarrativeText(
+        `Primary structural drivers in scope include ${drivers}. ${exec.confidenceSummary}`,
+      ),
+    );
+  } else if (exec.confidenceSummary.trim()) {
+    paragraphs.push(polishNarrativeText(exec.confidenceSummary));
+  }
+
+  const nextSteps =
+    exec.nextFocusAreas.length > 0
+      ? exec.nextFocusAreas.slice(0, 5).map((s) => polishNarrativeText(s))
+      : implications
+          .slice(0, 4)
+          .map(discussionStepFromImplication)
+          .filter(Boolean);
+
+  if (nextSteps.length === 0 && exec.topThemes.length > 0) {
+    for (const theme of exec.topThemes.slice(0, 3)) {
+      nextSteps.push(
+        `Align on ${theme.themeName.toLowerCase()} — confirm evidence and commercial boundaries before sizing actions.`,
+      );
+    }
+  }
+
+  return {
+    paragraphs: paragraphs.filter(Boolean).slice(0, 4),
+    nextSteps: nextSteps.filter(Boolean).slice(0, 5),
+  };
 }

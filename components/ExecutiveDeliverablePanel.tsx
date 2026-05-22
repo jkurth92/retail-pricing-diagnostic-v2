@@ -72,7 +72,6 @@ export function ExecutiveDeliverablePanel({
       <div className="exec-readout">
         <ExecutivePilotSummary
           exec={exec}
-          implications={exec.strategicImplications.slice(0, 3)}
           opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
           computedEvidence={computedEvidence}
         />
@@ -176,7 +175,6 @@ export function ExecutiveDeliverablePanel({
       <div className="dx-deliverable-wrap">
         <ExecutivePilotSummary
           exec={exec}
-          implications={exec.strategicImplications.slice(0, 2)}
           opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
           computedEvidence={computedEvidence}
           technicalDiagnosticsSlot={
@@ -202,7 +200,6 @@ export function ExecutiveDeliverablePanel({
       >
         <ExecutivePilotSummary
           exec={exec}
-          implications={exec.strategicImplications.slice(0, 3)}
           opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
         />
       </DiagnosticSection>

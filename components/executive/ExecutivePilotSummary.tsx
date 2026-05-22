@@ -2,13 +2,13 @@
 
 import type { ReactNode } from "react";
 import { Disclosure } from "@/components/Disclosure";
-import { CategoryContributionChart } from "@/components/executive/CategoryContributionChart";
+import { ExecutiveConsultingSummary } from "@/components/executive/ExecutiveConsultingSummary";
 import { InsightSourceTile } from "@/components/executive/InsightSourceTile";
 import { OverallOpportunityHero } from "@/components/executive/OverallOpportunityHero";
 import { StrategicDriverCard } from "@/components/executive/StrategicDriverCard";
-import { StrategicImplicationCallouts } from "@/components/executive/StrategicImplicationCallouts";
 import { OpportunityCalculationTracePanel } from "@/components/opportunity/OpportunityCalculationTracePanel";
 import {
+  buildExecutiveConsultingSummary,
   buildInsightSourceTiles,
   buildStrategicDriverCards,
 } from "@/lib/narrativePresentation";
@@ -19,7 +19,6 @@ import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 
 type ExecutivePilotSummaryProps = {
   exec: ExecutiveSummary;
-  implications: string[];
   opportunityExposure?: OpportunityExposureBundle | null;
   computedEvidence?: ComputedEvidenceBundle | null;
   technicalDiagnosticsSlot?: ReactNode;
@@ -27,7 +26,6 @@ type ExecutivePilotSummaryProps = {
 
 export function ExecutivePilotSummary({
   exec,
-  implications,
   opportunityExposure,
   computedEvidence,
   technicalDiagnosticsSlot,
@@ -36,9 +34,15 @@ export function ExecutivePilotSummary({
   const exposure = opportunityExposure ?? exec.opportunityExposure ?? null;
   const drivers = buildStrategicDriverCards(exec, 4);
   const insights = buildInsightSourceTiles(exec, exposure, computedEvidence, 6);
+  const consultingSummary = buildExecutiveConsultingSummary(
+    exec,
+    exec.strategicImplications,
+  );
 
   const lowPct = margin ? parseFloat(margin.low) : null;
   const highPct = margin ? parseFloat(margin.high) : null;
+
+  const hasStructuralEvidence = drivers.length > 0 || insights.length > 0;
 
   return (
     <div className="ent-compose flex w-full flex-col gap-5">
@@ -52,62 +56,50 @@ export function ExecutivePilotSummary({
         />
       </div>
 
-      {(drivers.length > 0 || (exposure?.categoryExposures.length ?? 0) > 0) && (
-        <div
-          className={`ent-row ent-row-split grid w-full gap-5 ${
-            (exposure?.categoryExposures.length ?? 0) > 0
-              ? "lg:grid-cols-[1.55fr_1fr]"
-              : ""
-          }`}
-        >
-          {drivers.length > 0 && (
-            <section className="ent-panel ent-panel-drivers h-full rounded-2xl border bg-white p-6 shadow-sm">
-              <h2 className="ent-section-title mb-4 text-sm font-semibold text-[var(--text-navy)]">
-                Key structural drivers
-              </h2>
-              <div className="ent-driver-grid grid gap-3 sm:grid-cols-2">
+      {hasStructuralEvidence && (
+        <section className="ent-row ent-row-evidence w-full">
+          <div className="ent-panel ent-panel-evidence h-full rounded-2xl border bg-white p-6 shadow-sm">
+            <h2 className="ent-section-title mb-1 text-sm font-semibold text-[var(--text-navy)]">
+              Structural evidence
+            </h2>
+            <p className="mb-5 text-xs leading-relaxed text-[var(--text-muted)]">
+              Key drivers and supporting signals from the diagnostic — directional, not
+              tactical price prescriptions.
+            </p>
+
+            {drivers.length > 0 && (
+              <div className="ent-driver-grid mb-6 grid gap-3 sm:grid-cols-2">
                 {drivers.map((d) => (
                   <StrategicDriverCard key={d.id} driver={d} />
                 ))}
               </div>
-            </section>
-          )}
+            )}
 
-          {exposure && exposure.categoryExposures.length > 0 && (
-            <aside className="ent-panel ent-panel-exposure h-full rounded-2xl border bg-[color-mix(in_srgb,var(--accent-light)_35%,white)] p-6 shadow-sm">
-              <h2 className="ent-section-title mb-4 text-sm font-semibold text-[var(--text-navy)]">
-                Category exposure
-              </h2>
-              <CategoryContributionChart categories={exposure.categoryExposures} />
-            </aside>
-          )}
-        </div>
-      )}
-
-      {(insights.length > 0 || implications.length > 0) && (
-        <div className="ent-row ent-row-split grid w-full gap-5 lg:grid-cols-2">
-          {insights.length > 0 && (
-            <section className="ent-panel ent-panel-evidence h-full rounded-2xl border bg-white p-6 shadow-sm">
-              <h2 className="ent-section-title mb-4 text-sm font-semibold text-[var(--text-navy)]">
-                Supporting evidence
-              </h2>
+            {insights.length > 0 && (
               <div className="ent-evidence-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {insights.map((t) => (
                   <InsightSourceTile key={t.id} tile={t} />
                 ))}
               </div>
-            </section>
-          )}
+            )}
+          </div>
+        </section>
+      )}
 
-          {implications.length > 0 && (
-            <section className="ent-panel ent-panel-implications h-full rounded-2xl border bg-gradient-to-b from-[var(--accent-light)]/30 to-white p-6 shadow-sm">
-              <h2 className="ent-section-title mb-4 text-sm font-semibold text-[var(--text-navy)]">
-                Strategic implications
-              </h2>
-              <StrategicImplicationCallouts implications={implications} />
-            </section>
-          )}
-        </div>
+      {(consultingSummary.paragraphs.length > 0 ||
+        consultingSummary.nextSteps.length > 0) && (
+        <section className="ent-row ent-row-summary w-full">
+          <div className="ent-panel ent-panel-summary h-full rounded-2xl border bg-gradient-to-b from-[var(--accent-light)]/25 to-white p-6 shadow-sm">
+            <h2 className="ent-section-title mb-1 text-sm font-semibold text-[var(--text-navy)]">
+              Executive summary
+            </h2>
+            <p className="mb-5 text-xs leading-relaxed text-[var(--text-muted)]">
+              AI-style synthesis for client discussion — opportunity framing, strategic
+              implications, and suggested follow-ups. Validate with client-owned data.
+            </p>
+            <ExecutiveConsultingSummary summary={consultingSummary} />
+          </div>
+        </section>
       )}
 
       <div className="ent-row ent-row-consultant mt-2 w-full">

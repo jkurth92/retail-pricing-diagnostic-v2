@@ -55,11 +55,6 @@ export const WORKFLOW_TABS: {
     description: "Executive summary and structural themes",
   },
   {
-    id: "opportunity_overview",
-    label: "Opportunity overview",
-    description: "Directional margin opportunity",
-  },
-  {
     id: "executive_outputs",
     label: "Executive outputs",
     description: "Memo, deck, and partner email drafts",

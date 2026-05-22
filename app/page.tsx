@@ -13,7 +13,6 @@ import { PilotWalkthroughBanner } from "@/components/PilotWalkthroughBanner";
 import { RetailerContextPanel } from "@/components/panels/RetailerContextPanel";
 import { UploadScopePanel } from "@/components/panels/UploadScopePanel";
 import { PricingDiagnosticPanel } from "@/components/panels/PricingDiagnosticPanel";
-import { OpportunityOverviewPanel } from "@/components/panels/OpportunityOverviewPanel";
 import { ExportDeliverablesPanel } from "@/components/panels/ExportDeliverablesPanel";
 import { createSuggestedCompetitors } from "@/lib/competitors";
 import { refreshFinancePeerResolution } from "@/lib/financePeerResolution";
@@ -471,16 +470,6 @@ export default function Home() {
             retailerTicker={retailerEnrichment.context.ticker}
             computedEvidence={computedEvidence}
             opportunityExposure={opportunityExposure}
-          />
-        );
-      case "opportunity_overview":
-        return (
-          <OpportunityOverviewPanel
-            knowledgeContext={knowledgeContext}
-            executiveDeliverable={executiveDeliverable}
-            diagnosticReady={diagnosticReady}
-            onRunDiagnostic={handleRunDiagnostic}
-            canRunDiagnostic={canRunDiagnostic}
           />
         );
       case "executive_outputs":

@@ -80,6 +80,15 @@
   );
 }
 
+.ent-panel-summary {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent-light) 22%, var(--surface)) 0%,
+    var(--surface) 100%
+  );
+  border-color: color-mix(in srgb, var(--accent-mid) 18%, var(--border));
+}
+
 /* Hero */
 .ent-hero-card {
   width: 100%;

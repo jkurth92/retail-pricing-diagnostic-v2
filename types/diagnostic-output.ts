@@ -4,12 +4,11 @@ import type { ObservedPricingPatternsOutput } from "@/types/observed-patterns";
 import type { RetailerOverviewOutput } from "@/types/retailer-overview";
 import type { ScopeDefinition } from "@/types/scope";
 
-/** Pilot guided journey — five visible steps. */
+/** Pilot guided journey — four visible steps. */
 export type WorkflowStep =
   | "retailer_context"
   | "upload_scope"
   | "pricing_diagnostic"
-  | "opportunity_overview"
   | "executive_outputs";
 
 export type LeverKey =
