@@ -1,4 +1,5 @@
 import type { CompanyProfile } from "@/types/company-profile";
+import { resolveRetailerArchetypeHint } from "@/lib/retailerArchetypeResolution";
 import type {
   RetailerContext,
   StrategicContextSuggestion,
@@ -10,6 +11,12 @@ function suggestArchetype(
   context: RetailerContext,
   profile: CompanyProfile | null,
 ): RetailerArchetypeId | null {
+  const known = resolveRetailerArchetypeHint(
+    context.retailerName,
+    context.ticker,
+  );
+  if (known) return known.archetypeId;
+
   const industry = (
     profile?.industry ??
     context.subSector ??
@@ -42,10 +49,14 @@ function suggestArchetype(
   ) {
     return "convenience";
   }
+  if (industry.includes("specialty") || name.includes("best buy")) {
+    return "specialty";
+  }
   if (
-    industry.includes("specialty") ||
-    name.includes("best buy") ||
-    sector.includes("discretionary")
+    sector.includes("discretionary") &&
+    !name.includes("target") &&
+    !name.includes("walmart") &&
+    !name.includes("amazon")
   ) {
     return "specialty";
   }
@@ -69,9 +80,22 @@ function suggestPosture(
   context: RetailerContext,
   profile: CompanyProfile | null,
 ): PricingPosture | null {
+  const known = resolveRetailerArchetypeHint(
+    context.retailerName,
+    context.ticker,
+  );
+  if (known) return known.pricingPosture;
+
   const text = `${context.companyOverview ?? ""} ${profile?.description ?? ""} ${context.retailerName}`.toLowerCase();
   if (text.includes("edlp") || text.includes("everyday low") || text.includes("warehouse")) {
     return "EDLP";
+  }
+  if (
+    text.includes("target") ||
+    text.includes("hybrid") ||
+    (text.includes("mass") && !text.includes("promo-led"))
+  ) {
+    return "Hybrid";
   }
   if (text.includes("promo") || text.includes("high-low") || text.includes("hi-lo")) {
     return "HiLo";

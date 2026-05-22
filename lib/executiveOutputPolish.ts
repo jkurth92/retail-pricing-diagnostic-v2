@@ -1,3 +1,7 @@
+import {
+  calibrateEvidenceHeadline,
+  softenExecutiveDriverPhrase,
+} from "@/lib/interpretationCalibration";
 import type { EvidenceBackedThemeLine } from "@/types/evidence-computation";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { LeverPatternFeaturesSection } from "@/types/pattern-features";
@@ -21,8 +25,8 @@ export function polishEvidenceThemes(
   max = 3,
 ): EvidenceBackedThemeLine[] {
   return themes.slice(0, max).map((t) => ({
-    headline: polishNarrativeText(t.headline),
-    detail: polishNarrativeText(t.detail),
+    headline: polishNarrativeText(calibrateEvidenceHeadline(t.headline)),
+    detail: polishNarrativeText(softenExecutiveDriverPhrase(t.detail)),
   }));
 }
 
@@ -33,10 +37,10 @@ export function polishEvidenceMetrics(metrics: string[], max = 4): string[] {
 export function metricToConciseImplication(metric: string): string | null {
   const m = metric.toLowerCase();
   if (m.includes("premium") && m.includes("gap")) {
-    return "Tight tier spacing may limit premium trade-up.";
+    return "Moderately compressed premium architecture may limit trade-up in select categories.";
   }
   if (m.includes("pl/nb") || m.includes("private-label")) {
-    return "Narrow PL/NB separation may reduce monetization flexibility.";
+    return "Selective PL/NB compression may reduce monetization flexibility where observed.";
   }
   if (m.includes("kvi")) {
     return "Broad value concentration may dilute recoverable margin.";

@@ -46,15 +46,15 @@ export const DIAGNOSTIC_HYPOTHESIS_REGISTRY: HypothesisRegistryEntry[] = [
   },
   {
     id: "hyp-weak-premiumization",
-    hypothesisName: "Weak premiumization",
+    hypothesisName: "Limited premium separation",
     hypothesisFamily: "Premiumization",
     description:
-      "Premium tier storytelling may be underdeveloped relative to strategic premiumization intent.",
+      "Premium tier spacing may be moderately compressed relative to archetype-typical benchmarks.",
     triggerSignalIds: ["sig-weak-premium-gap", "sig-premiumization-gap", "sig-weak-trade-up"],
     minSignalsToSurface: 2,
     conflictingSignalIds: [],
     priorityWeight: 95,
-    retailerContexts: ["premium_grocery", "grocery", "specialty"],
+    retailerContexts: ["premium_grocery", "grocery", "specialty", "mass"],
     categoryContexts: ["Premium", "Organic"],
     architectureImplications: ["Premium share expansion constrained by ladder clarity"],
     opportunityThemeId: "theme-arch-monetization",

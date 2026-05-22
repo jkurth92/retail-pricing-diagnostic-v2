@@ -18,8 +18,11 @@ export function buildExposurePrimaryDrivers(
     .filter((c) => c.plNbNarrow)
     .map((c) => c.category);
   if (plCats.length > 0) {
+    const isolated = plCats.length < 3;
     drivers.push(
-      `Weak PL/NB separation in ${plCats.slice(0, 2).join(" and ")}${plCats.length > 2 ? "…" : ""}`,
+      isolated
+        ? `Selective PL/NB compression in ${plCats.slice(0, 2).join(" and ")}`
+        : `PL/NB separation below expected range in ${plCats.slice(0, 2).join(" and ")}${plCats.length > 2 ? "…" : ""}`,
     );
   }
 
@@ -28,7 +31,7 @@ export function buildExposurePrimaryDrivers(
       .filter((c) => c.architectureCompression)
       .map((c) => c.category);
     drivers.push(
-      `Compressed premium spacing across categories representing ~${exposure.architectureAffectedRevenuePct}% of in-scope revenue${archCats.length > 0 ? ` (${archCats.slice(0, 2).join(", ")})` : ""}`,
+      `Moderately compressed premium architecture in categories representing ~${exposure.architectureAffectedRevenuePct}% of in-scope revenue${archCats.length > 0 ? ` (${archCats.slice(0, 2).join(", ")})` : ""}`,
     );
   }
 
@@ -69,7 +72,7 @@ export function buildStrategicImplicationOneLiner(
     return "Measured structural evidence is still partial — treat opportunity framing as directional until upload fields fully align.";
   }
   if (evidence.primaryDrivers.includes("PL/NB separation")) {
-    return "Recovering PL/NB separation and tier clarity should precede deeper promotional investment.";
+    return "Selective PL/NB and tier-spacing gaps are the most credible discussion topics before broader promotional moves.";
   }
   if (evidence.primaryDrivers.includes("KVI concentration")) {
     return "Rebalancing KVI concentration in trip-driving categories should precede broad price-point changes.";

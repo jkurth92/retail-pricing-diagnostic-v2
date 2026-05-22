@@ -52,8 +52,11 @@ function buildExposureSummaries(
     summaries.push(
       `PL/NB separation below expected range in ${plCats.length} categor${plCats.length === 1 ? "y" : "ies"} (${plCats.slice(0, 2).join(", ")}).`,
     );
+    const isolated = plCats.length < 3;
     causal.push(
-      `Weak PL/NB separation observed across high-volume categories with ${bundle.portfolioElasticitySensitivity} elasticity sensitivity.`,
+      isolated
+        ? `Selective PL/NB compression in ${plCats.slice(0, 2).join(" and ")} — limited portfolio-wide monetization impact.`
+        : `PL/NB separation below expected range across high-volume categories (${bundle.portfolioElasticitySensitivity} elasticity sensitivity).`,
     );
   }
 
@@ -68,7 +71,7 @@ function buildExposureSummaries(
   );
   if (premiumCats.length > 0) {
     summaries.push(
-      `Premiumization-sensitive categories show weak tier separation (${premiumCats.map((c) => c.category).join(", ")}).`,
+      `Premiumization-sensitive categories show limited tier separation (${premiumCats.map((c) => c.category).join(", ")}).`,
     );
   }
 
@@ -96,7 +99,7 @@ export function runOpportunityExposureEngine(
   input: OpportunityExposureInput,
 ): OpportunityExposureBundle {
   const rows = synthesizePricingRows(input);
-  const arch = computeArchitectureSignals(rows);
+  const arch = computeArchitectureSignals(rows, input.archetypeId);
   const kvi = computeKviSignals(rows);
   const categoryExposures = computeCategoryExposures({
     ...input,

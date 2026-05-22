@@ -5,6 +5,14 @@ import { computeCategorySignals } from "@/lib/categorySignals";
 import { computeKviSignals } from "@/lib/kviSignals";
 import { legacyPostureToKnowledge } from "@/lib/archetypeContext";
 import {
+  architectureAttributionLine,
+  calibrateEvidenceHeadline,
+  calibrateMetricList,
+  deriveOverallEvidenceStrength,
+  plNbAttributionLine,
+  softenExecutiveDriverPhrase,
+} from "@/lib/interpretationCalibration";
+import {
   synthesizePricingRows,
   type PricingRowSynthesisInput,
 } from "@/lib/pricingRowSynthesis";
@@ -12,7 +20,6 @@ import type { SupportingSignal } from "@/types/diagnostic-hypotheses";
 import type {
   ComputedEvidenceBundle,
   EvidenceBackedThemeLine,
-  EvidenceStrength,
 } from "@/types/evidence-computation";
 import type { CanonicalFieldKey } from "@/types/upload-schema";
 
@@ -73,11 +80,13 @@ function buildEvidenceSummaries(
     );
   }
 
-  if (arch.plNbCategoriesNarrow > 0) {
-    const total = new Set(categories).size;
-    lines.push(
-      `PL/NB separation below expected range in ${arch.plNbCategoriesNarrow} of ${total} categories`,
-    );
+  const totalCats = new Set(categories).size;
+  const plLine = plNbAttributionLine(arch, totalCats);
+  if (plLine) lines.push(plLine);
+
+  const archLine = architectureAttributionLine(arch, totalCats);
+  if (archLine && !lines.some((l) => l.includes("compressed"))) {
+    lines.push(archLine);
   }
 
   if (kvi.kviRevenueSharePct > 0) {
@@ -118,24 +127,31 @@ function buildEvidenceBackedThemes(
 
   if (arch.compressionCategories.length >= 1) {
     const cats = arch.compressionCategories.slice(0, 2).join(" and ");
+    const isolated = arch.compressionCategories.length === 1;
     themes.push({
-      headline: "Tight tier clustering in key categories",
-      detail: `${who}: premium and mainstream tiers appear closely clustered in ${cats}.`,
+      headline: isolated
+        ? "Moderately compressed premium architecture"
+        : "Compressed premium architecture",
+      detail: `${who}: tier spacing appears compressed in ${cats}${isolated ? " — broader portfolio spacing is less pronounced." : "."}`,
     });
   } else if (
     arch.premiumMainstreamGapPct !== null &&
-    arch.premiumMainstreamGapPct < 14
+    arch.premiumMainstreamGapPct < 16
   ) {
     themes.push({
-      headline: "Moderate premium tier separation",
-      detail: `${who}: portfolio median premium/mainstream gap is ~${Math.round(arch.premiumMainstreamGapPct)}%, suggesting limited trade-up runway.`,
+      headline: "Limited premium separation",
+      detail: `${who}: portfolio median premium/mainstream gap is ~${Math.round(arch.premiumMainstreamGapPct)}%, suggesting moderate trade-up headroom rather than severe failure.`,
     });
   }
 
-  if (arch.plNbCategoriesNarrow >= 2) {
+  if (arch.plNbNarrowCategories.length >= 1) {
+    const cats = arch.plNbNarrowCategories.slice(0, 2).join(" and ");
+    const isolated = arch.plNbNarrowCategories.length < 3;
     themes.push({
-      headline: "Narrow private-label separation",
-      detail: `Private-label price gaps versus national brands are narrower than expected in ${arch.plNbCategoriesNarrow} categories with measured mainstream tiers.`,
+      headline: isolated ? "Selective PL/NB compression" : "Weak monetization separation",
+      detail: isolated
+        ? `PL/NB gaps are narrower than expected in ${cats}; overall measured structure appears broadly healthy.`
+        : `Private-label separation is narrower than expected in ${arch.plNbNarrowCategories.length} categories (${cats}).`,
     });
   }
 
@@ -159,17 +175,19 @@ function resolveEligibleHypotheses(
   kvi: ReturnType<typeof computeKviSignals>,
   promoMarkdownEligible: boolean,
   packInconsistent: boolean,
+  archetypeId: import("@/types/retailer-archetypes").RetailerArchetypeId,
 ): string[] {
   const ids: string[] = [];
 
   if (arch.architectureCompression) ids.push("hyp-arch-compression");
   if (arch.plNbCategoriesNarrow >= 1) ids.push("hyp-weak-pl-nb");
   if (packInconsistent) ids.push("hyp-incoherent-ladder");
-  if (
-    arch.premiumMainstreamGapPct !== null &&
-    arch.premiumMainstreamGapPct < 16
-  ) {
-    ids.push("hyp-weak-premiumization");
+  if (arch.premiumMainstreamGapPct !== null) {
+    const premiumThreshold =
+      archetypeId === "mass" || archetypeId === "discount" ? 14 : 16;
+    if (arch.premiumMainstreamGapPct < premiumThreshold) {
+      ids.push("hyp-weak-premiumization");
+    }
   }
   if (
     arch.entryMainstreamGapPct !== null &&
@@ -217,16 +235,20 @@ function buildComputedSignals(
   ) {
     push(
       "sig-weak-premium-gap",
-      arch.premiumMainstreamGapPct < 12 ? "strong" : "moderate",
-      `Computed premium/mainstream median gap: ${Math.round(arch.premiumMainstreamGapPct)}%.`,
+      arch.premiumMainstreamGapPct < 12 ? "moderate" : "moderate",
+      `Premium/mainstream median gap ~${Math.round(arch.premiumMainstreamGapPct)}% — moderately compressed versus typical spacing.`,
     );
   }
 
   if (arch.plNbCategoriesNarrow >= 1) {
+    const cats = arch.plNbNarrowCategories.slice(0, 2).join(", ");
+    const isolated = arch.plNbNarrowCategories.length < 3;
     push(
       "sig-weak-pl-nb",
-      arch.plNbCategoriesNarrow >= 2 ? "strong" : "moderate",
-      `PL/NB gap below expected range in ${arch.plNbCategoriesNarrow} categor${arch.plNbCategoriesNarrow === 1 ? "y" : "ies"}.`,
+      isolated ? "moderate" : arch.plNbCategoriesNarrow >= 2 ? "strong" : "moderate",
+      cats
+        ? `Narrow PL/NB separation in ${cats}.`
+        : `PL/NB gap below expected range in ${arch.plNbCategoriesNarrow} categor${arch.plNbCategoriesNarrow === 1 ? "y" : "ies"}.`,
     );
   }
 
@@ -257,15 +279,6 @@ function buildComputedSignals(
   return fired;
 }
 
-function overallStrength(
-  metrics: ComputedEvidenceBundle["metrics"],
-): EvidenceStrength {
-  const strong = metrics.filter((m) => m.strength === "strong").length;
-  if (strong >= 3) return "strong";
-  if (strong >= 1 || metrics.length >= 4) return "moderate";
-  return "weak";
-}
-
 function primaryDrivers(metrics: ComputedEvidenceBundle["metrics"]): string[] {
   const drivers: string[] = [];
   if (metrics.some((m) => m.family === "architecture")) drivers.push("Price architecture");
@@ -283,7 +296,7 @@ export function runEvidenceComputation(
   const pricingRows = synthesizePricingRows(input);
   const categories = input.categoryRows.map((r) => r.category);
 
-  const arch = computeArchitectureSignals(pricingRows);
+  const arch = computeArchitectureSignals(pricingRows, input.archetypeId);
   const kvi = computeKviSignals(pricingRows);
   const cat = computeCategorySignals(pricingRows, input.categoryRows);
 
@@ -304,7 +317,11 @@ export function runEvidenceComputation(
     eprAverage: input.eprAverage ?? null,
   });
 
-  const metrics = [...arch.metrics, ...kvi.metrics, ...cat.metrics];
+  const metrics = calibrateMetricList([
+    ...arch.metrics,
+    ...kvi.metrics,
+    ...cat.metrics,
+  ]);
   const summaries = buildEvidenceSummaries(
     arch,
     kvi,
@@ -323,20 +340,29 @@ export function runEvidenceComputation(
     kvi,
     promoMarkdownEligible,
     packInconsistent,
+    input.archetypeId,
   );
   const evidenceBackedThemes = buildEvidenceBackedThemes(
     arch,
     kvi,
     input.retailerDisplayName ?? null,
     benchmarkCalibration.executiveContextLines,
-  );
+  ).map((t) => ({
+    headline: calibrateEvidenceHeadline(t.headline),
+    detail: softenExecutiveDriverPhrase(t.detail),
+  }));
 
   return {
     generatedAt: new Date().toISOString(),
     engineVersion: ENGINE_VERSION,
-    evidenceStrength: overallStrength(metrics),
+    evidenceStrength: deriveOverallEvidenceStrength(
+      metrics,
+      arch,
+      categories,
+      benchmarkCalibration.interpretations,
+    ),
     metrics,
-    summaries,
+    summaries: summaries.map((s) => softenExecutiveDriverPhrase(s)),
     computedSignals,
     eligibleHypothesisIds,
     evidenceBackedThemes,

@@ -29,6 +29,7 @@ import type { KnowledgeRegistryContext } from "@/types/knowledge-context";
 import type { ConfidenceScore } from "@/types/confidence-scoring";
 import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
 import { getArchetype, postureLabel } from "@/lib/archetypeContext";
+import { calibrateThemeDisplayName } from "@/lib/interpretationCalibration";
 import { buildExecutiveThemeOpportunityTrace } from "@/lib/opportunityCalculationTrace";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
@@ -95,7 +96,7 @@ function buildExecutiveTheme(
 
   return {
     id: definition.id,
-    themeName: definition.themeName,
+    themeName: calibrateThemeDisplayName(definition.themeName, archetypeId),
     themeFamily: definition.themeFamily,
     summary: definition.summary,
     supportingHypotheses: hypotheses,

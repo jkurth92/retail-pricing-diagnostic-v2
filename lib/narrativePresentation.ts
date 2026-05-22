@@ -4,6 +4,10 @@
  */
 
 import { polishNarrativeText } from "@/lib/executiveOutputPolish";
+import {
+  calibrateEvidenceHeadline,
+  softenExecutiveDriverPhrase,
+} from "@/lib/interpretationCalibration";
 import { shortenThemeTitle } from "@/lib/executiveUxHelpers";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { ExecutiveSummary } from "@/types/executive-summary";
@@ -36,16 +40,18 @@ export type ExecutiveConsultingSummary = {
 
 /** Shorten repetitive benchmark phrasing for executive scan. */
 export function softenBenchmarkPhrase(text: string): string {
-  return text
-    .replace(
-      /\bappears below the expected range \([^)]+\) for a [^.]+\./gi,
-      "Below expected spacing.",
-    )
-    .replace(/\bbelow the expected range for a [^.]+\./gi, "Below expected range.")
-    .replace(/\bnarrower than typical for [^.]+\./gi, "Compressed vs benchmark.")
-    .replace(/\bfor a [A-Za-z /-]+ retailer with [A-Za-z-]+ posture\.?/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return softenExecutiveDriverPhrase(
+    text
+      .replace(
+        /\bappears below the expected range \([^)]+\) for a [^.]+\./gi,
+        "Near the low end of expected range.",
+      )
+      .replace(/\bbelow the expected range for a [^.]+\./gi, "Below expected spacing.")
+      .replace(/\bnarrower than typical for [^.]+\./gi, "Moderately compressed versus typical spacing.")
+      .replace(/\bfor a [A-Za-z /-]+ retailer with [A-Za-z-]+ posture\.?/gi, "")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
 }
 
 function driverTitleFromText(raw: string): string {
@@ -73,7 +79,7 @@ export function buildStrategicDriverCards(
 
   const add = (id: string, raw: string, theme?: ExecutiveTheme) => {
     const title = theme?.themeName
-      ? shortenThemeTitle(theme.themeName)
+      ? shortenThemeTitle(calibrateEvidenceHeadline(theme.themeName))
       : driverTitleFromText(raw);
     if (seen.has(title)) return;
     seen.add(title);

@@ -1,5 +1,7 @@
+import { formatMetricDisplayValue, premiumGapSeverity, shouldSuppressMetric } from "@/lib/interpretationCalibration";
 import type { EvidenceMetric } from "@/types/evidence-computation";
 import type { SyntheticPricingRow } from "@/lib/pricingRowSynthesis";
+import type { RetailerArchetypeId } from "@/types/retailer-archetypes";
 
 export type ArchitectureSignalResult = {
   metrics: EvidenceMetric[];
@@ -9,6 +11,7 @@ export type ArchitectureSignalResult = {
   packSizeConsistencyPct: number | null;
   plNbGapPctMedian: number | null;
   plNbCategoriesNarrow: number;
+  plNbNarrowCategories: string[];
   compressionCategories: string[];
   architectureCompression: boolean;
 };
@@ -33,6 +36,7 @@ const COMPRESSION_ENTRY_GAP_PCT = 10;
 
 export function computeArchitectureSignals(
   rows: SyntheticPricingRow[],
+  archetypeId: RetailerArchetypeId = "mass",
 ): ArchitectureSignalResult {
   const metrics: EvidenceMetric[] = [];
   const byCategory = new Map<string, SyntheticPricingRow[]>();
@@ -47,6 +51,7 @@ export function computeArchitectureSignals(
   const spacingGaps: number[] = [];
   const plNbGaps: number[] = [];
   const compressionCategories: string[] = [];
+  const plNbNarrowCategories: string[] = [];
   let plNbCategoriesNarrow = 0;
 
   for (const [category, catRows] of byCategory) {
@@ -86,7 +91,10 @@ export function computeArchitectureSignals(
       if (plRow) {
         const plGap = gapPct(plRow.price, mainstream.price);
         plNbGaps.push(plGap);
-        if (plGap < EXPECTED_PL_NB_GAP_PCT) plNbCategoriesNarrow += 1;
+        if (plGap < EXPECTED_PL_NB_GAP_PCT) {
+          plNbCategoriesNarrow += 1;
+          plNbNarrowCategories.push(category);
+        }
       }
     }
   }
@@ -109,12 +117,7 @@ export function computeArchitectureSignals(
       premiumMainstreamGapPct < COMPRESSION_PREMIUM_GAP_PCT);
 
   if (premiumMainstreamGapPct !== null) {
-    const strength =
-      premiumMainstreamGapPct < COMPRESSION_PREMIUM_GAP_PCT
-        ? "strong"
-        : premiumMainstreamGapPct < 16
-          ? "moderate"
-          : "weak";
+    const strength = premiumGapSeverity(premiumMainstreamGapPct, archetypeId);
     metrics.push({
       id: "premium_mainstream_gap",
       label: "Premium/Mainstream median gap",
@@ -146,36 +149,59 @@ export function computeArchitectureSignals(
   }
 
   if (packSizeConsistencyPct !== null) {
-    metrics.push({
+    const packMetric: EvidenceMetric = {
       id: "pack_size_consistency",
       label: "Pack-size ladder consistency",
       value: `${packSizeConsistencyPct}%`,
       family: "architecture",
       strength: packSizeConsistencyPct < 70 ? "moderate" : "weak",
-    });
+    };
+    const display = formatMetricDisplayValue(
+      packMetric.id,
+      packMetric.value,
+    );
+    if (display && !shouldSuppressMetric(packMetric)) {
+      metrics.push({ ...packMetric, value: display });
+    }
   }
 
   if (plNbGapPctMedian !== null) {
+    const isolated =
+      plNbNarrowCategories.length > 0 &&
+      plNbNarrowCategories.length < Math.ceil(byCategory.size * 0.45);
     metrics.push({
       id: "pl_nb_gap",
       label: "PL/NB median gap (mainstream)",
       value: `${Math.round(plNbGapPctMedian)}%`,
       family: "architecture",
-      strength: plNbGapPctMedian < EXPECTED_PL_NB_GAP_PCT ? "strong" : "weak",
+      strength:
+        plNbGapPctMedian < EXPECTED_PL_NB_GAP_PCT
+          ? isolated
+            ? "moderate"
+            : "strong"
+          : "weak",
     });
   }
 
   if (plNbCategoriesNarrow > 0) {
+    const isolated =
+      plNbNarrowCategories.length < Math.ceil(byCategory.size * 0.45);
+    const names = plNbNarrowCategories.slice(0, 2).join(", ");
     metrics.push({
       id: "pl_nb_categories_narrow",
       label: "Categories with narrow PL/NB separation",
-      value: `${plNbCategoriesNarrow} of ${byCategory.size}`,
+      value: isolated
+        ? `Select categories (${names})`
+        : `${plNbCategoriesNarrow} of ${byCategory.size}`,
       family: "architecture",
-      strength: plNbCategoriesNarrow >= 2 ? "strong" : "moderate",
+      strength: isolated ? "moderate" : plNbCategoriesNarrow >= 2 ? "strong" : "moderate",
     });
   }
 
   if (architectureCompression) {
+    const localized =
+      compressionCategories.length > 0 &&
+      compressionCategories.length < Math.ceil(byCategory.size * 0.5);
     metrics.push({
       id: "architecture_compression",
       label: "Architecture compression indicator",
@@ -184,7 +210,7 @@ export function computeArchitectureSignals(
           ? `Observed in ${compressionCategories.slice(0, 3).join(", ")}${compressionCategories.length > 3 ? "…" : ""}`
           : "Portfolio-level tight tier spacing",
       family: "architecture",
-      strength: "strong",
+      strength: localized ? "moderate" : "strong",
     });
   }
 
@@ -196,6 +222,7 @@ export function computeArchitectureSignals(
     packSizeConsistencyPct,
     plNbGapPctMedian,
     plNbCategoriesNarrow,
+    plNbNarrowCategories,
     compressionCategories,
     architectureCompression,
   };

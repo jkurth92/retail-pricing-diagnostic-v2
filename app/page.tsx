@@ -22,6 +22,7 @@ import {
 } from "@/lib/financePeerSuggestion";
 import type { FinancePeer } from "@/types/finance-peers";
 import { formatToArchetypeId } from "@/lib/archetypeContext";
+import { resolveRetailerArchetypeHint } from "@/lib/retailerArchetypeResolution";
 import { buildPlaceholderIngestionDataset } from "@/lib/buildIngestionPreview";
 import { runEvidenceComputation } from "@/lib/evidenceComputation";
 import { runOpportunityExposureEngine } from "@/lib/opportunityExposure";
@@ -332,11 +333,21 @@ export default function Home() {
         if (bundle.context.ticker && !manualTicker) {
           setManualTicker(bundle.context.ticker);
         }
-        if (bundle.suggestions.suggestedPosture) {
-          setKnowledgePosture(bundle.suggestions.suggestedPosture);
-        }
-        if (bundle.suggestions.suggestedArchetypeId) {
-          setArchetypeId(bundle.suggestions.suggestedArchetypeId);
+        const hint = resolveRetailerArchetypeHint(
+          name.trim(),
+          bundle.context.ticker,
+        );
+        if (hint) {
+          setArchetypeId(hint.archetypeId);
+          setKnowledgePosture(hint.pricingPosture);
+          if (hint.retailerFormat) setRetailerFormat(hint.retailerFormat);
+        } else {
+          if (bundle.suggestions.suggestedArchetypeId) {
+            setArchetypeId(bundle.suggestions.suggestedArchetypeId);
+          }
+          if (bundle.suggestions.suggestedPosture) {
+            setKnowledgePosture(bundle.suggestions.suggestedPosture);
+          }
         }
       } finally {
         setEnrichmentLoading(false);
@@ -354,8 +365,16 @@ export default function Home() {
   const handleConfirmRetailer = () => {
     const trimmed = retailerInput.trim();
     setConfirmedRetailer(trimmed || "");
-    setCompetitors(createSuggestedCompetitors(retailerFormat));
-    setArchetypeId(formatToArchetypeId(retailerFormat));
+    const hint = resolveRetailerArchetypeHint(trimmed, manualTicker || null);
+    if (hint) {
+      setArchetypeId(hint.archetypeId);
+      setKnowledgePosture(hint.pricingPosture);
+      if (hint.retailerFormat) setRetailerFormat(hint.retailerFormat);
+      setCompetitors(createSuggestedCompetitors(hint.retailerFormat ?? retailerFormat));
+    } else {
+      setCompetitors(createSuggestedCompetitors(retailerFormat));
+      setArchetypeId(formatToArchetypeId(retailerFormat));
+    }
     void refreshEnrichment(trimmed);
   };
 

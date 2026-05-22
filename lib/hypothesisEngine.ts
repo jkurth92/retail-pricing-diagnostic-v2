@@ -76,6 +76,18 @@ function buildCandidate(
   const supporting = matchSignals(fired, entry.triggerSignalIds);
   const conflicting = conflictingSignals(fired, entry.conflictingSignalIds);
 
+  const themeExposure = buildThemeExposureContext(
+    exposureBundle,
+    entry.hypothesisFamily,
+  );
+
+  const benchmarkBelowCount =
+    benchmarkCalibration?.interpretations.filter(
+      (i) =>
+        i.position === "below_expected" ||
+        i.position === "narrower_than_typical",
+    ).length ?? 0;
+
   const confidence = scoreHypothesisConfidence({
     supportingSignals: supporting,
     conflictingSignals: conflicting,
@@ -83,12 +95,11 @@ function buildCandidate(
     roleInference: ctx.roleInference,
     evidenceCoverageRatio: evidenceRatio,
     eprAverage: ctx.eprAverage,
+    benchmarkBelowCount,
+    exposureWeightPct: themeExposure?.themeAffectedRevenuePct ?? 0,
+    measuredStrongSignals: evidenceMetrics.filter((m) => m.strength === "strong")
+      .length,
   });
-
-  const themeExposure = buildThemeExposureContext(
-    exposureBundle,
-    entry.hypothesisFamily,
-  );
 
   const opportunityTheme = calibrateOpportunityTheme(
     entry.opportunityThemeId,

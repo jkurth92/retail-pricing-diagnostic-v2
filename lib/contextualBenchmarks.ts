@@ -3,6 +3,7 @@
  */
 
 import { getArchetypeBenchmarkProfile } from "@/lib/benchmarkExpectations";
+import { embedBenchmarkPhrase } from "@/lib/interpretationCalibration";
 import { buildNormativeStructureSnapshot } from "@/lib/normativeStructures";
 import type { ArchitectureSignalResult } from "@/lib/architectureSignals";
 import type { KviSignalResult } from "@/lib/kviSignals";
@@ -100,28 +101,12 @@ export function compareToExpectedRange(
 function positionPhrase(
   position: BenchmarkComparisonPosition,
   metricLabel: string,
-  expected: BenchmarkRangePct,
+  _expected: BenchmarkRangePct,
   archetypeName: string,
-  postureLabel: string,
+  _postureLabel: string,
   category?: string,
 ): string {
-  const ctx = category ? ` in ${category}` : "";
-  const band = `${expected.lowPct}–${expected.highPct}%`;
-
-  switch (position) {
-    case "below_expected":
-      return `${metricLabel}${ctx} appears below the expected range (${band}) for a ${archetypeName} retailer with ${postureLabel} posture.`;
-    case "narrower_than_typical":
-      return `${metricLabel}${ctx} is narrower than typical for ${archetypeName} (${band} reference band).`;
-    case "broader_than_expected":
-      return `${metricLabel}${ctx} is broader than expected for ${archetypeName} — may indicate over-spacing versus traffic role.`;
-    case "above_expected":
-      return `${metricLabel}${ctx} sits above the typical ${archetypeName} band (${band}) — interpret with category role.`;
-    case "consistent_with_leading":
-      return `${metricLabel}${ctx} is consistent with leading ${archetypeName} regular-price structure (${band} band).`;
-    default:
-      return `${metricLabel}${ctx} sits within the expected ${archetypeName} range (${band}).`;
-  }
+  return embedBenchmarkPhrase(position, metricLabel, archetypeName, category);
 }
 
 function severityFromPosition(
@@ -227,9 +212,8 @@ export function buildContextualInterpretations(
         normative.plNbGapRange,
         archetypeName,
         input.postureDisplay,
-        input.arch.plNbCategoriesNarrow > 0
-          ? input.arch.compressionCategories[0] ?? "measured categories"
-          : undefined,
+        input.arch.plNbNarrowCategories[0] ??
+          (input.arch.plNbCategoriesNarrow > 0 ? "measured categories" : undefined),
       ),
       severityWeight: severityFromPosition(pos, profile.plNbIssueWeight),
       archetypeId: input.archetypeId,

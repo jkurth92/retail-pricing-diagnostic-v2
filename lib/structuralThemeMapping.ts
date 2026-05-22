@@ -33,7 +33,7 @@ export function mapStructuralThemes(
   ) {
     mappings.push({
       themeId: "architecture_compression",
-      themeLabel: "Architecture compression",
+      themeLabel: "Compressed premium architecture",
       evidenceHooks: [
         ...(arch.compressionCategories.length > 0
           ? [`Compressed tier spacing in ${arch.compressionCategories.slice(0, 2).join(", ")}`]
@@ -47,12 +47,20 @@ export function mapStructuralThemes(
   }
 
   if (arch.plNbCategoriesNarrow >= 1 || plInterp?.position === "below_expected") {
+    const narrow = arch.plNbNarrowCategories.slice(0, 2).join(" and ");
+    const isolated = arch.plNbNarrowCategories.length < 3;
     mappings.push({
       themeId: "weak_pl_nb_separation",
-      themeLabel: "Weak PL/NB monetization separation",
-      evidenceHooks: [
-        `PL/NB gap below expected range in ${arch.plNbCategoriesNarrow} categor${arch.plNbCategoriesNarrow === 1 ? "y" : "ies"}`,
-      ],
+      themeLabel: isolated ? "Selective PL/NB compression" : "Weak monetization separation",
+      evidenceHooks: narrow
+        ? [
+            isolated
+              ? `Narrow PL/NB separation in ${narrow}`
+              : `PL/NB gap below expected range in ${arch.plNbCategoriesNarrow} categories (${narrow})`,
+          ]
+        : [
+            `PL/NB gap below expected range in ${arch.plNbCategoriesNarrow} categor${arch.plNbCategoriesNarrow === 1 ? "y" : "ies"}`,
+          ],
       benchmarkHook: plInterp?.narrativePhrase,
     });
   }
@@ -64,7 +72,7 @@ export function mapStructuralThemes(
   ) {
     mappings.push({
       themeId: "kvi_over_investment",
-      themeLabel: "Over-investment in visible value (KVI)",
+      themeLabel: "Broad value concentration",
       evidenceHooks: [`KVI-like revenue weight ~${kvi.kviRevenueSharePct}%`],
       benchmarkHook: kviInterp?.narrativePhrase,
     });
@@ -73,7 +81,7 @@ export function mapStructuralThemes(
   if (arch.avgTierSpacingPct !== null && arch.avgTierSpacingPct < 11) {
     mappings.push({
       themeId: "flat_ladders",
-      themeLabel: "Flat monetization ladders",
+      themeLabel: "Moderately flat monetization ladders",
       evidenceHooks: [`Average tier spacing ~${Math.round(arch.avgTierSpacingPct)}%`],
     });
   }
@@ -81,7 +89,7 @@ export function mapStructuralThemes(
   if (arch.compressionCategories.length >= 2) {
     mappings.push({
       themeId: "architecture_incoherence",
-      themeLabel: "Architecture incoherence across categories",
+      themeLabel: "Selective architecture inconsistency",
       evidenceHooks: ["Inconsistent tier spacing across multiple categories"],
     });
   }

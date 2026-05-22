@@ -15,10 +15,10 @@ export type ExecutiveThemeDefinition = {
 export const EXECUTIVE_THEME_DEFINITIONS: ExecutiveThemeDefinition[] = [
   {
     id: "theme-arch-compression",
-    themeName: "Architecture compression",
+    themeName: "Compressed premium architecture",
     themeFamily: "Architecture",
     summary:
-      "Monetization architecture may be compressed by broad value signaling and tight tier spacing.",
+      "Monetization architecture may be moderately compressed by value signaling and tight tier spacing in select categories.",
     hypothesisIds: [
       "hyp-arch-compression",
       "hyp-weak-pl-nb",
@@ -31,10 +31,10 @@ export const EXECUTIVE_THEME_DEFINITIONS: ExecutiveThemeDefinition[] = [
   },
   {
     id: "theme-weak-premiumization",
-    themeName: "Weak premiumization",
+    themeName: "Limited premium separation",
     themeFamily: "Premiumization",
     summary:
-      "Premium tier storytelling may trail strategic premiumization intent.",
+      "Premium tier spacing may trail archetype-typical separation without implying structural failure.",
     hypothesisIds: ["hyp-weak-premiumization"],
     strategicImportanceWeight: 92,
     architecturePriority: true,
@@ -43,7 +43,7 @@ export const EXECUTIVE_THEME_DEFINITIONS: ExecutiveThemeDefinition[] = [
   },
   {
     id: "theme-weak-trade-up",
-    themeName: "Weak trade-up structure",
+    themeName: "Limited trade-up clarity",
     themeFamily: "Architecture",
     summary:
       "Trade-up paths from KVI anchors to higher tiers may lack clarity.",
@@ -55,7 +55,7 @@ export const EXECUTIVE_THEME_DEFINITIONS: ExecutiveThemeDefinition[] = [
   },
   {
     id: "theme-kvi-breadth",
-    themeName: "Excessive KVI breadth",
+    themeName: "Broad value concentration",
     themeFamily: "KVI",
     summary:
       "KVI signaling may be over-distributed, diluting focus categories.",
@@ -67,7 +67,7 @@ export const EXECUTIVE_THEME_DEFINITIONS: ExecutiveThemeDefinition[] = [
   },
   {
     id: "theme-kvi-concentration",
-    themeName: "Weak KVI concentration",
+    themeName: "Diffuse KVI concentration",
     themeFamily: "KVI",
     summary:
       "KVI investment may lack concentration in trip-driving categories.",

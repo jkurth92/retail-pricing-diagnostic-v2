@@ -16,6 +16,12 @@ export type ConfidenceInput = {
   roleInference: RoleInferenceResult;
   evidenceCoverageRatio: number;
   eprAverage: number | null;
+  /** Count of benchmark interpretations below / narrower than expected. */
+  benchmarkBelowCount?: number;
+  /** In-scope revenue weight affected by this theme family (%). */
+  exposureWeightPct?: number;
+  /** Measured evidence metrics tagged strong. */
+  measuredStrongSignals?: number;
 };
 
 function levelFromScore(score: number): DiagnosticConfidenceLevel {
@@ -61,6 +67,20 @@ export function scoreHypothesisConfidence(input: ConfidenceInput): ConfidenceSco
 
   score -= input.conflictingSignals.length * 2;
   if (input.evidenceCoverageRatio < 0.35) score -= 2;
+
+  if (ARCH_FAMILIES.includes(input.hypothesisFamily)) {
+    const below = input.benchmarkBelowCount ?? 0;
+    if (below >= 2) score += 1;
+    else if (below === 0) score -= 1;
+
+    const exposure = input.exposureWeightPct ?? 0;
+    if (exposure >= 18) score += 1;
+    else if (exposure > 0 && exposure < 8) score -= 1;
+
+    const strong = input.measuredStrongSignals ?? 0;
+    if (strong >= 2) score += 1;
+    else if (strong === 0 && input.supportingSignals.length > 0) score -= 1;
+  }
 
   const maturityAdjustment =
     input.eprAverage !== null ? (input.eprAverage - 3) * 0.5 : 0;

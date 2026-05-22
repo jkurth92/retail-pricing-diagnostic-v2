@@ -78,11 +78,19 @@ function buildExposureSummaryLines(
       `Traffic-driving categories account for most observed architecture compression (${arch.compressionCategories.slice(0, 2).join(", ")}).`,
     );
   }
-  if (arch.plNbCategoriesNarrow > 0) {
-    lines.push(
-      `PL/NB separation below expected range in ${arch.plNbCategoriesNarrow} measured categor${arch.plNbCategoriesNarrow === 1 ? "y" : "ies"}.`,
-    );
-  }
+  const plLine = (() => {
+    const narrow = arch.plNbNarrowCategories ?? [];
+    if (narrow.length === 0) return null;
+    const names = narrow.slice(0, 2).join(" and ");
+    if (narrow.length === 1) {
+      return `Narrow PL/NB separation observed in ${names}.`;
+    }
+    if (narrow.length < 3) {
+      return `Overall PL/NB structure appears broadly healthy; ${names} show narrower separation.`;
+    }
+    return `PL/NB separation below expected range in ${narrow.length} categories (${names}).`;
+  })();
+  if (plLine) lines.push(plLine);
   if (kvi.kviRevenueSharePct > 0) {
     const kviInterp = interpretations.find((i) => i.metricKind === "kvi_revenue_share");
     if (
@@ -95,9 +103,7 @@ function buildExposureSummaryLines(
     }
   }
   if (belowPremium) {
-    lines.push(
-      `Premiumization-sensitive spacing appears below the expected range (observed ${belowPremium.observedDisplay} vs ${belowPremium.expectedRange.lowPct}–${belowPremium.expectedRange.highPct}% reference).`,
-    );
+    lines.push(belowPremium.narrativePhrase);
   }
   return lines.slice(0, 4);
 }
