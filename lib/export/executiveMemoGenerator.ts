@@ -6,6 +6,7 @@ import {
   composeRetailerContextSection,
   type ExecutiveMemoComposeInput,
 } from "@/lib/export/executiveMemoComposer";
+import { buildOpportunityDriverSynthesis } from "@/lib/opportunityDriverSynthesis";
 import type { DiagnosticReadout } from "@/types/diagnostic-readout";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { FinancePeer } from "@/types/finance-peers";
@@ -38,6 +39,14 @@ export function buildExecutiveMemo(
   };
 
   const retailerContext = composeRetailerContextSection(composeInput);
+  const driverSynthesis = buildOpportunityDriverSynthesis({
+    exec: readout.executiveSummary,
+    exposure: composeInput.opportunityExposure ?? readout.executiveSummary.opportunityExposure,
+    themes: readout.executiveSummary.topThemes,
+    evidence: composeInput.computedEvidence,
+    promoMarkdownEligible: composeInput.computedEvidence?.promoMarkdownEligible ?? false,
+    opportunityRange: readout.opportunityDetail.totalMarginOpportunityRange || null,
+  });
   const pricingObservations = composePricingObservationsSection(composeInput);
   const implications = composeImplicationsSection(composeInput);
   const discussionQuestions = composeDiscussionQuestions(composeInput);
@@ -53,6 +62,7 @@ export function buildExecutiveMemo(
   return {
     title: `${MEMO_TITLE_PREFIX} — ${retailerName || "Client"}`,
     retailerContext,
+    opportunityDrivers: driverSynthesis.drivers,
     pricingObservations,
     implications,
     discussionQuestions,

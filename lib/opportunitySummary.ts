@@ -14,6 +14,8 @@ import type {
 export function buildOpportunitySummary(
   primaryThemes: ExecutiveTheme[],
   secondaryThemes: ExecutiveTheme[],
+  revenueImpactRange: string,
+  revenueImpactLabel: string,
   revenueSensitivitySummary: string,
   hasRevenueInScope: boolean,
   totalMarginOverride?: string,
@@ -61,7 +63,8 @@ export function buildOpportunitySummary(
   return {
     status,
     totalMarginOpportunityRange: totalMargin,
-    totalRevenueSensitivityRange: revenueSensitivitySummary,
+    totalRevenueSensitivityRange: revenueImpactRange,
+    revenueImpactLabel,
     primaryOpportunityDrivers: primaryDrivers,
     secondaryOpportunityDrivers: [...secondaryDrivers, ...enablers],
     caveats: [...OPPORTUNITY_CAVEATS],

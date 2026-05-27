@@ -24,6 +24,7 @@ type PricingDiagnosticPanelProps = {
   computedEvidence?: ComputedEvidenceBundle | null;
   opportunityExposure?: import("@/types/opportunity-exposure").OpportunityExposureBundle | null;
   evaluatedRevenuePercent?: number | null;
+  refinementPresentation?: import("@/lib/refinementAdjustments").RefinedDiagnosticPresentation | null;
 };
 
 export function PricingDiagnosticPanel({
@@ -40,6 +41,7 @@ export function PricingDiagnosticPanel({
   computedEvidence,
   opportunityExposure,
   evaluatedRevenuePercent,
+  refinementPresentation,
 }: PricingDiagnosticPanelProps) {
   if (!diagnosticReady) {
     return (
@@ -62,13 +64,16 @@ export function PricingDiagnosticPanel({
     <div className="max-w-6xl pilot-panel ent-diagnostic-page">
       <DiagnosticSection title="Pricing diagnostic">
         <ExecutiveDeliverablePanel
-          readout={executiveDeliverable}
+          readout={
+            refinementPresentation?.readout ?? executiveDeliverable
+          }
           exportPackage={executiveDeliverable.exportPackage}
           view="full"
           pilotMode
           opportunityExposure={opportunityExposure}
           computedEvidence={computedEvidence}
           evaluatedRevenuePercent={evaluatedRevenuePercent}
+          refinementPresentation={refinementPresentation}
           consultantSlot={
             <TechnicalDiagnosticsPanel
               knowledgeContext={knowledgeContext}

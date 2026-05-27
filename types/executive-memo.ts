@@ -3,10 +3,14 @@ export type OpportunityLeverLine = {
   marginRange: string;
 };
 
+import type { PricingOpportunityDriver } from "@/lib/opportunityDriverSynthesis";
+
 export type ExecutiveMemo = {
   title: string;
   /** Company & market context — scale, margins, peers */
   retailerContext: string;
+  /** Structured opportunity drivers (plain-language) */
+  opportunityDrivers?: PricingOpportunityDriver[];
   /** What the pricing review surfaced */
   pricingObservations: string;
   /** Strategic implications for leadership */

@@ -34,6 +34,7 @@ import {
 } from "@/lib/signalPrioritization";
 import { shortenThemeTitle } from "@/lib/executiveUxHelpers";
 import { illustrationsForMetric } from "@/lib/evidenceIllustrations";
+import { consultantThemeLabel } from "@/lib/insightTranslation";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { IllustrativeCommercialExample } from "@/types/evidence-illustrations";
 import type { ExecutiveSummary } from "@/types/executive-summary";
@@ -88,15 +89,17 @@ export function softenBenchmarkPhrase(text: string): string {
 
 function driverTitleFromText(raw: string): string {
   const s = softenBenchmarkPhrase(raw);
-  if (/weak pl\/nb|pl\/nb separation/i.test(s)) return "Weak monetization separation";
+  if (/weak pl\/nb|pl\/nb separation/i.test(s)) return "Private-brand role unclear";
   if (/compressed premium|premium spacing|tier spacing|architecture compression/i.test(s))
-    return "Compressed premium architecture";
+    return "Misaligned pricing architecture";
   if (/kvi|visible value|value concentration/i.test(s)) {
-    return calibrateValueConcentrationPhrase({}) ?? "Moderate value concentration";
+    return consultantThemeLabel(
+      calibrateValueConcentrationPhrase({}) ?? "Value communication diffuse",
+    );
   }
-  if (/trade-up|premium\/mainstream|tier/i.test(s)) return "Limited trade-up clarity";
-  if (/pl\/nb/i.test(s)) return "Narrow PL/NB separation";
-  return shortenThemeTitle(s.split(".")[0] ?? s);
+  if (/trade-up|premium\/mainstream|tier/i.test(s)) return "Unclear good-better-best structure";
+  if (/pl\/nb/i.test(s)) return "Private-brand under-differentiated";
+  return consultantThemeLabel(shortenThemeTitle(s.split(".")[0] ?? s));
 }
 
 function impactFromText(text: string): "high" | "medium" {
@@ -133,7 +136,8 @@ export function buildStrategicDriverCards(
       id,
       title,
       interpretation:
-        interpretation || "Structural pattern observed in reviewed pricing data.",
+        interpretation ||
+        "The portfolio shows evidence of structural pricing tension in reviewed data.",
       benchmarkHint,
       impact: impactFromText(raw),
       confidenceLabel: theme?.confidence.level.replace(/_/g, " "),

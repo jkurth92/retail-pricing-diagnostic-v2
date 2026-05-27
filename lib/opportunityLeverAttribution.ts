@@ -47,7 +47,7 @@ function leverKeyFromDriverText(text: string): LeverKey | null {
   return null;
 }
 
-function rankLevers(
+export function rankOpportunityLevers(
   themes: ExecutiveTheme[],
   primaryDrivers: string[],
   evidence?: ComputedEvidenceBundle | null,
@@ -161,7 +161,7 @@ export function buildOpportunityAreaBreakdown(
   promoMarkdownEligible = false,
 ): OpportunityAreaRow[] {
   const footprint = assessOpportunityFootprint(exposure, exec);
-  const ranked = rankLevers(themes, primaryDrivers, evidence, promoMarkdownEligible);
+  const ranked = rankOpportunityLevers(themes, primaryDrivers, evidence, promoMarkdownEligible);
   if (ranked.length === 0) return [];
 
   const rows: OpportunityAreaRow[] = [];
@@ -203,7 +203,7 @@ export function buildDirectionalLeverContributions(
   evidence?: ComputedEvidenceBundle | null,
   promoMarkdownEligible = false,
 ): LeverContributionRow[] {
-  const ranked = rankLevers(themes, primaryDrivers, evidence, promoMarkdownEligible);
+  const ranked = rankOpportunityLevers(themes, primaryDrivers, evidence, promoMarkdownEligible);
   return ranked.map((id, i) => ({
     id,
     label: id,

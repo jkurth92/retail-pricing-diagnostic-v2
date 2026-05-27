@@ -4,6 +4,7 @@
  */
 
 import { getArchetypeBenchmarkProfile } from "@/lib/benchmarkExpectations";
+import { translateConsultantInsight } from "@/lib/insightTranslation";
 import type { ArchitectureSignalResult } from "@/lib/architectureSignals";
 import type {
   BenchmarkComparisonPosition,
@@ -13,15 +14,15 @@ import type { EvidenceMetric, EvidenceStrength } from "@/types/evidence-computat
 import type { RetailerArchetypeId } from "@/types/retailer-archetypes";
 
 const THEME_LABEL_MAP: Record<string, string> = {
-  "weak premiumization": "Limited premium separation",
-  "weak trade-up structure": "Limited trade-up clarity",
-  "excessive kvi breadth": "Moderate value concentration",
-  "weak kvi concentration": "Modest KVI breadth",
-  "architecture compression": "Compressed premium architecture",
-  "weak pl/nb monetization separation": "Weak monetization separation",
-  "flat monetization ladders": "Moderately flat monetization ladders",
-  "architecture incoherence across categories": "Selective architecture inconsistency",
-  "over-investment in visible value (kvi)": "Selective visible value investment",
+  "weak premiumization": "Premium tiers lack clear separation",
+  "weak trade-up structure": "Unclear good-better-best structure",
+  "excessive kvi breadth": "Value investment too broadly distributed",
+  "weak kvi concentration": "Weak trip-driving value focus",
+  "architecture compression": "Misaligned pricing architecture",
+  "weak pl/nb monetization separation": "Private-brand role unclear",
+  "flat monetization ladders": "Price ladders inconsistently structured",
+  "architecture incoherence across categories": "Inconsistent price ladders across categories",
+  "over-investment in visible value (kvi)": "Value funding spread beyond trip drivers",
 };
 
 const SEVERE_HEADLINE_RE =
@@ -191,15 +192,16 @@ export function deriveOverallEvidenceStrength(
 }
 
 export function softenExecutiveDriverPhrase(text: string): string {
-  return text
-    .replace(/\bweak premiumization\b/gi, "limited premium separation")
-    .replace(/\bweak monetization separation\b/gi, "selective monetization compression")
-    .replace(/\bsignificant monetization weakness\b/gi, "selective architecture compression")
-    .replace(/\bbroad structural opportunity\b/gi, "moderate structural opportunity")
-    .replace(/\bweak pl\/nb\b/gi, "selective PL/NB compression")
-    .replace(/\bappears below the expected range\b/gi, "below expected spacing")
+  const softened = text
+    .replace(/\bweak premiumization\b/gi, "premium tiers lack clear separation")
+    .replace(/\bweak monetization separation\b/gi, "private-brand role unclear")
+    .replace(/\bsignificant monetization weakness\b/gi, "pricing ladders inconsistently structured")
+    .replace(/\bbroad structural opportunity\b/gi, "portfolio-wide structural pricing tension")
+    .replace(/\bweak pl\/nb\b/gi, "private-brand under-differentiated")
+    .replace(/\bappears below the expected range\b/gi, "tighter than typical competitive spacing")
     .replace(/\bfor a [A-Za-z /-]+ retailer with [A-Za-z-]+ posture\.?/gi, "")
     .trim();
+  return translateConsultantInsight(softened);
 }
 
 export function calibrateMetricList(metrics: EvidenceMetric[]): EvidenceMetric[] {

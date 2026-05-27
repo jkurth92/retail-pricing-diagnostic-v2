@@ -9,6 +9,7 @@ import type { DiagnosticConfidenceLevel } from "@/types/confidence-scoring";
 import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { KviSignalResult } from "@/lib/kviSignals";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
+import { consultantKviDiagnosis } from "@/lib/insightTranslation";
 import { isGenericFallbackPhrase } from "@/lib/signalPrioritization";
 
 const REPEAT_PHRASE_RE =
@@ -30,25 +31,43 @@ export function calibrateValueConcentrationPhrase(
 
   if (pct < 10 && !kvi.broadKviBreadth && catCount === 0) return null;
 
+  const diagnosis = consultantKviDiagnosis({
+    kviRevenueSharePct: pct,
+    broadKviBreadth: kvi.broadKviBreadth,
+    weakKviConcentration: kvi.weakKviConcentration,
+    kviCategoryCount: catCount,
+  });
+  if (diagnosis) {
+    const short =
+      pct >= 24 && catCount >= 3
+        ? "Discounts spread too widely"
+        : kvi.weakKviConcentration || (pct >= 8 && pct < 14)
+          ? "Deals not focused enough"
+          : catCount <= 2 && pct < 18
+            ? "Low prices focused in a few areas"
+            : "Lower prices not focused enough";
+    return short;
+  }
+
   if (kvi.broadKviBreadth && pct >= 24 && catCount >= 3) {
-    return "Broad value concentration";
+    return "Discounts spread too widely";
   }
   if (kvi.broadKviBreadth && pct >= 18) {
-    return "Moderate value concentration";
+    return "Lower prices spread across many items";
   }
   if (catCount <= 2 && pct > 0 && pct < 18) {
-    return "Localized value concentration";
+    return "Low prices focused in a few areas";
   }
   if (kvi.weakKviConcentration || (pct >= 8 && pct < 14)) {
-    return "Modest KVI breadth";
+    return "Deals not focused enough";
   }
   if (pct >= 14 && pct < 22) {
-    return "Selective visible value investment";
+    return "Some categories anchor low prices";
   }
   if (catCount >= 1 && pct < 18) {
-    return "Traffic-category value investment";
+    return "Low prices focused in a few categories";
   }
-  return "Moderate value concentration";
+  return "Lower prices not focused enough";
 }
 
 export function kviEvidenceFromResult(kvi: KviSignalResult): ValueConcentrationEvidence {
@@ -72,8 +91,8 @@ export function calibrateKviExposureDriver(
       broadKviBreadth: kviAffectedRevenuePct >= 22 && (categoryCount ?? 0) >= 3,
       kviCategoryCount: categoryCount,
     }) ?? (kviAffectedRevenuePct >= 22
-      ? "Broad KVI concentration"
-      : `Moderate KVI breadth (~${kviAffectedRevenuePct}% revenue weight)`)
+      ? "Value spread too broadly"
+      : "Value communication diffuse")
   );
 }
 

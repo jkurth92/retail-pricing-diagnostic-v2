@@ -5,6 +5,7 @@ import { OpportunityRangeVisual } from "@/components/executive/OpportunityRangeV
 import { confidenceLabelFromTrace } from "@/lib/executiveUxHelpers";
 import type { OpportunityCalculationTrace } from "@/types/opportunity-trace";
 import type { OpportunityTraceRow } from "@/types/opportunity-trace";
+import type { RevenueSensitivityTrace } from "@/types/revenue-sensitivity";
 
 type TraceMode = "executive" | "consultant";
 
@@ -100,6 +101,27 @@ function ExecutiveTraceSummary({ trace }: { trace: OpportunityCalculationTrace }
           ))}
         </ol>
       )}
+    </div>
+  );
+}
+
+function RevenueSensitivityTraceBlock({ trace }: { trace: RevenueSensitivityTrace }) {
+  return (
+    <div className="opp-trace-revenue mt-6 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-muted)]/60 p-4">
+      <h4 className="opp-trace-heading m-0">Directional revenue sensitivity</h4>
+      <p className="mt-1 text-xs text-[var(--text-muted)]">
+        Elasticity-informed interpretation — not a sales forecast.
+      </p>
+      <p className="mt-3 text-sm font-semibold text-[var(--text-navy)]">
+        {trace.finalRange.executiveLabel}
+        <span className="ml-2 font-normal text-[var(--accent-mid)]">
+          ({trace.finalRange.display})
+        </span>
+      </p>
+      <p className="mt-2 text-sm text-[var(--text-navy)]">{trace.interpretation}</p>
+      <TraceSection heading="Category elasticity inputs" rows={trace.categoryElasticity} variant="compact" />
+      <TraceSection heading="Sensitivity modifiers" rows={trace.modifiers} variant="compact" />
+      <TraceSection heading="Calculation steps" rows={trace.intermediateSteps} variant="compact" />
     </div>
   );
 }
@@ -206,6 +228,10 @@ export function OpportunityCalculationTracePanel({
           />
           <span className="opp-trace-final-value">{trace.finalRange.display}</span>
         </div>
+
+        {trace.revenueSensitivity && (
+          <RevenueSensitivityTraceBlock trace={trace.revenueSensitivity} />
+        )}
 
         {trace.childTraces && trace.childTraces.length > 0 && (
           <div className="opp-trace-children">

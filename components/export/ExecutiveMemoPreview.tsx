@@ -58,13 +58,13 @@ export function ExecutiveMemoPreview({ memo }: ExecutiveMemoPreviewProps) {
         </div>
         <div>
           <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            What we observed in the pricing review
+            What is driving the opportunity
           </h5>
           <p className="mt-2 whitespace-pre-line">{memo.pricingObservations}</p>
         </div>
         <div>
           <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            What it implies
+            Conclusion for leadership
           </h5>
           <p className="mt-2 whitespace-pre-line">{memo.implications}</p>
         </div>

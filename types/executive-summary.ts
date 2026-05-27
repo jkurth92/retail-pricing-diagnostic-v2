@@ -25,6 +25,10 @@ export type ExecutiveSummary = {
   topThemes: ExecutiveTheme[];
   marginOpportunitySummary: string;
   revenueSensitivitySummary: string;
+  /** Signed range e.g. "-0.2% to +0.6%" */
+  revenueImpactRange?: string;
+  /** Executive scan e.g. "Flat to modest upside" */
+  revenueImpactLabel?: string;
   confidenceSummary: string;
   maturitySummary: string;
   strategicImplications: string[];

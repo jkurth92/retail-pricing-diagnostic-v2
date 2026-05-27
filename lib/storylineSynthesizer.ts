@@ -15,10 +15,11 @@ import {
 } from "@/lib/executiveNarrative";
 import { proportionalityContextFromSignals } from "@/lib/calibrationProportionality";
 import { applyGracefulOpportunityAggregation } from "@/lib/gracefulDegradation";
+import { computeAggregatedMarginOpportunity } from "@/lib/opportunityAggregator";
 import {
-  computeAggregatedMarginOpportunity,
-  buildRevenueSensitivitySummary,
-} from "@/lib/opportunityAggregator";
+  buildRevenueSensitivityNarrativeSummary,
+  estimateDirectionalRevenueSensitivity,
+} from "@/lib/revenueSensitivityEstimation";
 import { buildOpportunitySummary } from "@/lib/opportunitySummary";
 import { calibrateStorylineResult } from "@/lib/outputCalibration";
 import { orderThemesByNarrativeDominance } from "@/lib/signalPrioritization";
@@ -180,11 +181,6 @@ export function synthesizeStoryline(
   const title =
     STORYLINE_TITLES[archetypeId] ?? "Structural pricing diagnostic storyline";
 
-  const revenueSensitivitySummary = buildRevenueSensitivitySummary(
-    [...primary, ...secondary],
-    `${getArchetype(archetypeId)?.archetypeName ?? archetypeId} archetype.`,
-  );
-
   const coverageResolved = coverage ?? {
     overallScore: 0.45,
     sufficiencyLevel: "medium" as const,
@@ -245,6 +241,30 @@ export function synthesizeStoryline(
       }));
   }
 
+  const revenueSensitivityEstimate = estimateDirectionalRevenueSensitivity({
+    marginRangeText: aggregated.rangeText,
+    themes: [...primary, ...secondary],
+    exposure: input.opportunityExposure ?? undefined,
+    archetypeId,
+    evidenceStrength: evidence?.evidenceStrength,
+  });
+
+  if (aggregated.trace) {
+    aggregated.trace.revenueSensitivity = revenueSensitivityEstimate.trace;
+    aggregated.trace.elasticityModifier = {
+      label: "Revenue sensitivity (directional)",
+      value: revenueSensitivityEstimate.finalRange.executiveLabel,
+      detail: revenueSensitivityEstimate.finalRange.display,
+    };
+  }
+
+  const archetypeNote = `${getArchetype(archetypeId)?.archetypeName ?? archetypeId} archetype.`;
+  const revenueSensitivitySummary = buildRevenueSensitivityNarrativeSummary(
+    revenueSensitivityEstimate,
+    [...primary, ...secondary],
+    archetypeNote,
+  );
+
   const storyline: StorylineSummary = {
     id: `storyline-${archetypeId}`,
     title,
@@ -259,6 +279,7 @@ export function synthesizeStoryline(
     marginOpportunityTotalRange: aggregated.rangeText,
     marginOpportunityTotalTrace: aggregated.trace ?? undefined,
     revenueSensitivitySummary,
+    revenueSensitivityEstimate,
     confidenceSummary: buildConfidenceSummary(primary, evidence?.evidenceStrength),
     narrative: buildStorylineNarrative(primary, defMap, archetypeId),
     notes: [...STORYLINE_NOTES],
@@ -267,6 +288,8 @@ export function synthesizeStoryline(
   const opportunity = buildOpportunitySummary(
     primary,
     secondary,
+    revenueSensitivityEstimate.finalRange.display,
+    revenueSensitivityEstimate.finalRange.executiveLabel,
     revenueSensitivitySummary,
     input.hasRevenueInScope ?? false,
     aggregated.rangeText,

@@ -1856,6 +1856,18 @@ body {
   border-top: 1px solid var(--border);
 }
 
+.refine-controls-card .refine-slider {
+  accent-color: var(--accent);
+}
+
+.refinement-status-banner {
+  width: 100%;
+}
+
+.refinement-badge-list {
+  list-style: none;
+}
+
 .retailer-profile-summary {
   box-shadow: var(--shadow);
 }

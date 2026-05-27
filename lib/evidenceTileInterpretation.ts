@@ -3,6 +3,13 @@
  * Presentation only — does not alter metrics, benchmarks, or sizing engines.
  */
 
+import {
+  consultantArchitectureDiagnosis,
+  consultantEntryPriceDiagnosis,
+  consultantKviDiagnosis,
+  consultantPlNbDiagnosis,
+  consultantPremiumDiagnosis,
+} from "@/lib/insightTranslation";
 import type { ComputedEvidenceBundle, EvidenceMetric } from "@/types/evidence-computation";
 
 export type EvidenceTilePresentation = {
@@ -59,62 +66,68 @@ export function buildEvidenceMetricImplication(
 
   switch (metricId) {
     case "premium_mainstream_gap":
-      return tight
-        ? "Compressed premium steps can blur trade-up on shelf and weaken premiumization pull."
-        : "Premium step-up is broadly legible — trade-up signaling is not a primary constraint.";
+      return consultantPremiumDiagnosis(tight);
     case "entry_mainstream_gap":
-      return tight
-        ? "Shallow entry-to-mainstream steps can mute opening-price signaling for value-focused shoppers."
-        : "Entry signaling is broadly consistent with peer mass / hybrid formats.";
+      return consultantEntryPriceDiagnosis(tight);
     case "tier_spacing":
-      return tight
-        ? "Tight average tier steps reduce visible step-ups across the assortment."
-        : "Tier steps are broadly balanced — ladder structure is not the lead constraint.";
+      return consultantArchitectureDiagnosis({ compressed: tight, systemic: !tight });
     case "pl_nb_gap":
-      return tight
-        ? "Narrow private-brand separation limits monetization flexibility between tiers."
-        : "Private-brand spacing is broadly healthy — monetization is not dominated by PL/NB tension.";
+      return consultantPlNbDiagnosis(tight);
     case "kvi_revenue_share": {
       const pct = parseInt(v.replace(/%/g, ""), 10);
-      if (Number.isFinite(pct) && pct < 14) {
-        return "Trip-driving value is present but not dominant — margin recovery is more architecture-led.";
-      }
-      return "Value-oriented pricing has meaningful weight in the mix and shapes which categories anchor price perception.";
+      return (
+        consultantKviDiagnosis({
+          kviRevenueSharePct: Number.isFinite(pct) ? pct : undefined,
+          broadKviBreadth: pct >= 20,
+          weakKviConcentration: pct >= 8 && pct < 14,
+        }) ??
+        "Lower prices may not be focused enough on the items shoppers use to judge whether the store is affordable."
+      );
     }
     case "kvi_category_concentration": {
       const cats = rawValue.replace(/\s*\(\+\d+ more\)/i, "");
-      return `Trip-driving value concentrates in ${cats} — these categories disproportionately shape how shoppers read your price architecture.`;
+      return `Shoppers most notice low prices in ${cats}. Those categories may shape how customers judge prices everywhere else in the store.`;
     }
     case "category_revenue_concentration": {
       const parsed = parseCategoryShare(rawValue);
       if (parsed) {
-        return `${parsed.category} is one of the largest reviewed categories and materially influences where structural opportunities concentrate.`;
+        return `A large share of sales sits in ${parsed.category}. Pricing choices there may matter more than changes in smaller categories.`;
       }
-      return "A few large in-scope categories disproportionately shape the pricing structure read.";
+      return "A few large categories drive most of what customers experience — and where margin may be won or lost.";
     }
-    case "architecture_compression":
-      return "Select categories show compressed tier spacing — trade-up and entry signaling may be harder to read on shelf.";
+    case "architecture_compression": {
+      const cats = rawValue
+        .replace(/^observed in\s*/i, "")
+        .split(/[,…]/)
+        .map((c) => c.trim())
+        .filter(Boolean);
+      return consultantArchitectureDiagnosis({
+        compressed: true,
+        systemic: cats.length >= 3,
+        categoryNames: cats,
+      });
+    }
     default:
       if (strength === "strong") {
-        return "This pattern reinforces the lead structural storyline in reviewed data.";
+        return "This pattern shows up in multiple places — it is unlikely to be fixed by changing one product alone.";
       }
       if (strength === "moderate") {
-        return "Adds commercial context to how pricing structure is interpreted in scope.";
+        return "Worth discussing with leadership because it can affect how shoppers see prices and where margin may leak.";
       }
-      return "Supporting context for the overall pricing narrative.";
+      return "Adds context for the overall story.";
   }
 }
 
 function buildTitle(metricId: string, engineLabel: string): string {
   const titles: Record<string, string> = {
-    premium_mainstream_gap: "Trade-up spacing (premium vs. mainstream)",
-    entry_mainstream_gap: "Entry price signaling",
-    tier_spacing: "Tier step-up across the ladder",
-    pl_nb_gap: "Private brand monetization gap",
-    kvi_revenue_share: "Value-oriented pricing in the mix",
-    kvi_category_concentration: "Where trip-driving value concentrates",
-    category_revenue_concentration: "Categories shaping the opportunity",
-    architecture_compression: "Compressed tier spacing (select categories)",
+    premium_mainstream_gap: "Premium vs. everyday prices",
+    entry_mainstream_gap: "Budget vs. everyday prices",
+    tier_spacing: "Budget, mainstream & premium clarity",
+    pl_nb_gap: "Store brand vs. national brands",
+    kvi_revenue_share: "Where lower prices show up",
+    kvi_category_concentration: "Value spread across categories",
+    category_revenue_concentration: "Biggest categories in the review",
+    architecture_compression: "Clear good-better-best story",
   };
   return (
     titles[metricId] ??
@@ -129,16 +142,16 @@ function buildTitle(metricId: string, engineLabel: string): string {
 
 function buildObservationLabel(metricId: string): string {
   const labels: Record<string, string> = {
-    premium_mainstream_gap: "Average premium spacing",
-    entry_mainstream_gap: "Entry vs. mainstream spacing",
-    tier_spacing: "Average tier spacing",
-    pl_nb_gap: "Private brand vs. national brand gap",
-    kvi_revenue_share: "Share of reviewed revenue",
-    kvi_category_concentration: "Concentration by category",
-    category_revenue_concentration: "Largest in-scope category",
-    architecture_compression: "Compression signal",
+    premium_mainstream_gap: "Premium vs. everyday gap",
+    entry_mainstream_gap: "Budget vs. everyday gap",
+    tier_spacing: "Average gap across price levels",
+    pl_nb_gap: "Store brand vs. brand-name gap",
+    kvi_revenue_share: "Share of sales on deal items",
+    kvi_category_concentration: "Categories with the most low-price focus",
+    category_revenue_concentration: "Largest category in the review",
+    architecture_compression: "Where steps look tight",
   };
-  return labels[metricId] ?? "Observed pattern";
+  return labels[metricId] ?? "What we noticed";
 }
 
 export function buildEvidenceTilePresentation(
@@ -184,7 +197,7 @@ export function buildExposureCategoryTilePresentation(
       observationLabel: "Category signal",
       observationValue: `${category} · ${revenueWeightPct}% of reviewed scope`,
       implication:
-        "Premium and mainstream tiers appear compressed here — trade-up may be harder to read on shelf.",
+        "In this category, premium options may not feel clearly better than everyday products — shoppers may not pay more.",
       suppress: false,
     };
   }
@@ -192,8 +205,8 @@ export function buildExposureCategoryTilePresentation(
     title: `Private brand gap · ${category}`,
     observationLabel: "Category signal",
     observationValue: `${category} · ${revenueWeightPct}% of reviewed scope`,
-    implication:
-      "Private-brand separation looks narrow in this category — less room to monetize tier differences.",
+      implication:
+        "Store brands and well-known brands may be priced too similarly here — the business may lose margin without shoppers noticing a difference.",
     suppress: false,
   };
 }

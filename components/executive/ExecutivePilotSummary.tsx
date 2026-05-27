@@ -6,13 +6,13 @@ import { ExecutiveConsultingSummary } from "@/components/executive/ExecutiveCons
 import { InsightSourceTile } from "@/components/executive/InsightSourceTile";
 import { OpportunityLeverBreakdown } from "@/components/executive/OpportunityLeverBreakdown";
 import { OverallOpportunityHero } from "@/components/executive/OverallOpportunityHero";
-import { buildOpportunityAreaBreakdown } from "@/lib/opportunityLeverAttribution";
-import { StrategicDriverCard } from "@/components/executive/StrategicDriverCard";
+import { RefinementStatusBanner } from "@/components/refinement/RefinementStatusBanner";
+import { buildOpportunityDriverSynthesis } from "@/lib/opportunityDriverSynthesis";
+import type { RefinedDiagnosticPresentation } from "@/lib/refinementAdjustments";
 import { OpportunityCalculationTracePanel } from "@/components/opportunity/OpportunityCalculationTracePanel";
 import {
   buildExecutiveConsultingSummary,
   buildInsightSourceTiles,
-  buildStrategicDriverCards,
 } from "@/lib/narrativePresentation";
 import { parseMarginRangeDisplay } from "@/lib/executiveOutputPolish";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
@@ -26,6 +26,8 @@ type ExecutivePilotSummaryProps = {
   technicalDiagnosticsSlot?: ReactNode;
   /** Addressable % of total revenue in diagnostic scope */
   evaluatedRevenuePercent?: number | null;
+  /** User refinement preview / applied presentation */
+  refinementPresentation?: RefinedDiagnosticPresentation | null;
 };
 
 export function ExecutivePilotSummary({
@@ -34,19 +36,21 @@ export function ExecutivePilotSummary({
   computedEvidence,
   technicalDiagnosticsSlot,
   evaluatedRevenuePercent,
+  refinementPresentation,
 }: ExecutivePilotSummaryProps) {
   const margin = parseMarginRangeDisplay(exec.marginOpportunitySummary);
   const exposure = opportunityExposure ?? exec.opportunityExposure ?? null;
-  const drivers = buildStrategicDriverCards(exec, 4);
   const insights = buildInsightSourceTiles(exec, exposure, computedEvidence, 6);
-  const opportunityAreas = buildOpportunityAreaBreakdown(
-    exec,
-    exposure,
-    exec.topThemes,
-    exec.primaryDrivers,
-    computedEvidence,
-    computedEvidence?.promoMarkdownEligible ?? false,
-  );
+  const opportunityDrivers =
+    refinementPresentation?.driverSynthesis.drivers ??
+    buildOpportunityDriverSynthesis({
+      exec,
+      exposure,
+      themes: exec.topThemes,
+      evidence: computedEvidence,
+      promoMarkdownEligible: computedEvidence?.promoMarkdownEligible ?? false,
+      opportunityRange: margin?.display ?? exec.marginOpportunitySummary ?? null,
+    }).drivers;
 
   const consultingSummary = buildExecutiveConsultingSummary(
     exec,
@@ -58,10 +62,13 @@ export function ExecutivePilotSummary({
   const lowPct = margin ? parseFloat(margin.low) : null;
   const highPct = margin ? parseFloat(margin.high) : null;
 
-  const hasStructuralEvidence = drivers.length > 0 || insights.length > 0;
+  const hasStructuralEvidence = insights.length > 0;
 
   return (
     <div className="ent-compose flex w-full flex-col gap-5">
+      {refinementPresentation?.meta.isUserRefined && (
+        <RefinementStatusBanner meta={refinementPresentation.meta} />
+      )}
       <div className="ent-row ent-row-hero w-full">
         <OverallOpportunityHero
           exec={exec}
@@ -71,8 +78,8 @@ export function ExecutivePilotSummary({
           exposure={exposure}
           evaluatedRevenuePercent={evaluatedRevenuePercent}
         />
-        {opportunityAreas.length > 0 && (
-          <OpportunityLeverBreakdown rows={opportunityAreas} />
+        {opportunityDrivers.length > 0 && (
+          <OpportunityLeverBreakdown drivers={opportunityDrivers} />
         )}
       </div>
 
@@ -87,16 +94,8 @@ export function ExecutivePilotSummary({
               list-price recommendations.
             </p>
 
-            {drivers.length > 0 && (
-              <div className="ent-driver-grid mb-6 grid gap-3 sm:grid-cols-2">
-                {drivers.map((d) => (
-                  <StrategicDriverCard key={d.id} driver={d} />
-                ))}
-              </div>
-            )}
-
             {insights.length > 0 && (
-              <div className="ent-evidence-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="ent-evidence-grid">
                 {insights.map((t) => (
                   <InsightSourceTile key={t.id} tile={t} />
                 ))}

@@ -13,6 +13,7 @@ import type {
   EvidenceIllustrationsBundle,
   IllustrativeCommercialExample,
 } from "@/types/evidence-illustrations";
+import { translateExecutiveInsight } from "@/lib/insightTranslation";
 import type { ProxySignal } from "@/types/data-interpretation";
 
 const ILLUSTRATION_DISCLAIMER =
@@ -399,8 +400,23 @@ export function buildEvidenceIllustrations(
   }
 
   enrichTierSpacingContrast(byMetricId, snapshots);
+  polishIllustrationCopy(byMetricId);
 
   return { byMetricId, disclaimer: ILLUSTRATION_DISCLAIMER };
+}
+
+function polishIllustrationCopy(
+  byMetricId: Partial<
+    Record<EvidenceIllustrationMetricKey, IllustrativeCommercialExample[]>
+  >,
+): void {
+  for (const examples of Object.values(byMetricId)) {
+    if (!examples) continue;
+    for (const ex of examples) {
+      ex.observation = translateExecutiveInsight(ex.observation);
+      ex.interpretation = translateExecutiveInsight(ex.interpretation);
+    }
+  }
 }
 
 function enrichTierSpacingContrast(

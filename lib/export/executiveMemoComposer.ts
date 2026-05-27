@@ -5,11 +5,12 @@
 import { buildTrajectoryRows } from "@/lib/financeBenchmark";
 import { buildContextKpis } from "@/lib/retailerContextDisplay";
 import { translateExecutivePhrase } from "@/lib/executiveBusinessLanguage";
+import { translateConsultantInsight } from "@/lib/insightTranslation";
 import {
-  buildExecutiveConsultingSummary,
-  buildStrategicDriverCards,
-  softenBenchmarkPhrase,
-} from "@/lib/narrativePresentation";
+  buildOpportunityDriverSynthesis,
+  formatOpportunityDriversMemo,
+} from "@/lib/opportunityDriverSynthesis";
+import { buildExecutiveConsultingSummary } from "@/lib/narrativePresentation";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { DiagnosticReadout } from "@/types/diagnostic-readout";
 import type { FinancePeer } from "@/types/finance-peers";
@@ -43,7 +44,9 @@ export function composeRetailerContextSection(
   const ctx = enrichment?.context;
 
   lines.push(
-    `${retailerName} is positioned as a ${input.readout.executiveSummary.retailerProfile.archetype.toLowerCase()} retailer with a ${input.readout.executiveSummary.retailerProfile.posture.toLowerCase()} pricing posture.`,
+    translateConsultantInsight(
+      `${retailerName} operates as a ${input.readout.executiveSummary.retailerProfile.archetype.toLowerCase()} retailer with a ${input.readout.executiveSummary.retailerProfile.posture.toLowerCase()} pricing posture — the commercial question is how coherently price tiers, value roles, and private-brand positioning work together.`,
+    ),
   );
 
   const kpis = enrichment ? buildContextKpis(enrichment) : [];
@@ -52,7 +55,9 @@ export function composeRetailerContextSection(
       .slice(0, 5)
       .map((k) => `${k.label}: ${k.value}`)
       .join("; ");
-    lines.push(`Reported scale and profitability context: ${kpiLine}.`);
+    lines.push(
+      `The retailer’s reported scale and profitability profile: ${kpiLine}.`,
+    );
   } else if (ctx?.revenue) {
     lines.push(`Revenue context: ${ctx.revenue}.`);
   }
@@ -88,103 +93,35 @@ export function composeRetailerContextSection(
   return lines.join("\n\n");
 }
 
+function buildMemoDriverSynthesis(input: ExecutiveMemoComposeInput) {
+  const { readout, computedEvidence, opportunityExposure } = input;
+  return buildOpportunityDriverSynthesis({
+    exec: readout.executiveSummary,
+    exposure: opportunityExposure ?? readout.executiveSummary.opportunityExposure,
+    themes: readout.executiveSummary.topThemes,
+    evidence: computedEvidence,
+    promoMarkdownEligible: computedEvidence?.promoMarkdownEligible ?? false,
+    opportunityRange: readout.opportunityDetail.totalMarginOpportunityRange || null,
+  });
+}
+
 export function composePricingObservationsSection(
   input: ExecutiveMemoComposeInput,
 ): string {
-  const { readout, computedEvidence } = input;
-  const bullets: string[] = [];
+  const synthesis = buildMemoDriverSynthesis(input);
+  const range = input.readout.opportunityDetail.totalMarginOpportunityRange?.trim();
+  const sizingNote = range
+    ? `Indicative margin opportunity in reviewed scope: ${range} — for discussion, not a forecast.\n\n`
+    : "";
 
-  const opp = readout.opportunityDetail;
-  if (opp.totalMarginOpportunityRange) {
-    bullets.push(
-      `Indicative margin opportunity in reviewed scope: ${opp.totalMarginOpportunityRange} (directional, not a forecast).`,
-    );
-  }
-
-  if (computedEvidence?.summaries?.length) {
-    for (const s of computedEvidence.summaries.slice(0, 4)) {
-      bullets.push(translateExecutivePhrase(softenBenchmarkPhrase(s)));
-    }
-  }
-
-  for (const theme of readout.executiveSummary.evidenceBackedThemes.slice(0, 3)) {
-    bullets.push(
-      translateExecutivePhrase(
-        `${theme.headline.replace(/\.$/, "")}: ${softenBenchmarkPhrase(theme.detail)}`,
-      ),
-    );
-  }
-
-  if (bullets.length < 3) {
-    for (const d of readout.executiveSummary.primaryDrivers.slice(0, 3)) {
-      bullets.push(translateExecutivePhrase(softenBenchmarkPhrase(d)));
-    }
-  }
-
-  const drivers = buildStrategicDriverCards(readout.executiveSummary, 3);
-  for (const card of drivers) {
-    if (bullets.length >= 5) break;
-    const line = `${card.title}: ${card.interpretation}`;
-    if (!bullets.some((b) => b.toLowerCase().includes(card.title.toLowerCase()))) {
-      bullets.push(translateExecutivePhrase(line));
-    }
-  }
-
-  if (bullets.length === 0) {
-    bullets.push(
-      translateExecutivePhrase(
-        readout.opportunityOverview.split(".").slice(0, 2).join(".") + ".",
-      ),
-    );
-  }
-
-  return bullets.map((b) => `• ${b}`).join("\n");
+  return sizingNote + formatOpportunityDriversMemo(synthesis);
 }
 
 export function composeImplicationsSection(
   input: ExecutiveMemoComposeInput,
 ): string {
-  const { readout } = input;
-  const paragraphs: string[] = [];
-
-  const consulting = buildExecutiveConsultingSummary(
-    readout.executiveSummary,
-    readout.strategicImplications,
-    input.opportunityExposure ?? readout.executiveSummary.opportunityExposure,
-    input.evaluatedRevenuePercent,
-  );
-
-  if (consulting.paragraphs.length > 0) {
-    paragraphs.push(...consulting.paragraphs.slice(0, 3));
-  } else if (readout.executiveSummary.executiveNarrative.trim()) {
-    paragraphs.push(
-      translateExecutivePhrase(
-        readout.executiveSummary.executiveNarrative.split(".").slice(0, 3).join(".") + ".",
-      ),
-    );
-  }
-
-  for (const imp of readout.strategicImplications.slice(0, 2)) {
-    const t = translateExecutivePhrase(softenBenchmarkPhrase(imp));
-    if (!paragraphs.some((p) => p.includes(t.slice(0, 40)))) {
-      paragraphs.push(t);
-    }
-  }
-
-  if (readout.executiveSummary.opportunityHeadline) {
-    paragraphs.push(
-      translateExecutivePhrase(readout.executiveSummary.opportunityHeadline),
-    );
-  }
-
-  const exposure = input.opportunityExposure ?? readout.executiveSummary.opportunityExposure;
-  if (exposure?.exposureSummaries?.length) {
-    paragraphs.push(
-      translateExecutivePhrase(exposure.exposureSummaries[0] ?? ""),
-    );
-  }
-
-  return paragraphs.filter((p) => p.length > 20).slice(0, 4).join("\n\n");
+  const synthesis = buildMemoDriverSynthesis(input);
+  return [synthesis.conclusion, synthesis.marginLine].join("\n\n");
 }
 
 export function composeDiscussionQuestions(
@@ -207,10 +144,10 @@ export function composeDiscussionQuestions(
     .map((s) => (s.endsWith("?") ? s : `${s.replace(/\.$/, "")}?`));
 
   const defaults = [
-    "Where should we prioritize tier spacing versus visible value investment in the next planning cycle?",
-    "Which categories should anchor a trade-up test versus a base-price architecture reset?",
-    "What margin guardrails should govern changes in trip-driving categories?",
-    "How do commercial constraints (vendor, promo calendar, competitive price gaps) limit structural moves?",
+    "Where should we sharpen trip-driving value anchors versus investing in ladder spacing?",
+    "Which categories should lead a good-better-best reset versus a targeted entry-price test?",
+    "Is private brand meant to monetize tiers or compete on opening price — and is the current structure consistent with that choice?",
+    "What vendor, promo, and competitive constraints would cap any architecture-led move?",
   ];
 
   const merged = [...fromExec, ...fromConsulting, ...defaults];

@@ -7,6 +7,7 @@ import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 import { buildEvidenceMetricImplication } from "@/lib/evidenceTileInterpretation";
+import { translateConsultantInsight } from "@/lib/insightTranslation";
 import { buildPortfolioConfidenceChipLabel } from "@/lib/narrativeRefinement";
 import { softenExecutiveDriverPhrase } from "@/lib/interpretationCalibration";
 import type { EvidenceMetric } from "@/types/evidence-computation";
@@ -65,7 +66,8 @@ export function translateExecutivePhrase(text: string): string {
   for (const [re, replacement] of PHRASE_MAP) {
     out = out.replace(re, replacement);
   }
-  return out.replace(/\s{2,}/g, " ").trim();
+  out = out.replace(/\s{2,}/g, " ").trim();
+  return translateConsultantInsight(out);
 }
 
 /** Remove model-style percentage claims from executive copy. */
@@ -239,26 +241,28 @@ export function buildExecutiveImplicationLine(
   );
 
   if (hasArch && hasKvi) {
-    return "Visible value investment appears heavier in select traffic-driving categories, while overall pricing structure remains directionally coherent.";
+    return "The retailer appears to be balancing trip-driving value investment with uneven ladder structure — the opportunity is driven less by broad price level and more by how tiers and value roles are sequenced.";
   }
 
   if (hasArch && cats.length === 1) {
-    return `Architecture spacing in ${cats[0]} appears compressed relative to expected structure for this format.`;
+    return `Signals suggest pricing ladders in ${cats[0]} are not creating clear good-better-best separation relative to the rest of the portfolio.`;
   }
 
   if (hasArch || footprint.compressionCategories.length > 0) {
-    return "The opportunity appears bounded and architecture-led rather than a portfolio-wide reset.";
+    return "The opportunity is driven less by a portfolio-wide price reset and more by misaligned pricing architecture and tier-role clarity.";
   }
 
   if (hasKvi) {
-    return "Value investment appears selective; the discussion should confirm whether concentration is intentional.";
+    return "Value communication appears diffuse — leadership should confirm whether value funding is intentionally broad or should be re-anchored on trip-driving items.";
   }
 
-  return "The opportunity appears directional, bounded, and commercially explainable.";
+  return "The portfolio shows evidence of selective structural pricing tension rather than a single-category issue.";
 }
 
 export type HeroBusinessInterpretation = {
   opportunitySize: string | null;
+  revenueImpactRange: string | null;
+  revenueImpactLabel: string | null;
   scopeEvaluated: string | null;
   concentration: string | null;
   confidence: string;
@@ -275,6 +279,8 @@ export function buildHeroBusinessInterpretation(
     opportunitySize: marginDisplay
       ? `${marginDisplay} margin opportunity`
       : translateExecutivePhrase(exec.marginOpportunitySummary),
+    revenueImpactRange: exec.revenueImpactRange ?? null,
+    revenueImpactLabel: exec.revenueImpactLabel ?? null,
     scopeEvaluated: businessScopeEvaluatedLabel(evaluatedRevenuePercent),
     concentration: businessConcentrationLabel(exposure, exec),
     confidence: businessConfidenceLabel(exec.evidenceStrength, exec.topThemes),
@@ -294,6 +300,19 @@ export function buildExecutiveBusinessSummaryParagraphs(
     paragraphs.push(translateExecutivePhrase(exec.opportunityHeadline));
   }
 
+  if (exec.revenueImpactLabel?.trim()) {
+    const revLine =
+      exec.revenueSensitivitySummary?.split(".")[0]?.trim() ??
+      `Potential revenue impact appears ${exec.revenueImpactLabel.toLowerCase()}`;
+    if (revLine.length > 24) {
+      paragraphs.push(
+        translateExecutivePhrase(
+          revLine.endsWith(".") ? revLine : `${revLine}.`,
+        ),
+      );
+    }
+  }
+
   const scope = businessScopeEvaluatedLabel(evaluatedRevenuePercent);
   const concentration = businessConcentrationLabel(exposure, exec);
   if (scope) {
@@ -308,11 +327,11 @@ export function buildExecutiveBusinessSummaryParagraphs(
 
   if (footprint.compressionCategories.length >= 2) {
     paragraphs.push(
-      `Architecture compression is most visible in ${footprint.compressionCategories.slice(0, 3).join(", ")}.`,
+      `Price ladders appear most strained in ${footprint.compressionCategories.slice(0, 3).join(", ")} — the pattern reads as category-visible but thematically linked to tier-role design.`,
     );
   } else if (exec.primaryDrivers.length > 0) {
     paragraphs.push(
-      `The primary opportunity appears concentrated in ${buildPrimaryOpportunityAreaLine(exec, exposure).toLowerCase()}.`,
+      `The retailer appears to face its clearest pricing tension in ${buildPrimaryOpportunityAreaLine(exec, exposure).toLowerCase()}.`,
     );
   }
 
@@ -333,17 +352,17 @@ export function softenEvidenceMetricSubtext(subtext: string): string {
 
 /** @deprecated Prefer buildEvidenceTilePresentation in evidenceTileInterpretation.ts */
 const METRIC_TITLE: Record<string, string> = {
-  premium_mainstream_gap: "Trade-up spacing (premium vs. mainstream)",
-  entry_mainstream_gap: "Entry price signaling",
-  tier_spacing: "Tier step-up across the ladder",
-  pl_nb_gap: "Private brand monetization gap",
-  pl_nb_categories_narrow: "Narrow private brand separation",
-  kvi_revenue_share: "Value-oriented pricing in the mix",
-  kvi_sku_share: "Value-oriented pricing in the mix",
-  kvi_category_concentration: "Where trip-driving value concentrates",
-  category_revenue_concentration: "Categories shaping the opportunity",
+  premium_mainstream_gap: "Premiumization & trade-up",
+  entry_mainstream_gap: "Opening-price value signal",
+  tier_spacing: "Good-better-best ladder structure",
+  pl_nb_gap: "Private-brand role clarity",
+  pl_nb_categories_narrow: "Private-brand role clarity",
+  kvi_revenue_share: "Value communication breadth",
+  kvi_sku_share: "Value communication breadth",
+  kvi_category_concentration: "Trip-driving value concentration",
+  category_revenue_concentration: "Categories shaping the story",
   pack_size_consistency: "Pack-size ladder consistency",
-  architecture_compression: "Compressed tier spacing (select categories)",
+  architecture_compression: "Pricing architecture alignment",
 };
 
 /** Preserve numeric values; only normalize whitespace. */

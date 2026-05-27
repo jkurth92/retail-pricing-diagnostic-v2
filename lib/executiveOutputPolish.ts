@@ -89,19 +89,52 @@ export function buildConciseExecutiveImplications(
   return filterGenericNarrativeLines(out).slice(0, 2);
 }
 
+/** Extract numeric margin bounds from narrative range strings (e.g. trace copy). */
+export function extractMarginRangeBounds(range: string): {
+  low: number;
+  high: number;
+  matched: string;
+} | null {
+  const match = range.match(/(\d+(?:\.\d+)?)\s*%?\s*[–-]\s*(\d+(?:\.\d+)?)\s*%?/);
+  if (!match) return null;
+  const low = parseFloat(match[1]);
+  const high = parseFloat(match[2]);
+  if (!Number.isFinite(low) || !Number.isFinite(high) || high <= low) return null;
+  return { low, high, matched: match[0] };
+}
+
+function marginRangeDecimals(low: number, high: number): number {
+  return high - low < 2 ? 2 : 1;
+}
+
+export function formatMarginRangeCore(
+  low: number,
+  high: number,
+  matchedSample?: string,
+): string {
+  const decimals = marginRangeDecimals(low, high);
+  const lowStr = low.toFixed(decimals);
+  const highStr = high.toFixed(decimals);
+  if (matchedSample && /%\s*[–-]/.test(matchedSample)) {
+    return `${lowStr}%–${highStr}%`;
+  }
+  return `${lowStr}–${highStr}%`;
+}
+
 export function parseMarginRangeDisplay(range: string): {
   low: string;
   high: string;
   display: string;
 } | null {
-  const match = range.match(/(\d+(?:\.\d+)?)\s*%?\s*[–-]\s*(\d+(?:\.\d+)?)\s*%/);
-  if (!match) return null;
-  const low = parseFloat(match[1]);
-  const high = parseFloat(match[2]);
+  const bounds = extractMarginRangeBounds(range);
+  if (!bounds) return null;
+  const decimals = marginRangeDecimals(bounds.low, bounds.high);
+  const low = bounds.low.toFixed(decimals);
+  const high = bounds.high.toFixed(decimals);
   return {
-    low: low.toFixed(1),
-    high: high.toFixed(1),
-    display: `${low.toFixed(1)}–${high.toFixed(1)}%`,
+    low,
+    high,
+    display: formatMarginRangeCore(bounds.low, bounds.high, bounds.matched),
   };
 }
 

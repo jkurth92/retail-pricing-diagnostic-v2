@@ -9,11 +9,15 @@ import type { StorylineExportTree } from "@/lib/export/storylineExport";
 type ExportPreviewPanelProps = {
   bundle: ExportDeliverableBundle;
   storylineExport: StorylineExportTree;
+  refinementActive?: boolean;
+  refinementMode?: "base" | "preview" | "applied";
 };
 
 export function ExportPreviewPanel({
   bundle,
   storylineExport,
+  refinementActive = false,
+  refinementMode = "base",
 }: ExportPreviewPanelProps) {
   return (
     <DiagnosticSection
@@ -24,6 +28,13 @@ export function ExportPreviewPanel({
       <p className="text-sm leading-relaxed text-[var(--text-muted)]">
         {bundle.guardrailNote}
       </p>
+      {refinementActive && (
+        <p className="mt-3 text-xs font-medium text-[var(--accent-deep)]">
+          {refinementMode === "preview"
+            ? "Memo preview reflects consultant refinements — apply or reset before download."
+            : "Memo reflects user-refined interpretation; evidence and sizing are unchanged."}
+        </p>
+      )}
 
       <div className="mt-6">
         <ExecutiveMemoPreview memo={bundle.memo} />

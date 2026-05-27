@@ -26,7 +26,7 @@ export function InsightSourceTile({ tile }: InsightSourceTileProps) {
 
   return (
     <article
-      className={`ent-evidence-tile flex min-h-[6.5rem] flex-col gap-2 rounded-xl border p-4 ${
+      className={`ent-evidence-tile flex flex-col gap-2 rounded-xl border p-4 ${
         isPrimary
           ? "ent-evidence-primary border-[var(--accent-deep)]/35 bg-white shadow-sm ring-1 ring-[var(--accent-deep)]/10"
           : isSecondary
@@ -34,13 +34,13 @@ export function InsightSourceTile({ tile }: InsightSourceTileProps) {
             : "border-[var(--border)] bg-[var(--surface-muted)] opacity-95"
       } ${tile.strength === "strong" && !isPrimary ? "ent-evidence-strong" : ""}`}
     >
-      <p className="ent-evidence-label m-0 text-[0.8125rem] font-semibold leading-snug text-[var(--text-navy)]">
+      <p className="ent-evidence-label m-0 text-[0.8125rem] font-semibold leading-snug text-[var(--text-navy)] normal-case tracking-normal">
         {tile.title}
       </p>
 
       <div className="ent-evidence-observation">
         <p className="m-0 text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-          {tile.observationLabel ?? "Observation"}
+          {tile.observationLabel ?? "What we noticed"}
         </p>
         {stat ? (
           <p className="ent-evidence-stat m-0 mt-0.5 text-3xl font-semibold leading-none tracking-tight text-[var(--accent-deep)]">
@@ -59,13 +59,11 @@ export function InsightSourceTile({ tile }: InsightSourceTileProps) {
       </div>
 
       {implication && (
-        <div className="ent-evidence-implication flex-1">
+        <div className="ent-evidence-implication mt-auto">
           <p className="m-0 text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            Why it matters
+            Why this matters
           </p>
-          <p className="ent-evidence-sub m-0 mt-0.5 line-clamp-3 text-xs leading-snug text-[var(--text-navy)]">
-            {implication}
-          </p>
+          <p className="ent-evidence-implication-text">{implication}</p>
         </div>
       )}
 

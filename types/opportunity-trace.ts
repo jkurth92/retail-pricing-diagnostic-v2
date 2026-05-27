@@ -1,3 +1,5 @@
+import type { RevenueSensitivityTrace } from "@/types/revenue-sensitivity";
+
 /** Auditable, deterministic trace for thematic opportunity sizing (not optimization). */
 
 export type OpportunityTraceRow = {
@@ -32,4 +34,6 @@ export type OpportunityCalculationTrace = {
   childTraces?: OpportunityCalculationTrace[];
   /** Step 14B — benchmark context (secondary / consultant-facing) */
   benchmarkContext?: OpportunityTraceRow[];
+  /** Directional revenue sensitivity (elasticity-informed, not a forecast) */
+  revenueSensitivity?: RevenueSensitivityTrace;
 };

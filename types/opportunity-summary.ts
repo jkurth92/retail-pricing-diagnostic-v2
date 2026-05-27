@@ -13,6 +13,8 @@ export type OpportunitySummary = {
   status: OpportunitySummaryStatus;
   totalMarginOpportunityRange: string;
   totalRevenueSensitivityRange: string;
+  /** Executive scan line for revenue sensitivity */
+  revenueImpactLabel?: string;
   primaryOpportunityDrivers: OpportunityDriver[];
   secondaryOpportunityDrivers: OpportunityDriver[];
   caveats: string[];

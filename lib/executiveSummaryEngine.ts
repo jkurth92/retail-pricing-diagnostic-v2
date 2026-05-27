@@ -135,6 +135,10 @@ export function buildExecutiveSummaryBlock(
     marginOpportunitySummary: storyline.marginOpportunityTotalRange,
     marginOpportunityTotalTrace: storyline.marginOpportunityTotalTrace,
     revenueSensitivitySummary: storyline.revenueSensitivitySummary,
+    revenueImpactRange:
+      storyline.revenueSensitivityEstimate?.finalRange.display,
+    revenueImpactLabel:
+      storyline.revenueSensitivityEstimate?.finalRange.executiveLabel,
     confidenceSummary: buildAlignedConfidenceSummary(
       storyline.primaryThemes,
       evidenceBundle.evidenceStrength,

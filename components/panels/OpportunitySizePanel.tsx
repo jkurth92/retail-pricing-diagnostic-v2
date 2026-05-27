@@ -102,8 +102,14 @@ export function OpportunitySizePanel({
         <p className="mt-2 text-lg font-semibold text-[var(--accent)]">
           {opportunity.totalMarginOpportunityRange}
         </p>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
+        {opportunity.revenueImpactLabel && (
+          <p className="mt-3 text-sm font-medium text-[var(--text-navy)]">
+            Potential revenue impact: {opportunity.revenueImpactLabel}
+          </p>
+        )}
+        <p className="mt-1 text-sm text-[var(--text-muted)]">
           {opportunity.totalRevenueSensitivityRange}
+          <span className="block text-xs">Directional sales sensitivity — not a forecast</span>
         </p>
         <div className="mt-5 grid gap-6 lg:grid-cols-2">
           <div>

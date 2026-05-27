@@ -55,6 +55,7 @@ import type {
   RetailerArchetypeId,
 } from "@/types/retailer-archetypes";
 import type { CompetitorEntry } from "@/types/competitors";
+import { useDiagnosticRefinement } from "@/hooks/useDiagnosticRefinement";
 import {
   DEFAULT_EPR_SCORES,
   workflowTabToSidebarStep,
@@ -432,6 +433,25 @@ export default function Home() {
     ? storylineResult.storyline.marginOpportunityTotalRange
     : undefined;
 
+  const refinement = useDiagnosticRefinement({
+    baseReadout: diagnosticReady ? executiveDeliverable : null,
+    computedEvidence,
+    opportunityExposure,
+    evaluatedRevenuePercent: parseNumericInput(addressablePercentInput),
+  });
+
+  const headerMarginOpportunityRange = useMemo(() => {
+    const refined = refinement.presentation?.readout;
+    if (refined) {
+      return (
+        refined.executiveSummary.marginOpportunitySummary ||
+        refined.opportunityDetail.totalMarginOpportunityRange ||
+        marginOpportunityRange
+      );
+    }
+    return marginOpportunityRange;
+  }, [refinement.presentation, marginOpportunityRange]);
+
   const renderWorkflowPanel = () => {
     switch (workflowTab) {
       case "retailer_context":
@@ -507,6 +527,7 @@ export default function Home() {
             computedEvidence={computedEvidence}
             opportunityExposure={opportunityExposure}
             evaluatedRevenuePercent={parseNumericInput(addressablePercentInput)}
+            refinementPresentation={refinement.presentation}
           />
         );
       case "executive_outputs":
@@ -516,6 +537,22 @@ export default function Home() {
             exportBundle={executiveDeliverable.exportBundle}
             storylineExport={executiveDeliverable.storylineExport}
             diagnosticReady={diagnosticReady}
+            retailerName={confirmedRetailer || retailerInput}
+            refinementPresentation={refinement.presentation}
+            refinementState={refinement.state}
+            onSlidersChange={refinement.setSliders}
+            onFeedbackChange={refinement.setFeedbackText}
+            onPreviewRefinement={refinement.previewRefinement}
+            onApplyRefinement={refinement.applyRefinement}
+            onResetRefinement={refinement.resetRefinement}
+            hasPendingRefinementControls={refinement.hasPendingControls}
+            isRefinementPreview={refinement.isPreview}
+            isRefinementApplied={refinement.isApplied}
+            enrichment={retailerEnrichment}
+            computedEvidence={computedEvidence}
+            opportunityExposure={opportunityExposure}
+            financePeers={financePeers}
+            evaluatedRevenuePercent={parseNumericInput(addressablePercentInput)}
           />
         );
       default:
@@ -535,7 +572,7 @@ export default function Home() {
       <HeaderSummary
         retailerDisplay={retailerDisplay}
         knowledgeContext={knowledgeContext}
-        marginOpportunityRange={marginOpportunityRange}
+        marginOpportunityRange={headerMarginOpportunityRange}
         diagnosticReady={diagnosticReady}
       />
       {renderWorkflowPanel()}
