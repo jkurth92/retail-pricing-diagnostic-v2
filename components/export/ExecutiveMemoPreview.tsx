@@ -29,7 +29,7 @@ export function ExecutiveMemoPreview({ memo }: ExecutiveMemoPreviewProps) {
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            Executive memo (1 page)
+            Executive memo
           </p>
           <h4 className="mt-1 text-base font-semibold text-[var(--text-navy)]">
             {memo.title}
@@ -49,24 +49,34 @@ export function ExecutiveMemoPreview({ memo }: ExecutiveMemoPreviewProps) {
           {error}
         </p>
       )}
-      <section className="mt-4 space-y-4 text-sm leading-relaxed text-[var(--text-navy)]">
+      <section className="mt-4 space-y-5 text-sm leading-relaxed text-[var(--text-navy)]">
         <div>
-          <h5 className="font-semibold">Executive answer</h5>
-          <p className="mt-2 whitespace-pre-line">{memo.executiveAnswer}</p>
+          <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            Retailer context
+          </h5>
+          <p className="mt-2 whitespace-pre-line">{memo.retailerContext}</p>
         </div>
         <div>
-          <h5 className="font-semibold">Structural themes</h5>
-          <ul className="mt-2 list-disc pl-5">
-            {memo.structuralThemes.map((t) => (
-              <li key={t}>{t}</li>
-            ))}
-          </ul>
+          <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            What we observed in the pricing review
+          </h5>
+          <p className="mt-2 whitespace-pre-line">{memo.pricingObservations}</p>
         </div>
         <div>
-          <h5 className="font-semibold">Leadership focus</h5>
+          <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            What it implies
+          </h5>
+          <p className="mt-2 whitespace-pre-line">{memo.implications}</p>
+        </div>
+        <div>
+          <h5 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            Questions to discuss with leadership
+          </h5>
           <ul className="mt-2 list-disc pl-5">
-            {memo.leadershipFocusAreas.map((q) => (
-              <li key={q}>{q}</li>
+            {memo.discussionQuestions.map((q) => (
+              <li key={q} className="mt-1">
+                {q}
+              </li>
             ))}
           </ul>
         </div>

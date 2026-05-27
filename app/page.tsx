@@ -305,6 +305,8 @@ export default function Home() {
       enrichment: retailerEnrichment,
       computedEvidence: computedEvidence ?? undefined,
       opportunityExposure: opportunityExposure ?? undefined,
+      financePeers,
+      evaluatedRevenuePercent: parseNumericInput(addressablePercentInput),
     });
   }, [
     diagnosticReady,
@@ -317,6 +319,8 @@ export default function Home() {
     retailerEnrichment,
     computedEvidence,
     opportunityExposure,
+    financePeers,
+    addressablePercentInput,
   ]);
 
   const canRunDiagnostic = Boolean(confirmedRetailer.trim());

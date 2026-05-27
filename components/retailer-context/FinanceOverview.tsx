@@ -151,14 +151,7 @@ export function FinanceOverview({
   onAddFinancePeer,
 }: FinanceOverviewProps) {
   const profile = enrichment.companyProfile;
-  const trajectory = profile?.trajectory;
-  const highlights = buildMomentumHighlights(trajectory ?? {
-    revenueGrowthPct: null,
-    ebitdaGrowthPct: null,
-    grossMarginChangeBps: null,
-    operatingMarginChangeBps: null,
-    ebitdaMarginChangeBps: null,
-  });
+  const highlights = buildMomentumHighlights(profile ?? null);
   const rows = buildTrajectoryRows(profile, financePeers);
   const { contributingCount, excludedCount } = summarizeFinancePeers(financePeers);
 

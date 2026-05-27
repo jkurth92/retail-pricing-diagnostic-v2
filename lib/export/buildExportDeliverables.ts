@@ -1,5 +1,4 @@
-import { buildExecutiveEmail } from "@/lib/export/executiveEmailGenerator";
-import { buildExecutiveMemo } from "@/lib/export/executiveMemoGenerator";
+import { buildExecutiveMemo, type BuildExecutiveMemoOptions } from "@/lib/export/executiveMemoGenerator";
 import { buildPresentationExport } from "@/lib/export/presentationGenerator";
 import {
   buildStorylineExportTree,
@@ -19,6 +18,7 @@ export function buildExportDeliverableBundle(
   readout: DiagnosticReadout,
   retailerName: string,
   _modularity: ExportModularityConfig = DEFAULT_EXPORT_MODULARITY,
+  memoOptions: BuildExecutiveMemoOptions = {},
 ): ExportDeliverableBundle {
   const storylineTree = buildStorylineExportTree(readout, retailerName);
   const sections = storylineNodesToExportSections(storylineTree, readout);
@@ -33,8 +33,16 @@ export function buildExportDeliverableBundle(
     generatedAt: readout.generatedAt,
     status: "ready",
     guardrailNote: readout.guardrailMessage,
-    email: buildExecutiveEmail(readout, retailerName),
-    memo: buildExecutiveMemo(readout, retailerName),
+    email: {
+      subject: "",
+      greeting: "",
+      executiveSummary: "",
+      topThemes: [],
+      opportunitySummary: "",
+      nextStepFraming: "",
+      closing: "",
+    },
+    memo: buildExecutiveMemo(readout, retailerName, memoOptions),
     presentation: buildPresentationExport(readout, retailerName),
     sections,
     sectionSelections,
@@ -45,12 +53,13 @@ export function buildExportDeliverableBundle(
 export function buildFullExportArtifacts(
   readout: DiagnosticReadout,
   retailerName: string,
+  memoOptions: BuildExecutiveMemoOptions = {},
 ): {
   bundle: ExportDeliverableBundle;
   legacyPackage: ExportPackage;
   storylineTree: ReturnType<typeof buildStorylineExportTree>;
 } {
-  const bundle = buildExportDeliverableBundle(readout, retailerName);
+  const bundle = buildExportDeliverableBundle(readout, retailerName, DEFAULT_EXPORT_MODULARITY, memoOptions);
   const legacyPackage = buildExportPackage(readout, retailerName, "memo_doc");
   const storylineTree = buildStorylineExportTree(readout, retailerName);
   return { bundle, legacyPackage, storylineTree };

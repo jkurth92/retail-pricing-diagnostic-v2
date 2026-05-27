@@ -101,11 +101,10 @@ export const EMPTY_EXPORT_BUNDLE: ExportDeliverableBundle = {
   },
   memo: {
     title: "Executive memo",
-    executiveAnswer: "",
-    opportunityBreakdown: { totalRange: "—", byLever: [], synthesis: "" },
-    structuralThemes: [],
-    leadershipFocusAreas: [],
-    supportingNarrative: "",
+    retailerContext: "",
+    pricingObservations: "",
+    implications: "",
+    discussionQuestions: [],
     notes: [],
   },
   presentation: {

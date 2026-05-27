@@ -1,77 +1,73 @@
+import { MEMO_FOOTER_NOTE, MEMO_TITLE_PREFIX } from "@/data/export/memoTemplates";
 import {
-  DEFAULT_LEADERSHIP_QUESTIONS,
-  MEMO_COHERENCE_LABELS,
-  MEMO_FOOTER_NOTE,
-  MEMO_TITLE_PREFIX,
-} from "@/data/export/memoTemplates";
+  composeDiscussionQuestions,
+  composeImplicationsSection,
+  composePricingObservationsSection,
+  composeRetailerContextSection,
+  type ExecutiveMemoComposeInput,
+} from "@/lib/export/executiveMemoComposer";
 import type { DiagnosticReadout } from "@/types/diagnostic-readout";
+import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
+import type { FinancePeer } from "@/types/finance-peers";
+import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 import type { ExecutiveMemo } from "@/types/executive-memo";
+import type { RetailerEnrichmentBundle } from "@/types/retailer-context";
 
-function coherenceAssessment(readout: DiagnosticReadout): string {
-  const arch = readout.executiveSummary.topThemes.find((t) =>
-    t.themeName.toLowerCase().includes("architecture"),
-  );
-  if (arch && arch.rank <= 2) return MEMO_COHERENCE_LABELS.mixed;
-  if (readout.executiveSummary.topThemes.length <= 2)
-    return MEMO_COHERENCE_LABELS.strong;
-  return MEMO_COHERENCE_LABELS.constrained;
-}
+export type BuildExecutiveMemoOptions = {
+  enrichment?: RetailerEnrichmentBundle | null;
+  computedEvidence?: ComputedEvidenceBundle | null;
+  opportunityExposure?: OpportunityExposureBundle | null;
+  financePeers?: FinancePeer[];
+  evaluatedRevenuePercent?: number | null;
+};
 
 export function buildExecutiveMemo(
   readout: DiagnosticReadout,
   retailerName: string,
+  options: BuildExecutiveMemoOptions = {},
 ): ExecutiveMemo {
-  const opp = readout.opportunityDetail;
-  const byLever = [
-    ...opp.primaryOpportunityDrivers,
-    ...opp.secondaryOpportunityDrivers,
-  ]
-    .slice(0, 5)
-    .map((d) => ({ leverLabel: d.label, marginRange: d.marginRange }));
+  const composeInput: ExecutiveMemoComposeInput = {
+    readout,
+    retailerName,
+    enrichment: options.enrichment,
+    computedEvidence: options.computedEvidence,
+    opportunityExposure:
+      options.opportunityExposure ?? readout.executiveSummary.opportunityExposure,
+    financePeers: options.financePeers,
+    evaluatedRevenuePercent: options.evaluatedRevenuePercent,
+  };
 
-  const synthesis =
-    readout.executiveSummary.executiveNarrative.split(".").slice(0, 2).join(".") +
-    ".";
-
-  const structuralThemes = readout.storylineSections
-    .filter((s) =>
-      ["architecture_coherence", "kvi_role_alignment", "promo_markdown_structure"].includes(
-        s.id,
-      ),
-    )
-    .map((s) => s.sectionNarrative.split(".").slice(0, 1).join(".") + ".")
-    .slice(0, 4);
-
-  const leadershipFocusAreas = [
-    ...readout.executiveSummary.nextFocusAreas.slice(0, 2),
-    ...DEFAULT_LEADERSHIP_QUESTIONS,
-  ].slice(0, 4);
+  const retailerContext = composeRetailerContextSection(composeInput);
+  const pricingObservations = composePricingObservationsSection(composeInput);
+  const implications = composeImplicationsSection(composeInput);
+  const discussionQuestions = composeDiscussionQuestions(composeInput);
 
   const executiveAnswer = [
-    `Potential pricing opportunity: ${opp.totalMarginOpportunityRange || "directional — thematic bands only"}`,
+    retailerContext,
     "",
-    "Primary drivers:",
-    ...byLever.map((l) => `• ${l.leverLabel}: ${l.marginRange}`),
+    pricingObservations,
     "",
-    synthesis,
-    "",
-    `Pricing coherence: ${coherenceAssessment(readout)}`,
+    implications,
   ].join("\n");
 
   return {
     title: `${MEMO_TITLE_PREFIX} — ${retailerName || "Client"}`,
+    retailerContext,
+    pricingObservations,
+    implications,
+    discussionQuestions,
+    notes: [MEMO_FOOTER_NOTE, readout.guardrailMessage],
     executiveAnswer,
     opportunityBreakdown: {
-      totalRange: opp.totalMarginOpportunityRange,
-      byLever,
-      synthesis,
+      totalRange: readout.opportunityDetail.totalMarginOpportunityRange,
+      byLever: [],
+      synthesis: implications.split("\n\n")[0] ?? "",
     },
-    structuralThemes:
-      structuralThemes.length > 0
-        ? structuralThemes
-        : readout.strategicImplications.slice(0, 3),
-    leadershipFocusAreas,
-    supportingNarrative: readout.opportunityOverview.split(".").slice(0, 2).join(".") + ".",
-    notes: [MEMO_FOOTER_NOTE, readout.guardrailMessage],
+    structuralThemes: pricingObservations
+      .split("\n")
+      .filter((l) => l.startsWith("•"))
+      .map((l) => l.replace(/^•\s*/, "")),
+    leadershipFocusAreas: discussionQuestions,
+    supportingNarrative: retailerContext.split("\n\n")[0] ?? "",
   };
 }

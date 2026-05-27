@@ -1,3 +1,4 @@
+import { formatExecutiveCurrency } from "@/lib/formatExecutiveCurrency";
 import { trajectoryForComparablePeer } from "@/lib/financePeerResolution";
 import type { CompanyProfile, PerformanceTrajectory } from "@/types/company-profile";
 import type { FinancePeer } from "@/types/finance-peers";
@@ -99,35 +100,40 @@ function trajectoryFromProfile(profile: CompanyProfile | null): PerformanceTraje
 }
 
 export function buildMomentumHighlights(
-  trajectory: PerformanceTrajectory,
+  profile: CompanyProfile | null,
 ): MomentumHighlight[] {
+  if (!profile) return [];
+
   const items: MomentumHighlight[] = [];
 
-  if (trajectory.revenueGrowthPct != null) {
+  const revenue =
+    profile.revenueDisplay ??
+    (profile.revenue != null ? formatExecutiveCurrency(profile.revenue) : null);
+  if (revenue) {
     items.push({
       label: "Revenue growth",
-      value: formatGrowthPct(trajectory.revenueGrowthPct),
+      value: revenue,
       subtext: "YoY directional",
     });
   }
-  if (trajectory.grossMarginChangeBps != null) {
+
+  const grossMargin = profile.grossMarginDisplay ?? null;
+  if (grossMargin) {
     items.push({
       label: "Gross margin",
-      value: formatBps(trajectory.grossMarginChangeBps),
+      value: grossMargin,
       subtext: "vs prior year",
     });
   }
-  if (trajectory.ebitdaMarginChangeBps != null) {
+
+  const ebitda =
+    profile.ebitdaDisplay ??
+    (profile.ebitda != null ? formatExecutiveCurrency(profile.ebitda) : null);
+  if (ebitda) {
     items.push({
       label: "EBITDA margin",
-      value: formatBps(trajectory.ebitdaMarginChangeBps),
+      value: ebitda,
       subtext: "vs prior year",
-    });
-  } else if (trajectory.ebitdaGrowthPct != null) {
-    items.push({
-      label: "EBITDA growth",
-      value: formatGrowthPct(trajectory.ebitdaGrowthPct),
-      subtext: "YoY directional",
     });
   }
 

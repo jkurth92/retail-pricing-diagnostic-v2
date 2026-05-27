@@ -57,7 +57,7 @@ export const WORKFLOW_TABS: {
   {
     id: "executive_outputs",
     label: "Executive outputs",
-    description: "Memo, deck, and partner email drafts",
+    description: "Executive discussion memo",
   },
 ];
 

@@ -15,6 +15,7 @@ import type { EprScores } from "@/types/ui";
 import type { ExportPackage } from "@/types/export-structure";
 import type { ExportDeliverableBundle } from "@/types/export-system";
 import type { StorylineExportTree } from "@/lib/export/storylineExport";
+import type { FinancePeer } from "@/types/finance-peers";
 
 export type ExecutiveDeliverableInput = {
   knowledge: KnowledgeRegistryContext;
@@ -25,6 +26,8 @@ export type ExecutiveDeliverableInput = {
   enrichment?: RetailerEnrichmentBundle | null;
   computedEvidence?: ComputedEvidenceBundle;
   opportunityExposure?: OpportunityExposureBundle | null;
+  financePeers?: FinancePeer[];
+  evaluatedRevenuePercent?: number | null;
 };
 
 export function runExecutiveDeliverableEngine(
@@ -80,13 +83,20 @@ export function runExecutiveDeliverableEngine(
     notes: [
       STORYLINE_GUARDRAIL,
       ...STORYLINE_NOTES,
-      "Step 11 generates editable consulting exports (email, DOCX memo, PPTX deck) from this readout.",
+      "Step 11 generates an editable executive discussion memo (DOCX) from this readout.",
     ],
   });
 
   const { bundle, legacyPackage, storylineTree } = buildFullExportArtifacts(
     readout,
     retailerName,
+    {
+      enrichment: input.enrichment,
+      computedEvidence: input.computedEvidence,
+      opportunityExposure: input.opportunityExposure,
+      financePeers: input.financePeers,
+      evaluatedRevenuePercent: input.evaluatedRevenuePercent,
+    },
   );
   const exportPackage = legacyPackage ?? buildExportPackage(readout, retailerName);
 

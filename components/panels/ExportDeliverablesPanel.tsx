@@ -24,7 +24,7 @@ export function ExportDeliverablesPanel({
       <div className="max-w-3xl pilot-panel">
         <DiagnosticSection
           title="Executive outputs"
-          lead="Partner email, one-page memo, and LOP-ready deck drafts unlock after the diagnostic is generated."
+          lead="Executive discussion memo unlocks after the diagnostic is generated."
         >
           <p className="text-sm text-[var(--text-muted)]">
             Confirm retailer context and scope, generate the diagnostic, then

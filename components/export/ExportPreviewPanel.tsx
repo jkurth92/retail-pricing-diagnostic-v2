@@ -2,9 +2,7 @@
 
 import { Disclosure } from "@/components/Disclosure";
 import { DiagnosticSection } from "@/components/DiagnosticSection";
-import { EmailPreviewPanel } from "@/components/export/EmailPreviewPanel";
 import { ExecutiveMemoPreview } from "@/components/export/ExecutiveMemoPreview";
-import { SlidePreviewPanel } from "@/components/export/SlidePreviewPanel";
 import type { ExportDeliverableBundle } from "@/types/export-system";
 import type { StorylineExportTree } from "@/lib/export/storylineExport";
 
@@ -20,21 +18,19 @@ export function ExportPreviewPanel({
   return (
     <DiagnosticSection
       eyebrow="Deliverables"
-      title="Executive exports"
-      lead="Consulting first drafts — editable DOCX, PPTX, and partner email. Review before client circulation."
+      title="Executive memo"
+      lead="Discussion-ready memo for leadership — retailer context, pricing observations, implications, and questions. Download as DOCX to refine."
     >
       <p className="text-sm leading-relaxed text-[var(--text-muted)]">
         {bundle.guardrailNote}
       </p>
 
-      <div className="mt-6 space-y-6">
-        <EmailPreviewPanel email={bundle.email} />
+      <div className="mt-6">
         <ExecutiveMemoPreview memo={bundle.memo} />
-        <SlidePreviewPanel presentation={bundle.presentation} />
       </div>
 
       <Disclosure
-        title="Storyline structure (export hierarchy)"
+        title="Storyline structure (reference)"
         defaultOpen={false}
       >
         <ol className="space-y-4">
