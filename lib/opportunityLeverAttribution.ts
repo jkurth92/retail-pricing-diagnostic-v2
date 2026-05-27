@@ -1,14 +1,23 @@
 /**
- * Directional lever contribution framing — presentation only, not additive sizing.
+ * Directional opportunity-area framing — presentation only, not additive sizing.
  */
 
-import type { ExecutiveTheme } from "@/types/executive-theme";
+import {
+  assessOpportunityFootprint,
+  type OpportunityFootprint,
+} from "@/lib/executiveBusinessLanguage";
+import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
+import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
+import type { ExecutiveTheme } from "@/types/executive-theme";
 
-export type LeverContributionRow = {
+export type OpportunityAreaTier = "primary" | "secondary" | "supporting";
+
+export type OpportunityAreaRow = {
   id: string;
-  label: string;
-  sharePct: number;
+  tier: OpportunityAreaTier;
+  tierLabel: string;
+  description: string;
 };
 
 const LEVER_ORDER = [
@@ -19,44 +28,34 @@ const LEVER_ORDER = [
   "zoning",
 ] as const;
 
-const LEVER_LABELS: Record<(typeof LEVER_ORDER)[number], string> = {
-  architecture: "Architecture",
-  kvi: "KVI / value concentration",
-  pl_nb: "PL/NB monetization",
-  promo: "Promo",
-  zoning: "Zoning",
-};
+type LeverKey = (typeof LEVER_ORDER)[number];
 
-function leverKeyFromFamily(family: string): (typeof LEVER_ORDER)[number] | null {
+function leverKeyFromFamily(family: string): LeverKey | null {
   if (family === "Architecture" || family === "Premiumization") return "architecture";
   if (family === "KVI" || family === "ValueCommunication") return "kvi";
-  if (/promo/i.test(family)) return "promo";
-  if (/markdown/i.test(family)) return "promo";
+  if (/promo|markdown/i.test(family)) return "promo";
   return null;
 }
 
-function leverKeyFromDriverText(text: string): (typeof LEVER_ORDER)[number] | null {
+function leverKeyFromDriverText(text: string): LeverKey | null {
   const t = text.toLowerCase();
   if (/architecture|premium|tier|spacing|compression/i.test(t)) return "architecture";
   if (/kvi|value concentration|visible value/i.test(t)) return "kvi";
-  if (/pl\/nb|private-label|monetization separation/i.test(t)) return "pl_nb";
+  if (/pl\/nb|private-label|monetization/i.test(t)) return "pl_nb";
   if (/promo|markdown|discount/i.test(t)) return "promo";
   if (/zon/i.test(t)) return "zoning";
   return null;
 }
 
-/**
- * Weighted directional shares from theme envelopes and drivers (sums to 100).
- */
-export function buildDirectionalLeverContributions(
+function rankLevers(
   themes: ExecutiveTheme[],
   primaryDrivers: string[],
   evidence?: ComputedEvidenceBundle | null,
   promoMarkdownEligible = false,
-): LeverContributionRow[] {
-  const weights = new Map<string, number>();
+): LeverKey[] {
+  const weights = new Map<LeverKey, number>();
 
-  const add = (key: (typeof LEVER_ORDER)[number], w: number) => {
+  const add = (key: LeverKey, w: number) => {
     weights.set(key, (weights.get(key) ?? 0) + w);
   };
 
@@ -76,41 +75,138 @@ export function buildDirectionalLeverContributions(
     if (key) add(key, 0.45);
   }
 
-  if (evidence?.metrics.some((m) => m.family === "architecture")) {
-    add("architecture", 0.25);
-  }
-  if (evidence?.metrics.some((m) => m.family === "kvi")) {
-    add("kvi", 0.15);
-  }
+  if (evidence?.metrics.some((m) => m.family === "architecture")) add("architecture", 0.25);
+  if (evidence?.metrics.some((m) => m.family === "kvi")) add("kvi", 0.15);
 
-  if (!promoMarkdownEligible) {
-    weights.delete("promo");
-  }
+  if (!promoMarkdownEligible) weights.delete("promo");
 
   if (weights.size === 0) {
     add("architecture", 1);
     add("kvi", 0.4);
-    add("pl_nb", 0.25);
   }
 
-  const entries = LEVER_ORDER.filter((k) => (weights.get(k) ?? 0) > 0).map((k) => ({
-    key: k,
-    weight: weights.get(k) ?? 0,
-  }));
+  return [...weights.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([k]) => k);
+}
 
-  const total = entries.reduce((s, e) => s + e.weight, 0) || 1;
-  let rows: LeverContributionRow[] = entries.map((e) => ({
-    id: e.key,
-    label: LEVER_LABELS[e.key],
-    sharePct: Math.round((e.weight / total) * 100),
-  }));
+function describeArchitectureArea(footprint: OpportunityFootprint): string {
+  const cats = footprint.compressionCategories;
+  if (cats.length >= 2) {
+    return `Architecture compression in ${cats.slice(0, 3).join(", ")}`;
+  }
+  if (cats.length === 1) {
+    return `Architecture compression in ${cats[0]}`;
+  }
+  if (footprint.mode === "portfolio_thematic") {
+    return "Architecture opportunity appears thematic rather than category-specific";
+  }
+  return "Moderate premium spacing compression";
+}
 
-  const sum = rows.reduce((s, r) => s + r.sharePct, 0);
-  if (rows.length > 0 && sum !== 100) {
-    rows = rows.map((r, i) =>
-      i === 0 ? { ...r, sharePct: r.sharePct + (100 - sum) } : r,
-    );
+function describeKviArea(footprint: OpportunityFootprint): string {
+  if (footprint.mode === "portfolio_thematic") {
+    return "Visible value investment appears broadly distributed across the portfolio";
+  }
+  if (footprint.elevatedKviCategories.length >= 2) {
+    return `Selective visible value investment in ${footprint.elevatedKviCategories.slice(0, 2).join(" and ")}`;
+  }
+  return "Selective visible value concentration";
+}
+
+function describePlNbArea(footprint: OpportunityFootprint): string {
+  const narrow = footprint.plNbCategories;
+  if (narrow.length >= 2) {
+    return `Monetization separation opportunity in ${narrow.slice(0, 2).join(" and ")}`;
+  }
+  if (narrow.length === 1) {
+    return `Monetization separation opportunity in ${narrow[0]}`;
+  }
+  return "Supporting monetization separation opportunity";
+}
+
+function describeLever(
+  key: LeverKey,
+  footprint: OpportunityFootprint,
+): string {
+  switch (key) {
+    case "architecture":
+      return describeArchitectureArea(footprint);
+    case "kvi":
+      return describeKviArea(footprint);
+    case "pl_nb":
+      return describePlNbArea(footprint);
+    case "promo":
+      return "Promotional intensity as a secondary discussion area";
+    case "zoning":
+      return "Zone-level price consistency as a supporting factor";
+    default:
+      return "Supporting structural opportunity";
+  }
+}
+
+const TIER_LABELS: Record<OpportunityAreaTier, string> = {
+  primary: "Primary opportunity area",
+  secondary: "Secondary opportunity area",
+  supporting: "Supporting factors",
+};
+
+/** Ranked opportunity areas without percentage allocations. */
+export function buildOpportunityAreaBreakdown(
+  exec: ExecutiveSummary,
+  exposure: OpportunityExposureBundle | null | undefined,
+  themes: ExecutiveTheme[],
+  primaryDrivers: string[],
+  evidence?: ComputedEvidenceBundle | null,
+  promoMarkdownEligible = false,
+): OpportunityAreaRow[] {
+  const footprint = assessOpportunityFootprint(exposure, exec);
+  const ranked = rankLevers(themes, primaryDrivers, evidence, promoMarkdownEligible);
+  if (ranked.length === 0) return [];
+
+  const rows: OpportunityAreaRow[] = [];
+  const primary = ranked[0];
+  rows.push({
+    id: primary,
+    tier: "primary",
+    tierLabel: TIER_LABELS.primary,
+    description: describeLever(primary, footprint),
+  });
+
+  if (ranked[1]) {
+    rows.push({
+      id: ranked[1],
+      tier: "secondary",
+      tierLabel: TIER_LABELS.secondary,
+      description: describeLever(ranked[1], footprint),
+    });
   }
 
-  return rows.sort((a, b) => b.sharePct - a.sharePct);
+  for (const key of ranked.slice(2, 4)) {
+    rows.push({
+      id: key,
+      tier: "supporting",
+      tierLabel: TIER_LABELS.supporting,
+      description: describeLever(key, footprint),
+    });
+  }
+
+  return rows;
+}
+
+/** @deprecated Use buildOpportunityAreaBreakdown — internal ranking only. */
+export type LeverContributionRow = { id: string; label: string; sharePct: number };
+
+export function buildDirectionalLeverContributions(
+  themes: ExecutiveTheme[],
+  primaryDrivers: string[],
+  evidence?: ComputedEvidenceBundle | null,
+  promoMarkdownEligible = false,
+): LeverContributionRow[] {
+  const ranked = rankLevers(themes, primaryDrivers, evidence, promoMarkdownEligible);
+  return ranked.map((id, i) => ({
+    id,
+    label: id,
+    sharePct: Math.max(100 - i * 25, 10),
+  }));
 }

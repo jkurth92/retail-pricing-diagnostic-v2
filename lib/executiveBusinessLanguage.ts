@@ -10,33 +10,113 @@ import { buildPortfolioConfidenceChipLabel } from "@/lib/narrativeRefinement";
 import { softenExecutiveDriverPhrase } from "@/lib/interpretationCalibration";
 
 const PHRASE_MAP: [RegExp, string][] = [
-  [/\bmonetizable exposure\b/gi, "evaluated revenue implicated"],
+  [/\bmonetizable exposure\b/gi, "evaluated revenue"],
   [/\bmonetizable in-scope revenue\b/gi, "evaluated revenue"],
   [/\bdirectional confidence\b/gi, "evidence support"],
   [/\bhigh directional confidence\b/gi, "moderate evidence support"],
   [/\bmoderate directional confidence\b/gi, "moderate evidence support"],
-  [/\bdirectional confidence\b/gi, "limited evidence support"],
   [/\bhigh confidence\b/gi, "strong evidence support"],
   [/\bmedium confidence\b/gi, "moderate evidence support"],
   [/\bmoderate confidence\b/gi, "moderate evidence support"],
-  [/\bthematic width\b/gi, "structural theme concentration"],
+  [/\bthematic width\b/gi, "selective structural opportunity"],
   [/\bmoderate thematic width\b/gi, "opportunity concentrated in select structural themes"],
   [/\bwider thematic band\b/gi, "broader opportunity range"],
-  [/\btighter confidence band\b/gi, "narrower opportunity range"],
+  [/\btighter confidence band\b/gi, "relatively narrow opportunity range"],
   [/\barchitecture[- ]led\b/gi, "tier and spacing structure"],
-  [/\barchitecture coherence\b/gi, "tier spacing consistency"],
-  [/\boverlap factor\b/gi, "theme overlap adjustment"],
+  [/\barchitecture coherence\b/gi, "pricing structure remains broadly coherent"],
+  [/\boverlap factor\b/gi, "theme overlap"],
   [/\bthematic diagnostic\b/gi, "strategic pricing diagnostic"],
   [/\bthematic, bounded\b/gi, "directional and bounded"],
   [/\bthematic, non-additive\b/gi, "directional, not additive"],
+  [/\bprimary issue\b/gi, "primary opportunity area"],
+  [/\bweakness\b/gi, "gap"],
+  [/\bfailure\b/gi, "gap"],
+  [/\bmonetization weakness\b/gi, "monetization opportunity"],
 ];
 
+export type OpportunityFootprintMode =
+  | "category_localized"
+  | "thematic_localized"
+  | "portfolio_thematic";
+
+export type OpportunityFootprint = {
+  mode: OpportunityFootprintMode;
+  compressionCategories: string[];
+  plNbCategories: string[];
+  elevatedKviCategories: string[];
+};
+
 export function translateExecutivePhrase(text: string): string {
-  let out = text.trim();
+  let out = stripExecutivePseudoPrecision(text.trim());
   for (const [re, replacement] of PHRASE_MAP) {
     out = out.replace(re, replacement);
   }
   return out.replace(/\s{2,}/g, " ").trim();
+}
+
+/** Remove model-style percentage claims from executive copy. */
+export function stripExecutivePseudoPrecision(text: string): string {
+  return text
+    .replace(
+      /opportunity concentrated in ~?\d+(?:\.\d+)?%\s+of\s+evaluated\s+revenue/gi,
+      "opportunity appears concentrated in select categories",
+    )
+    .replace(/~?\d+(?:\.\d+)?%\s+of\s+evaluated\s+revenue/gi, "a subset of evaluated revenue")
+    .replace(/\bconcentrated in ~\d+(?:\.\d+)?%/gi, "concentrated in select categories")
+    .replace(/\s+\d{1,3}%\s*$/g, "")
+    .trim();
+}
+
+export function assessOpportunityFootprint(
+  exposure?: OpportunityExposureBundle | null,
+  exec?: ExecutiveSummary,
+): OpportunityFootprint {
+  const compressionCategories =
+    exposure?.categoryExposures.filter((c) => c.architectureCompression).map((c) => c.category) ??
+    [];
+  const plNbCategories =
+    exposure?.categoryExposures.filter((c) => c.plNbNarrow).map((c) => c.category) ?? [];
+  const elevatedKviCategories =
+    exposure?.categoryExposures.filter((c) => c.kviElevated).map((c) => c.category) ?? [];
+
+  const archAffected = exposure?.architectureAffectedRevenuePct ?? 0;
+  const monetizable = exposure?.monetizableExposurePct ?? 0;
+  const totalCats = exposure?.categoryExposures.length ?? 0;
+
+  const compressionShare =
+    totalCats > 0 ? compressionCategories.length / totalCats : 0;
+
+  let mode: OpportunityFootprintMode = "thematic_localized";
+
+  if (
+    compressionCategories.length === 0 &&
+    elevatedKviCategories.length === 0 &&
+    archAffected < 12
+  ) {
+    mode = "portfolio_thematic";
+  } else if (
+    compressionCategories.length >= 1 &&
+    compressionCategories.length <= 4 &&
+    (compressionShare <= 0.55 || archAffected < 45 || monetizable < 40)
+  ) {
+    mode = "category_localized";
+  }
+
+  const hasBroadKvi =
+    elevatedKviCategories.length >= 3 ||
+    exec?.primaryDrivers.some((d) =>
+      typeof d === "string" && /broad|moderate value concentration/i.test(d),
+    );
+  if (hasBroadKvi && compressionCategories.length <= 1) {
+    mode = "portfolio_thematic";
+  }
+
+  return {
+    mode,
+    compressionCategories,
+    plNbCategories,
+    elevatedKviCategories,
+  };
 }
 
 export function businessConfidenceLabel(
@@ -51,9 +131,26 @@ export function businessConfidenceLabel(
 
 export function businessConcentrationLabel(
   exposure: OpportunityExposureBundle | null | undefined,
+  exec?: ExecutiveSummary,
 ): string | null {
-  if (!exposure || exposure.monetizableExposurePct <= 0) return null;
-  return `Opportunity concentrated in ~${exposure.monetizableExposurePct}% of evaluated revenue`;
+  if (!exposure) return null;
+
+  const footprint = assessOpportunityFootprint(exposure, exec);
+  const cats = footprint.compressionCategories;
+
+  if (footprint.mode === "category_localized" && cats.length >= 2) {
+    return `Opportunity appears concentrated in ${cats.slice(0, 3).join(", ")}`;
+  }
+  if (footprint.mode === "category_localized" && cats.length === 1) {
+    return `Opportunity appears concentrated in ${cats[0]}`;
+  }
+  if (footprint.mode === "portfolio_thematic") {
+    return "Opportunity appears thematic rather than category-specific";
+  }
+  if (footprint.elevatedKviCategories.length >= 2 && cats.length === 0) {
+    return "Opportunity appears concentrated in a subset of high-volume categories";
+  }
+  return "Opportunity appears localized rather than portfolio-wide";
 }
 
 export function businessScopeEvaluatedLabel(
@@ -63,23 +160,23 @@ export function businessScopeEvaluatedLabel(
     return null;
   }
   const pct = Math.round(evaluatedRevenuePercent);
-  return `${pct}% of retailer revenue evaluated`;
+  if (pct >= 85) return "Majority of retailer revenue evaluated";
+  if (pct >= 55) return `${pct}% of retailer revenue evaluated`;
+  return "Select portion of retailer revenue evaluated";
 }
 
-export function buildPrimaryIssueLine(
+export function buildPrimaryOpportunityAreaLine(
   exec: ExecutiveSummary,
   exposure?: OpportunityExposureBundle | null,
 ): string {
-  const archCats =
-    exposure?.categoryExposures
-      .filter((c) => c.architectureCompression)
-      .map((c) => c.category) ?? [];
+  const footprint = assessOpportunityFootprint(exposure, exec);
+  const cats = footprint.compressionCategories;
 
-  if (archCats.length >= 2) {
-    return `Selective architecture compression in ${archCats.slice(0, 3).join(", ")}`;
+  if (cats.length >= 2) {
+    return `Selective architecture compression in ${cats.slice(0, 3).join(", ")}`;
   }
-  if (archCats.length === 1) {
-    return `Selective architecture compression in ${archCats[0]}`;
+  if (cats.length === 1) {
+    return `Selective architecture compression in ${cats[0]}`;
   }
 
   const driver = exec.primaryDrivers.find(
@@ -89,12 +186,61 @@ export function buildPrimaryIssueLine(
     return translateExecutivePhrase(softenExecutiveDriverPhrase(driver));
   }
 
-  const archTheme = exec.topThemes.find((t) => t.themeFamily === "Architecture");
-  if (archTheme) {
-    return translateExecutivePhrase(archTheme.themeName);
+  if (footprint.mode === "portfolio_thematic") {
+    return "Selective structural opportunity across the portfolio";
   }
 
-  return "Selective monetization compression in measured categories";
+  return "Selective monetization opportunity in measured categories";
+}
+
+export type ExecutiveImplicationInput = {
+  primaryDrivers?: string[];
+  topThemes?: ExecutiveSummary["topThemes"];
+};
+
+export function buildExecutiveImplicationLine(
+  exposure?: OpportunityExposureBundle | null,
+  input?: ExecutiveImplicationInput | ExecutiveSummary,
+): string {
+  const exec =
+    input && "retailerProfile" in input
+      ? (input as ExecutiveSummary)
+      : ({
+          primaryDrivers: input?.primaryDrivers ?? [],
+          topThemes: input?.topThemes ?? [],
+        } as ExecutiveSummary);
+
+  const footprint = assessOpportunityFootprint(exposure, exec);
+  const cats = footprint.compressionCategories;
+
+  if (cats.length >= 2) {
+    return `The primary opportunity appears concentrated in selective category-level architecture compression rather than broad portfolio-wide monetization pressure.`;
+  }
+
+  const hasKvi = exec.primaryDrivers.some((d) =>
+    typeof d === "string" && /kvi|value concentration|visible value/i.test(d),
+  );
+  const hasArch = exec.primaryDrivers.some((d) =>
+    typeof d === "string" && /architecture|premium|tier|spacing/i.test(d),
+  );
+
+  if (hasArch && hasKvi) {
+    return "Visible value investment appears heavier in select traffic-driving categories, while overall pricing structure remains directionally coherent.";
+  }
+
+  if (hasArch && cats.length === 1) {
+    return `Architecture spacing in ${cats[0]} appears compressed relative to expected structure for this format.`;
+  }
+
+  if (hasArch || footprint.compressionCategories.length > 0) {
+    return "The opportunity appears bounded and architecture-led rather than a portfolio-wide reset.";
+  }
+
+  if (hasKvi) {
+    return "Value investment appears selective; the discussion should confirm whether concentration is intentional.";
+  }
+
+  return "The opportunity appears directional, bounded, and commercially explainable.";
 }
 
 export type HeroBusinessInterpretation = {
@@ -102,7 +248,7 @@ export type HeroBusinessInterpretation = {
   scopeEvaluated: string | null;
   concentration: string | null;
   confidence: string;
-  primaryIssue: string;
+  primaryOpportunityArea: string;
 };
 
 export function buildHeroBusinessInterpretation(
@@ -116,9 +262,9 @@ export function buildHeroBusinessInterpretation(
       ? `${marginDisplay} margin opportunity`
       : translateExecutivePhrase(exec.marginOpportunitySummary),
     scopeEvaluated: businessScopeEvaluatedLabel(evaluatedRevenuePercent),
-    concentration: businessConcentrationLabel(exposure),
+    concentration: businessConcentrationLabel(exposure, exec),
     confidence: businessConfidenceLabel(exec.evidenceStrength, exec.topThemes),
-    primaryIssue: buildPrimaryIssueLine(exec, exposure),
+    primaryOpportunityArea: buildPrimaryOpportunityAreaLine(exec, exposure),
   };
 }
 
@@ -126,48 +272,50 @@ export function buildExecutiveBusinessSummaryParagraphs(
   exec: ExecutiveSummary,
   exposure?: OpportunityExposureBundle | null,
   evaluatedRevenuePercent?: number | null,
-  opportunityLine?: string,
-  evidenceLine?: string,
-  implicationLine?: string,
 ): string[] {
   const paragraphs: string[] = [];
+  const footprint = assessOpportunityFootprint(exposure, exec);
 
-  const opp =
-    opportunityLine ??
-    (exec.opportunityHeadline
-      ? translateExecutivePhrase(exec.opportunityHeadline)
-      : null);
-  if (opp) paragraphs.push(opp);
+  if (exec.opportunityHeadline?.trim()) {
+    paragraphs.push(translateExecutivePhrase(exec.opportunityHeadline));
+  }
 
   const scope = businessScopeEvaluatedLabel(evaluatedRevenuePercent);
-  const concentration = businessConcentrationLabel(exposure);
-  if (scope || concentration) {
-    const parts = [scope, concentration].filter(Boolean);
-    paragraphs.push(parts.join(". ") + (parts.length ? "." : ""));
+  const concentration = businessConcentrationLabel(exposure, exec);
+  if (scope) {
+    paragraphs.push(
+      concentration
+        ? `${scope}. ${concentration}.`
+        : `${scope}.`,
+    );
+  } else if (concentration) {
+    paragraphs.push(concentration + ".");
   }
 
-  const keyIssue =
-    evidenceLine ??
-    (exec.primaryDrivers.length > 0
-      ? `The strongest signals point to ${buildPrimaryIssueLine(exec, exposure).toLowerCase()}.`
-      : null);
-  if (keyIssue) paragraphs.push(translateExecutivePhrase(keyIssue));
-
-  const implication =
-    implicationLine ??
-    (exec.strategicImplicationOneLiner
-      ? translateExecutivePhrase(exec.strategicImplicationOneLiner)
-      : null);
-  if (implication) {
-    paragraphs.push(implication);
+  if (footprint.compressionCategories.length >= 2) {
+    paragraphs.push(
+      `Architecture compression is most visible in ${footprint.compressionCategories.slice(0, 3).join(", ")}.`,
+    );
+  } else if (exec.primaryDrivers.length > 0) {
+    paragraphs.push(
+      `The primary opportunity appears concentrated in ${buildPrimaryOpportunityAreaLine(exec, exposure).toLowerCase()}.`,
+    );
   }
 
-  return paragraphs.slice(0, 5);
+  paragraphs.push(buildExecutiveImplicationLine(exposure, exec));
+
+  return paragraphs
+    .map((p) => translateExecutivePhrase(p))
+    .filter((p) => p.length > 20)
+    .slice(0, 4);
 }
 
 export function softenEvidenceMetricSubtext(subtext: string): string {
   return translateExecutivePhrase(subtext)
-    .replace(/strong measured signal in upload proxy/i, "Strong signal in reviewed data")
-    .replace(/moderate signal — directionally meaningful/i, "Moderate signal — directionally meaningful")
+    .replace(/strong measured signal in upload proxy/i, "Notable signal in reviewed data")
+    .replace(/moderate signal — directionally meaningful/i, "Meaningful directional signal")
     .replace(/supporting directional signal/i, "Supporting signal");
 }
+
+/** @deprecated Use buildPrimaryOpportunityAreaLine */
+export const buildPrimaryIssueLine = buildPrimaryOpportunityAreaLine;

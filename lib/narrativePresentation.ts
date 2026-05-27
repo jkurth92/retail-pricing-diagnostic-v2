@@ -146,6 +146,22 @@ export function buildStrategicDriverCards(
     .slice(0, max);
 }
 
+function formatExecutiveMetricValue(
+  metricId: string,
+  rawValue: string,
+): string {
+  if (/kvi_revenue|kvi_sku/i.test(metricId)) {
+    return "Elevated in trip-driving categories";
+  }
+  if (/premium.*gap|mainstream/i.test(metricId)) {
+    return rawValue.includes("%") ? "Compressed versus typical spacing" : rawValue;
+  }
+  if (/^\~?\d+(?:\.\d+)?%$/.test(rawValue.trim())) {
+    return "Directionally meaningful";
+  }
+  return rawValue;
+}
+
 function metricToInsight(m: ComputedEvidenceBundle["metrics"][0]): InsightSourceTile | null {
   const rawSubtext =
     m.strength === "strong"
@@ -158,7 +174,7 @@ function metricToInsight(m: ComputedEvidenceBundle["metrics"][0]): InsightSource
   return {
     id: m.id,
     title: m.label,
-    metric: m.value,
+    metric: formatExecutiveMetricValue(m.id, m.value),
     subtext,
     strength: m.strength,
     emphasis: insightTileEmphasis(m.label, m.strength, 0),
@@ -305,7 +321,7 @@ export function heroContextChips(
     label: businessConfidenceLabel(exec.evidenceStrength, exec.topThemes),
     tone: "primary",
   });
-  const concentration = businessConcentrationLabel(exposure);
+  const concentration = businessConcentrationLabel(exposure, exec);
   if (concentration) chips.push({ label: concentration, tone: "primary" });
   return chips.slice(0, 3);
 }

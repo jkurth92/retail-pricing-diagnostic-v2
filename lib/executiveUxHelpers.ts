@@ -52,7 +52,7 @@ export function businessRangeConfidenceLabel(
 ): string | undefined {
   if (lowPct == null || highPct == null) return undefined;
   const span = highPct - lowPct;
-  if (span <= 0.6) return "Narrower opportunity range";
-  if (span <= 1.2) return "Opportunity concentrated in select structural themes";
-  return "Broader opportunity range across themes";
+  if (span <= 0.6) return "Relatively narrow opportunity range";
+  if (span <= 1.2) return "Opportunity reflects several structural drivers";
+  return "Opportunity range spans multiple structural themes";
 }

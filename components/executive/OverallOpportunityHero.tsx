@@ -36,9 +36,12 @@ export function OverallOpportunityHero({
 
   const interpretationRows = [
     { label: "Scope analyzed", value: interpretation.scopeEvaluated },
-    { label: "Opportunity concentration", value: interpretation.concentration },
+    { label: "Where opportunity sits", value: interpretation.concentration },
     { label: "Evidence support", value: interpretation.confidence },
-    { label: "Primary issue", value: interpretation.primaryIssue },
+    {
+      label: "Primary opportunity area",
+      value: interpretation.primaryOpportunityArea,
+    },
   ].filter((r) => r.value);
 
   return (

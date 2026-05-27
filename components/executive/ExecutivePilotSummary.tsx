@@ -6,7 +6,7 @@ import { ExecutiveConsultingSummary } from "@/components/executive/ExecutiveCons
 import { InsightSourceTile } from "@/components/executive/InsightSourceTile";
 import { OpportunityLeverBreakdown } from "@/components/executive/OpportunityLeverBreakdown";
 import { OverallOpportunityHero } from "@/components/executive/OverallOpportunityHero";
-import { buildDirectionalLeverContributions } from "@/lib/opportunityLeverAttribution";
+import { buildOpportunityAreaBreakdown } from "@/lib/opportunityLeverAttribution";
 import { StrategicDriverCard } from "@/components/executive/StrategicDriverCard";
 import { OpportunityCalculationTracePanel } from "@/components/opportunity/OpportunityCalculationTracePanel";
 import {
@@ -39,7 +39,9 @@ export function ExecutivePilotSummary({
   const exposure = opportunityExposure ?? exec.opportunityExposure ?? null;
   const drivers = buildStrategicDriverCards(exec, 4);
   const insights = buildInsightSourceTiles(exec, exposure, computedEvidence, 6);
-  const leverRows = buildDirectionalLeverContributions(
+  const opportunityAreas = buildOpportunityAreaBreakdown(
+    exec,
+    exposure,
     exec.topThemes,
     exec.primaryDrivers,
     computedEvidence,
@@ -69,14 +71,16 @@ export function ExecutivePilotSummary({
           exposure={exposure}
           evaluatedRevenuePercent={evaluatedRevenuePercent}
         />
-        {leverRows.length > 0 && <OpportunityLeverBreakdown rows={leverRows} />}
+        {opportunityAreas.length > 0 && (
+          <OpportunityLeverBreakdown rows={opportunityAreas} />
+        )}
       </div>
 
       {hasStructuralEvidence && (
         <section className="ent-row ent-row-evidence w-full">
           <div className="ent-panel ent-panel-evidence h-full rounded-2xl border bg-white p-6 shadow-sm">
             <h2 className="ent-section-title mb-1 text-sm font-semibold text-[var(--text-navy)]">
-              What is driving the opportunity
+              Supporting evidence
             </h2>
             <p className="mb-5 text-xs leading-relaxed text-[var(--text-muted)]">
               Strongest commercial signals from the review — directional, not price

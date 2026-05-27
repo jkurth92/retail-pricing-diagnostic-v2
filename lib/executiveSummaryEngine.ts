@@ -8,10 +8,8 @@ import {
   buildExposurePrimaryDrivers,
   buildOpportunityHeadline,
 } from "@/lib/evidenceExecutiveSummary";
-import {
-  buildAlignedConfidenceSummary,
-  refineStrategicImplicationOneLiner,
-} from "@/lib/narrativeRefinement";
+import { buildExecutiveImplicationLine } from "@/lib/executiveBusinessLanguage";
+import { buildAlignedConfidenceSummary } from "@/lib/narrativeRefinement";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 import {
   buildConciseExecutiveImplications,
@@ -73,10 +71,12 @@ export function buildExecutiveSummaryBlock(
     normalizedFields: [],
   };
 
-  const strategicImplicationOneLiner = refineStrategicImplicationOneLiner(
-    evidenceBundle,
-    storyline.primaryThemes,
-  );
+  const exposureBundle = opportunityExposure ?? null;
+
+  const strategicImplicationOneLiner = buildExecutiveImplicationLine(exposureBundle, {
+    primaryDrivers: evidenceBundle.primaryDrivers,
+    topThemes: storyline.primaryThemes,
+  });
 
   const narrative = buildOpeningExecutiveNarrative(
     profile,
@@ -96,8 +96,6 @@ export function buildExecutiveSummaryBlock(
         })),
     3,
   );
-
-  const exposureBundle = opportunityExposure ?? null;
 
   const benchmarkLines =
     evidenceBundle.benchmarkCalibration?.executiveContextLines ?? [];

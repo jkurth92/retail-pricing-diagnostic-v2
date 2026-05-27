@@ -1,13 +1,15 @@
 "use client";
 
-import type { LeverContributionRow } from "@/lib/opportunityLeverAttribution";
+import type { OpportunityAreaRow } from "@/lib/opportunityLeverAttribution";
 
 type OpportunityLeverBreakdownProps = {
-  rows: LeverContributionRow[];
+  rows: OpportunityAreaRow[];
 };
 
 export function OpportunityLeverBreakdown({ rows }: OpportunityLeverBreakdownProps) {
   if (rows.length === 0) return null;
+
+  const tiers = ["primary", "secondary", "supporting"] as const;
 
   return (
     <section
@@ -18,33 +20,34 @@ export function OpportunityLeverBreakdown({ rows }: OpportunityLeverBreakdownPro
         id="lever-breakdown-heading"
         className="m-0 text-sm font-semibold text-[var(--text-navy)]"
       >
-        Where the opportunity appears concentrated
+        What is driving the opportunity
       </h3>
-      <p className="mt-1 mb-4 text-xs leading-relaxed text-[var(--text-muted)]">
-        Directional contribution by pricing lever — illustrative split, not additive
-        financial math.
+      <p className="mt-1 mb-5 text-xs leading-relaxed text-[var(--text-muted)]">
+        Directional view of where to focus the discussion — not a financial decomposition.
       </p>
-      <ul className="m-0 flex list-none flex-col gap-3 p-0">
-        {rows.map((row) => (
-          <li key={row.id} className="ent-lever-row">
-            <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
-              <span className="font-medium text-[var(--text-navy)]">{row.label}</span>
-              <span className="tabular-nums font-semibold text-[var(--accent-deep)]">
-                {row.sharePct}%
-              </span>
+      <div className="flex flex-col gap-5">
+        {tiers.map((tier) => {
+          const tierRows = rows.filter((r) => r.tier === tier);
+          if (tierRows.length === 0) return null;
+          return (
+            <div key={tier}>
+              <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--accent-mid)]">
+                {tierRows[0].tierLabel}
+              </p>
+              <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                {tierRows.map((row) => (
+                  <li
+                    key={row.id}
+                    className="rounded-lg border border-[var(--border)] bg-white px-4 py-3 text-sm leading-snug text-[var(--text-navy)]"
+                  >
+                    {row.description}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div
-              className="h-2 overflow-hidden rounded-full bg-white"
-              role="presentation"
-            >
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-[var(--accent-mid)] to-[var(--accent-deep)]"
-                style={{ width: `${Math.max(row.sharePct, 4)}%` }}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
+          );
+        })}
+      </div>
     </section>
   );
 }

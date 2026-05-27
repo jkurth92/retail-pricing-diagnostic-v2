@@ -66,7 +66,7 @@ export function buildOpportunityHeadline(
   if (evidence.evidenceStrength === "weak") {
     return `Directional pricing opportunity: ${low.toFixed(1)}–${high.toFixed(1)}% margin improvement (thematic, bounded)`;
   }
-  const concentration = businessConcentrationLabel(exposure);
+  const concentration = businessConcentrationLabel(exposure, undefined);
   const exposureNote = concentration ? ` · ${concentration}` : "";
   return `Potential pricing opportunity: ${low.toFixed(1)}–${high.toFixed(1)}% margin improvement${exposureNote}`;
 }
