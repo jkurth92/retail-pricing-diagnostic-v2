@@ -1,5 +1,6 @@
 "use client";
 
+import { IllustrativeExamplesPanel } from "@/components/executive/IllustrativeExamplesPanel";
 import type { InsightSourceTile as TileModel } from "@/lib/narrativePresentation";
 
 type InsightSourceTileProps = {
@@ -51,6 +52,12 @@ export function InsightSourceTile({ tile }: InsightSourceTileProps) {
         <span className="ent-chip ent-chip-xs mt-2 inline-block w-fit rounded border border-[var(--border)] px-2 py-0.5 text-[0.6875rem] text-[var(--text-muted)]">
           {tile.benchmarkHint}
         </span>
+      )}
+      {tile.illustrativeExamples && tile.illustrativeExamples.length > 0 && (
+        <IllustrativeExamplesPanel
+          examples={tile.illustrativeExamples}
+          disclaimer={tile.illustrationDisclaimer}
+        />
       )}
     </article>
   );

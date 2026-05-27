@@ -21,6 +21,7 @@ import {
 } from "@/lib/narrativeRefinement";
 import { runRobustDataInterpretation } from "@/lib/robustDataInterpretation";
 import type { RobustDataInterpretationBundle } from "@/types/data-interpretation";
+import { buildEvidenceIllustrations } from "@/lib/evidenceIllustrations";
 import {
   synthesizePricingRows,
   type PricingRowSynthesisInput,
@@ -384,6 +385,16 @@ export function runEvidenceComputation(
     detail: softenExecutiveDriverPhrase(t.detail),
   }));
 
+  const illustrations = buildEvidenceIllustrations({
+    rows: pricingRows,
+    arch,
+    kvi,
+    cat,
+    archetypeId: input.archetypeId,
+    proxySignals: dataInterpretation.proxySignals,
+    retailerTicker: input.retailerTicker,
+  });
+
   return {
     generatedAt: new Date().toISOString(),
     engineVersion: ENGINE_VERSION,
@@ -405,6 +416,7 @@ export function runEvidenceComputation(
     normalizedFields: effectiveFields,
     benchmarkCalibration,
     dataInterpretation,
+    illustrations,
   };
 }
 

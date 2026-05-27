@@ -2,6 +2,7 @@ import type { SupportingSignal } from "@/types/diagnostic-hypotheses";
 import type { BenchmarkCalibrationBundle } from "@/types/benchmark-calibration";
 import type { RobustDataInterpretationBundle } from "@/types/data-interpretation";
 import type { CanonicalFieldKey } from "@/types/upload-schema";
+import type { EvidenceIllustrationsBundle } from "@/types/evidence-illustrations";
 
 export type EvidenceMetricId =
   | "premium_mainstream_gap"
@@ -51,4 +52,6 @@ export type ComputedEvidenceBundle = {
   benchmarkCalibration?: BenchmarkCalibrationBundle;
   /** Step 15 — robust data interpretation & graceful degradation context */
   dataInterpretation?: RobustDataInterpretationBundle;
+  /** Representative commercial examples per evidence metric (illustrative only) */
+  illustrations?: EvidenceIllustrationsBundle;
 };

@@ -30,7 +30,9 @@ import {
   orderThemesByNarrativeDominance,
 } from "@/lib/signalPrioritization";
 import { shortenThemeTitle } from "@/lib/executiveUxHelpers";
+import { illustrationsForMetric } from "@/lib/evidenceIllustrations";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
+import type { IllustrativeCommercialExample } from "@/types/evidence-illustrations";
 import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
@@ -52,6 +54,8 @@ export type InsightSourceTile = {
   benchmarkHint?: string;
   strength?: "strong" | "moderate" | "weak";
   emphasis?: "primary" | "secondary" | "supporting";
+  illustrativeExamples?: IllustrativeCommercialExample[];
+  illustrationDisclaimer?: string;
 };
 
 /** Composed executive narrative for client-facing discussion (presentation only). */
@@ -150,18 +154,37 @@ export function buildStrategicDriverCards(
     .slice(0, max);
 }
 
-function metricToInsight(m: ComputedEvidenceBundle["metrics"][0]): InsightSourceTile | null {
+function attachIllustrations(
+  tile: InsightSourceTile,
+  evidence: ComputedEvidenceBundle | null | undefined,
+): InsightSourceTile {
+  const examples = illustrationsForMetric(evidence?.illustrations, tile.id);
+  if (examples.length === 0) return tile;
+  return {
+    ...tile,
+    illustrativeExamples: examples,
+    illustrationDisclaimer: evidence?.illustrations?.disclaimer,
+  };
+}
+
+function metricToInsight(
+  m: ComputedEvidenceBundle["metrics"][0],
+  evidence?: ComputedEvidenceBundle | null,
+): InsightSourceTile | null {
   const displayValue = formatEvidenceMetricDisplay(m.id, m.value);
   if (!displayValue) return null;
 
-  return {
-    id: m.id,
-    title: formatEvidenceMetricTitle(m.id, m.label),
-    metric: displayValue,
-    subtext: formatEvidenceMetricSubtext(m.id, m.value, m.strength),
-    strength: m.strength,
-    emphasis: insightTileEmphasis(m.label, m.strength, 0),
-  };
+  return attachIllustrations(
+    {
+      id: m.id,
+      title: formatEvidenceMetricTitle(m.id, m.label),
+      metric: displayValue,
+      subtext: formatEvidenceMetricSubtext(m.id, m.value, m.strength),
+      strength: m.strength,
+      emphasis: insightTileEmphasis(m.label, m.strength, 0),
+    },
+    evidence,
+  );
 }
 
 export function buildInsightSourceTiles(
@@ -174,10 +197,11 @@ export function buildInsightSourceTiles(
   const seen = new Set<string>();
 
   const push = (tile: InsightSourceTile) => {
-    const key = `${tile.title}-${tile.metric}`;
+    const enriched = attachIllustrations(tile, evidence);
+    const key = `${enriched.title}-${enriched.metric}`;
     if (seen.has(key) || tiles.length >= max) return;
     seen.add(key);
-    tiles.push(tile);
+    tiles.push(enriched);
   };
 
   if (evidence?.metrics) {
@@ -190,7 +214,7 @@ export function buildInsightSourceTiles(
       );
     });
     sorted.forEach((m, idx) => {
-      const t = metricToInsight(m);
+      const t = metricToInsight(m, evidence);
       if (!t) return;
       t.emphasis = insightTileEmphasis(m.label, m.strength, idx);
       push(t);
