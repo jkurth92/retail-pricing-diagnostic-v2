@@ -83,8 +83,8 @@ export function ExecutivePilotSummary({
               Supporting evidence
             </h2>
             <p className="mb-5 text-xs leading-relaxed text-[var(--text-muted)]">
-              Strongest commercial signals from the review — directional, not price
-              prescriptions.
+              Strongest structural signals from the review — indicative context, not
+              list-price recommendations.
             </p>
 
             {drivers.length > 0 && (

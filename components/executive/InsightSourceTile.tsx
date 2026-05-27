@@ -39,9 +39,9 @@ export function InsightSourceTile({ tile }: InsightSourceTileProps) {
         <p className="ent-evidence-stat m-0 mt-1 text-3xl font-semibold leading-none tracking-tight text-[var(--accent-deep)]">
           {stat}
         </p>
-      ) : subMetric ? (
-        <p className="ent-evidence-stat ent-evidence-stat-sm m-0 text-lg font-semibold text-[var(--accent-deep)]">
-          {subMetric}
+      ) : tile.metric?.trim() ? (
+        <p className="ent-evidence-stat ent-evidence-stat-sm m-0 mt-1 text-lg font-semibold leading-snug text-[var(--accent-deep)]">
+          {subMetric ?? tile.metric}
         </p>
       ) : null}
       <p className="ent-evidence-sub m-0 mt-1 line-clamp-2 flex-1 text-xs leading-snug text-[var(--text-muted)]">

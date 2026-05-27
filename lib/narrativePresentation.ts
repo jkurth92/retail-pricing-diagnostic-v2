@@ -12,7 +12,9 @@ import {
   buildExecutiveBusinessSummaryParagraphs,
   businessConfidenceLabel,
   businessConcentrationLabel,
-  softenEvidenceMetricSubtext,
+  formatEvidenceMetricDisplay,
+  formatEvidenceMetricSubtext,
+  formatEvidenceMetricTitle,
   translateExecutivePhrase,
 } from "@/lib/executiveBusinessLanguage";
 import {
@@ -106,9 +108,11 @@ export function buildStrategicDriverCards(
       : driverTitleFromText(raw);
     if (seen.has(title)) return;
     seen.add(title);
-    const interpretation = theme
-      ? softenBenchmarkPhrase(theme.summary).slice(0, 120)
-      : softenBenchmarkPhrase(raw).slice(0, 120);
+    const interpretation = translateExecutivePhrase(
+      theme
+        ? softenBenchmarkPhrase(theme.summary).slice(0, 140)
+        : softenBenchmarkPhrase(raw).slice(0, 140),
+    );
     let benchmarkHint: string | undefined;
     if (/below expected|compressed vs benchmark|low-end/i.test(interpretation)) {
       benchmarkHint = "Vs benchmark";
@@ -146,36 +150,15 @@ export function buildStrategicDriverCards(
     .slice(0, max);
 }
 
-function formatExecutiveMetricValue(
-  metricId: string,
-  rawValue: string,
-): string {
-  if (/kvi_revenue|kvi_sku/i.test(metricId)) {
-    return "Elevated in trip-driving categories";
-  }
-  if (/premium.*gap|mainstream/i.test(metricId)) {
-    return rawValue.includes("%") ? "Compressed versus typical spacing" : rawValue;
-  }
-  if (/^\~?\d+(?:\.\d+)?%$/.test(rawValue.trim())) {
-    return "Directionally meaningful";
-  }
-  return rawValue;
-}
-
 function metricToInsight(m: ComputedEvidenceBundle["metrics"][0]): InsightSourceTile | null {
-  const rawSubtext =
-    m.strength === "strong"
-      ? "Strong measured signal in upload proxy."
-      : m.strength === "moderate"
-        ? "Moderate signal — directionally meaningful."
-        : "Supporting directional signal.";
-  const subtext = softenEvidenceMetricSubtext(rawSubtext);
+  const displayValue = formatEvidenceMetricDisplay(m.id, m.value);
+  if (!displayValue) return null;
 
   return {
     id: m.id,
-    title: m.label,
-    metric: formatExecutiveMetricValue(m.id, m.value),
-    subtext,
+    title: formatEvidenceMetricTitle(m.id, m.label),
+    metric: displayValue,
+    subtext: formatEvidenceMetricSubtext(m.id, m.value, m.strength),
     strength: m.strength,
     emphasis: insightTileEmphasis(m.label, m.strength, 0),
   };
@@ -222,7 +205,7 @@ export function buildInsightSourceTiles(
         id: `sem-${tiles.length}`,
         title: soft.slice(0, colon).trim(),
         metric: soft.slice(colon + 1).trim(),
-        subtext: "From measured structural evidence.",
+        subtext: "From reviewed pricing structure.",
         benchmarkHint: /benchmark|expected|typical/i.test(soft) ? "Contextual" : undefined,
       });
     } else if (soft.length > 10) {

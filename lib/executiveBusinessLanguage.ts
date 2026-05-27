@@ -32,6 +32,11 @@ const PHRASE_MAP: [RegExp, string][] = [
   [/\bweakness\b/gi, "gap"],
   [/\bfailure\b/gi, "gap"],
   [/\bmonetization weakness\b/gi, "monetization opportunity"],
+  [/\bKVI-like\b/gi, "Visible value"],
+  [/\bkey value items?\b/gi, "trip-driving value"],
+  [/\bPL\/NB\b/g, "private brand vs. national brand"],
+  [/\bdirectional signal\b/gi, "structural signal"],
+  [/\bupload proxy\b/gi, "reviewed data"],
 ];
 
 export type OpportunityFootprintMode =
@@ -315,6 +320,74 @@ export function softenEvidenceMetricSubtext(subtext: string): string {
     .replace(/strong measured signal in upload proxy/i, "Notable signal in reviewed data")
     .replace(/moderate signal — directionally meaningful/i, "Meaningful directional signal")
     .replace(/supporting directional signal/i, "Supporting signal");
+}
+
+const METRIC_TITLE: Record<string, string> = {
+  premium_mainstream_gap: "Premium vs. mainstream spacing",
+  entry_mainstream_gap: "Entry vs. mainstream spacing",
+  tier_spacing: "Average tier spacing",
+  pl_nb_gap: "Private brand vs. national brand gap",
+  pl_nb_categories_narrow: "Narrow private brand separation",
+  kvi_revenue_share: "Visible value revenue share",
+  kvi_sku_share: "Visible value SKU share",
+  kvi_category_concentration: "Value concentration by category",
+  category_revenue_concentration: "Largest category revenue weight",
+  pack_size_consistency: "Pack-size ladder consistency",
+  architecture_compression: "Architecture compression",
+};
+
+/** Preserve numeric values; only normalize whitespace. */
+export function formatEvidenceMetricDisplay(_metricId: string, rawValue: string): string {
+  return rawValue.trim();
+}
+
+export function formatEvidenceMetricTitle(metricId: string, engineLabel: string): string {
+  return METRIC_TITLE[metricId] ?? engineLabel
+    .replace(/\bKVI-like\b/gi, "Visible value")
+    .replace(/\bPL\/NB\b/g, "Private brand vs. national brand")
+    .replace(/\bmedian gap\b/gi, "spacing")
+    .replace(/\s+\(inferred\)/gi, "")
+    .replace(/\s+\(mainstream\)/gi, "");
+}
+
+export function formatEvidenceMetricSubtext(
+  metricId: string,
+  rawValue: string,
+  strength: "strong" | "moderate" | "weak" = "moderate",
+): string {
+  const v = rawValue.toLowerCase();
+  const tight = strength === "strong" || strength === "moderate";
+
+  switch (metricId) {
+    case "premium_mainstream_gap":
+      return tight
+        ? "Premium tier appears compressed versus mainstream."
+        : "Premium spacing sits within a typical range.";
+    case "entry_mainstream_gap":
+      return tight
+        ? "Entry-to-mainstream step-up appears shallow."
+        : "Entry spacing is broadly in line with peers.";
+    case "tier_spacing":
+      return tight
+        ? "Overall tier steps are relatively tight."
+        : "Tier spacing is broadly consistent.";
+    case "pl_nb_gap":
+      return tight
+        ? "Private brand separation may be narrow in places."
+        : "Private brand gap is broadly healthy.";
+    case "kvi_revenue_share":
+      return v.includes("%") && parseInt(v, 10) < 15
+        ? "Visible value represents a modest share of revenue."
+        : "Visible value has meaningful revenue weight.";
+    case "kvi_category_concentration":
+      return `Concentration is most visible in ${rawValue.replace(/\s*\(\+\d+ more\)/i, "")}.`;
+    case "category_revenue_concentration":
+      return "Largest single category in the reviewed revenue base.";
+    default:
+      if (strength === "strong") return "Reinforces the core structural view.";
+      if (strength === "moderate") return "Adds context to the architecture story.";
+      return "Secondary supporting context.";
+  }
 }
 
 /** @deprecated Use buildPrimaryOpportunityAreaLine */
