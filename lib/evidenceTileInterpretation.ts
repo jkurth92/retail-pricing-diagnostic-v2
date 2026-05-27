@@ -35,7 +35,19 @@ export function shouldSuppressEvidenceMetric(
   if (SUPPRESSED_METRIC_IDS.has(metricId)) return true;
 
   if (metricId === "architecture_compression") {
-    return allMetrics.some((m) => m.id === "premium_mainstream_gap");
+    return allMetrics.some(
+      (m) => m.id === "premium_mainstream_gap" || m.id === "tier_spacing",
+    );
+  }
+
+  if (metricId === "premium_mainstream_gap") {
+    return allMetrics.some((m) => m.id === "tier_spacing");
+  }
+
+  if (metricId === "entry_mainstream_gap") {
+    return allMetrics.some(
+      (m) => m.id === "tier_spacing" || m.id === "premium_mainstream_gap",
+    );
   }
 
   if (metricId === "kvi_revenue_share") {
@@ -237,7 +249,14 @@ export function exposureTileShouldShow(
   if (!evidence?.metrics) return true;
   const ids = new Set(evidence.metrics.map((m) => m.id));
   if (kind === "cat-weight" && ids.has("category_revenue_concentration")) return false;
-  if (kind === "cat-arch" && ids.has("premium_mainstream_gap")) return false;
+  if (
+    kind === "cat-arch" &&
+    (ids.has("premium_mainstream_gap") ||
+      ids.has("tier_spacing") ||
+      ids.has("architecture_compression"))
+  ) {
+    return false;
+  }
   if (kind === "cat-pl" && ids.has("pl_nb_gap")) return false;
   return true;
 }

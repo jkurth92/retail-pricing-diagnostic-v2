@@ -6,6 +6,8 @@ export type IllustrativeCommercialExample = {
   observation: string;
   interpretation: string;
   granularity: "category" | "sku";
+  /** Concrete SKU price lines shown under "Example:" (2+ per block when present). */
+  skuLines?: string[];
 };
 
 export type EvidenceIllustrationMetricKey = EvidenceMetricId | "zoning_dispersion";

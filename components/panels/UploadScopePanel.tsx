@@ -33,6 +33,7 @@ type UploadScopePanelProps = {
     names: string[],
     detectedColumns: string[],
     productNameSample: string[],
+    productRows: import("@/types/upload-products").UploadProductRow[],
   ) => void;
   onRunDiagnostic: () => void;
   canRunDiagnostic: boolean;
@@ -67,10 +68,11 @@ export function UploadScopePanel({
     names: string[],
     columns: string[],
     productNameSample: string[],
+    productRows: import("@/types/upload-products").UploadProductRow[],
   ) => {
     setUploadedFileCount(count);
     setDetectedColumns(columns);
-    onUploadFilesChange?.(count, names, columns, productNameSample);
+    onUploadFilesChange?.(count, names, columns, productNameSample, productRows);
   };
 
   return (

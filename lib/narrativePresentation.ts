@@ -34,6 +34,8 @@ import {
 } from "@/lib/signalPrioritization";
 import { shortenThemeTitle } from "@/lib/executiveUxHelpers";
 import { illustrationsForMetric } from "@/lib/evidenceIllustrations";
+import { parseCategoriesFromMetricLabel } from "@/lib/scopeProductCategories";
+import { filterIllustrationsToScopeCategories } from "@/lib/skuIllustrationBuilder";
 import { consultantThemeLabel } from "@/lib/insightTranslation";
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { IllustrativeCommercialExample } from "@/types/evidence-illustrations";
@@ -169,13 +171,43 @@ function attachIllustrations(
   tile: InsightSourceTile,
   evidence: ComputedEvidenceBundle | null | undefined,
 ): InsightSourceTile {
-  const examples = illustrationsForMetric(evidence?.illustrations, tile.id);
+  let examples = illustrationsForMetric(evidence?.illustrations, tile.id);
+  if (tile.id === "kvi_category_concentration" && examples.length > 0) {
+    const scopeCats = parseCategoriesFromMetricLabel(tile.metric);
+    examples = filterIllustrationsToScopeCategories(examples, scopeCats);
+  }
   if (examples.length === 0) return tile;
   return {
     ...tile,
     illustrativeExamples: examples,
     illustrationDisclaimer: evidence?.illustrations?.disclaimer,
   };
+}
+
+function selectExecutiveEvidenceMetrics(
+  metrics: ComputedEvidenceBundle["metrics"],
+): ComputedEvidenceBundle["metrics"] {
+  const ids = new Set(metrics.map((m) => m.id));
+  const preferred: string[] = [];
+
+  if (ids.has("pl_nb_gap")) preferred.push("pl_nb_gap");
+
+  if (ids.has("tier_spacing")) {
+    preferred.push("tier_spacing");
+  } else if (ids.has("premium_mainstream_gap")) {
+    preferred.push("premium_mainstream_gap");
+  } else if (ids.has("entry_mainstream_gap")) {
+    preferred.push("entry_mainstream_gap");
+  }
+
+  if (ids.has("kvi_category_concentration")) {
+    preferred.push("kvi_category_concentration");
+  } else if (ids.has("kvi_revenue_share")) {
+    preferred.push("kvi_revenue_share");
+  }
+
+  if (preferred.length === 0) return metrics;
+  return metrics.filter((m) => preferred.includes(m.id));
 }
 
 function metricToInsight(
@@ -203,25 +235,49 @@ function metricToInsight(
   );
 }
 
+function illustrationSignature(
+  examples: IllustrativeCommercialExample[] | undefined,
+): string {
+  if (!examples?.length) return "";
+  return examples
+    .map((e) => e.skuLines?.join("|") ?? `${e.category}:${e.observation}`)
+    .join("::");
+}
+
 export function buildInsightSourceTiles(
   exec: ExecutiveSummary,
   exposure: OpportunityExposureBundle | null | undefined,
   evidence: ComputedEvidenceBundle | null | undefined,
-  max = 8,
+  max = 4,
 ): InsightSourceTile[] {
   const tiles: InsightSourceTile[] = [];
   const seen = new Set<string>();
+  const seenIllustrations = new Set<string>();
 
   const push = (tile: InsightSourceTile) => {
-    const enriched = attachIllustrations(tile, evidence);
+    let enriched = attachIllustrations(tile, evidence);
     const key = `${enriched.title}-${enriched.metric}`;
     if (seen.has(key) || tiles.length >= max) return;
+
+    if (enriched.illustrativeExamples?.length) {
+      const sig = illustrationSignature(enriched.illustrativeExamples);
+      if (sig && seenIllustrations.has(sig)) {
+        enriched = {
+          ...enriched,
+          illustrativeExamples: undefined,
+          illustrationDisclaimer: undefined,
+        };
+      } else if (sig) {
+        seenIllustrations.add(sig);
+      }
+    }
+
     seen.add(key);
     tiles.push(enriched);
   };
 
   if (evidence?.metrics) {
-    const sorted = [...evidence.metrics].sort((a, b) => {
+    const sorted = selectExecutiveEvidenceMetrics([...evidence.metrics]).sort((a, b) => {
       const rankDiff = metricDisplayRank(a.label, a.id) - metricDisplayRank(b.label, b.id);
       if (rankDiff !== 0) return rankDiff;
       const strengthOrder = { strong: 0, moderate: 1, weak: 2 };
@@ -237,7 +293,13 @@ export function buildInsightSourceTiles(
     });
   }
 
-  if (exposure && exposureTileShouldShow("cat-weight", evidence)) {
+  const metricIds = new Set(evidence?.metrics?.map((m) => m.id) ?? []);
+  const skipExposureTiles =
+    metricIds.has("pl_nb_gap") &&
+    (metricIds.has("tier_spacing") || metricIds.has("premium_mainstream_gap")) &&
+    (metricIds.has("kvi_category_concentration") || metricIds.has("kvi_revenue_share"));
+
+  if (!skipExposureTiles && exposure && exposureTileShouldShow("cat-weight", evidence)) {
     const topCats = [...exposure.categoryExposures]
       .sort((a, b) => b.revenueWeightPct - a.revenueWeightPct)
       .slice(0, 2);
@@ -257,7 +319,7 @@ export function buildInsightSourceTiles(
     }
   }
 
-  if (exposure) {
+  if (!skipExposureTiles && exposure) {
     const archCats = exposure.categoryExposures.filter(
       (x) => x.architectureCompression,
     );

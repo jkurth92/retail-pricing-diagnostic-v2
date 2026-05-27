@@ -56,6 +56,7 @@ import type {
   RetailerArchetypeId,
 } from "@/types/retailer-archetypes";
 import type { CompetitorEntry } from "@/types/competitors";
+import type { UploadProductRow } from "@/types/upload-products";
 import { useDiagnosticRefinement } from "@/hooks/useDiagnosticRefinement";
 import {
   DEFAULT_EPR_SCORES,
@@ -81,6 +82,7 @@ export default function Home() {
     useState<KnowledgePosture>("EDLP");
   const [uploadFileNames, setUploadFileNames] = useState<string[]>([]);
   const [uploadProductSample, setUploadProductSample] = useState<string[]>([]);
+  const [uploadProductRows, setUploadProductRows] = useState<UploadProductRow[]>([]);
   const [revenueFromProfile, setRevenueFromProfile] = useState(false);
   const [competitors, setCompetitors] = useState<CompetitorEntry[]>([]);
   const [totalRevenueInput, setTotalRevenueInput] = useState("");
@@ -192,6 +194,7 @@ export default function Home() {
       dataInterpretation: ingestionPreview.dataInterpretation,
       retailerDisplayName: confirmedRetailer || retailerInput,
       eprAverage: eprAvg,
+      uploadProducts: uploadProductRows,
     });
   }, [
     diagnosticReady,
@@ -203,6 +206,7 @@ export default function Home() {
     confirmedRetailer,
     retailerInput,
     eprScores,
+    uploadProductRows,
   ]);
 
   const opportunityExposure = useMemo(() => {
@@ -254,6 +258,7 @@ export default function Home() {
             ? Object.values(eprScores).reduce((a, b) => a + b, 0) /
               Object.values(eprScores).length
             : null,
+        uploadProducts: uploadProductRows,
       },
       opportunityExposure: opportunityExposure ?? undefined,
     });
@@ -413,9 +418,11 @@ export default function Home() {
     names: string[],
     _detectedColumns: string[] = [],
     productNameSample: string[] = [],
+    productRows: UploadProductRow[] = [],
   ) => {
     setUploadFileNames(names);
     setUploadProductSample(productNameSample);
+    setUploadProductRows(productRows);
     setCategoryRolesEdited(null);
   };
 

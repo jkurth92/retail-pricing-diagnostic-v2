@@ -32,6 +32,7 @@ import type {
   EvidenceBackedThemeLine,
 } from "@/types/evidence-computation";
 import type { CanonicalFieldKey } from "@/types/upload-schema";
+import type { UploadProductRow } from "@/types/upload-products";
 
 const ENGINE_VERSION = "15.0.0";
 
@@ -59,6 +60,7 @@ export type EvidenceComputationInput = PricingRowSynthesisInput & {
   eprAverage?: number | null;
   dataInterpretation?: RobustDataInterpretationBundle;
   detectedColumns?: string[];
+  uploadProducts?: UploadProductRow[];
 };
 
 function toSignal(
@@ -393,6 +395,8 @@ export function runEvidenceComputation(
     archetypeId: input.archetypeId,
     proxySignals: dataInterpretation.proxySignals,
     retailerTicker: input.retailerTicker,
+    retailerDisplayName: input.retailerDisplayName,
+    uploadProducts: input.uploadProducts,
   });
 
   return {

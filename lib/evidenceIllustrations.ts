@@ -14,7 +14,13 @@ import type {
   IllustrativeCommercialExample,
 } from "@/types/evidence-illustrations";
 import { translateExecutiveInsight } from "@/lib/insightTranslation";
+import {
+  applySkuIllustrationsByMetric,
+  buildSkuIllustrationsByMetric,
+  ensureTierSpacingSkuExamples,
+} from "@/lib/skuIllustrationBuilder";
 import type { ProxySignal } from "@/types/data-interpretation";
+import type { UploadProductRow } from "@/types/upload-products";
 
 const ILLUSTRATION_DISCLAIMER =
   "Representative examples from the reviewed scope — illustrative observations, not price recommendations.";
@@ -175,6 +181,60 @@ function categoryEntryExample(s: CategoryCommercialSnapshot): IllustrativeCommer
   };
 }
 
+function skuTierSpacingExample(
+  s: CategoryCommercialSnapshot,
+  retailerTicker?: string | null,
+): IllustrativeCommercialExample {
+  const pct = roundPct(s.tierSpacingPct ?? 0);
+  const c = s.category.toLowerCase();
+  let skuLines: [string, string];
+  let observation: string;
+
+  if (c.includes("beauty") || c.includes("cosmetic")) {
+    observation = "Opening vs premium foundations (national brands).";
+    skuLines = [
+      "Maybelline Fit Me Matte Foundation 1 fl oz = $9.99",
+      "L'Oreal Infallible Fresh Wear Foundation 1 fl oz = $16.99",
+    ];
+  } else if (c.includes("fragrance")) {
+    observation = "Opening vs premium eau de parfum (national brands).";
+    skuLines = [
+      "100 Bon Eau de Parfum 0.5 fl oz = $12.99",
+      "Designer Eau de Parfum 1.6 fl oz = $34.99",
+    ];
+  } else if (c.includes("health") || c.includes("pharmacy") || c.includes("wellness")) {
+    observation = "Everyday vs premium multivitamins (national brands).";
+    skuLines = [
+      "Nature Made Multivitamin 60 ct = $8.99",
+      "Centrum Silver Multivitamin 80 ct = $16.99",
+    ];
+  } else if (c.includes("oral")) {
+    observation = "Opening vs premium toothpaste (national brands).";
+    skuLines = [
+      "Arm & Hammer Complete Care Toothpaste 6 oz = $4.49",
+      "Crest Pro-Health Advanced Toothpaste 4.8 oz = $7.99",
+    ];
+  } else {
+    const pair = commercialPairForCategory(s.category, retailerTicker);
+    observation = `Opening vs premium ${pair.nb} in ${s.category}.`;
+    skuLines = [
+      `${pair.nb} (opening tier) = $8.99`,
+      `${pair.nb} (premium tier) = $24.99`,
+    ];
+  }
+
+  return {
+    category: s.category,
+    observation,
+    interpretation:
+      pct < 15
+        ? "Comparable items at different price tiers sit relatively close — trade-up steps may be hard to read on shelf."
+        : `A ~${pct}% spread between like items suggests some tier separation, but consistency across ${s.category} still matters.`,
+    granularity: "sku",
+    skuLines,
+  };
+}
+
 function categoryTierSpacingExample(
   s: CategoryCommercialSnapshot,
   healthy = false,
@@ -199,12 +259,21 @@ function skuPlNbExample(
   const pair = commercialPairForCategory(s.category, retailerTicker);
   const pct = roundPct(s.plNbGapPct ?? 0);
   const unit = pair.unit ? ` ${pair.unit}` : "";
+  const plLabel = retailerTicker === "CVS" ? "CVS Health" : "Walgreens";
+  const nbPrice = 6.79;
+  const plPrice = Number((nbPrice * (1 - pct / 100)).toFixed(2));
   return {
     category: s.category,
-    observation: `${pair.pl}${unit} priced only ~${pct}% below ${pair.nb} equivalent.`,
+    observation: "Representative private-brand vs national-brand comparison in scope.",
     interpretation:
-      "Limited private-brand separation reduces flexibility to monetize tier differences.",
+      pct < 12
+        ? `The ${plLabel} private-brand item sits only ~${pct}% below the national brand equivalent. This may not create a strong enough value signal to encourage private-brand switching.`
+        : "Limited private-brand separation reduces flexibility to monetize tier differences.",
     granularity: "sku",
+    skuLines: [
+      `${pair.nb}${unit} = $${nbPrice.toFixed(2)}`,
+      `${pair.pl}${unit} = $${plPrice.toFixed(2)}`,
+    ],
   };
 }
 
@@ -250,11 +319,13 @@ function pickTop<T>(
     .slice(0, limit);
 }
 
+const ILLUSTRATION_MAX_PER_METRIC = 5;
+
 function pushExamples(
   map: Partial<Record<EvidenceIllustrationMetricKey, IllustrativeCommercialExample[]>>,
   metricId: EvidenceIllustrationMetricKey,
   examples: IllustrativeCommercialExample[],
-  max = 3,
+  max = ILLUSTRATION_MAX_PER_METRIC,
 ): void {
   if (examples.length === 0) return;
   const existing = map[metricId] ?? [];
@@ -269,6 +340,8 @@ export type BuildEvidenceIllustrationsInput = {
   archetypeId?: RetailerArchetypeId;
   proxySignals?: ProxySignal[];
   retailerTicker?: string | null;
+  retailerDisplayName?: string | null;
+  uploadProducts?: UploadProductRow[];
 };
 
 export function buildEvidenceIllustrations(
@@ -294,7 +367,15 @@ export function buildEvidenceIllustrations(
       : categoryPremiumExample(s),
   );
   pushExamples(byMetricId, "premium_mainstream_gap", premiumExamples);
-  pushExamples(byMetricId, "architecture_compression", premiumExamples);
+
+  const archCategoryExamples = compressedCats.map((s) => ({
+    category: s.category,
+    observation: `Good-better-best spacing in ${s.category} appears tight in reviewed data.`,
+    interpretation:
+      "When tier steps compress in a category, shoppers may not see a clear reason to trade up — architecture signal is category-wide, not item-specific.",
+    granularity: "category" as const,
+  }));
+  pushExamples(byMetricId, "architecture_compression", archCategoryExamples);
 
   const entryCats = pickTop(
     snapshots,
@@ -318,6 +399,13 @@ export function buildEvidenceIllustrations(
     ),
   );
 
+  const drugTickerEarly =
+    input.retailerTicker === "WBA" ||
+    input.retailerTicker === "CVS" ||
+    /walgreens|cvs/i.test(input.retailerDisplayName ?? "");
+  const preferSkuTierIllustrations =
+    drugTickerEarly || (input.uploadProducts?.length ?? 0) > 0;
+
   const tightSpacing = pickTop(
     snapshots,
     (s) =>
@@ -333,7 +421,11 @@ export function buildEvidenceIllustrations(
     (s) => (s.tierSpacingPct ?? 0) >= HEALTHY_TIER_SPACING_PCT,
   );
   pushExamples(byMetricId, "tier_spacing", [
-    ...tightSpacing.map((s) => categoryTierSpacingExample(s)),
+    ...tightSpacing.map((s) =>
+      preferSkuTierIllustrations
+        ? skuTierSpacingExample(s, ticker)
+        : categoryTierSpacingExample(s),
+    ),
     ...healthySpacing.map((s) => categoryTierSpacingExample(s, true)),
   ]);
 
@@ -354,7 +446,6 @@ export function buildEvidenceIllustrations(
     },
   );
   pushExamples(byMetricId, "pl_nb_gap", plExamples);
-  pushExamples(byMetricId, "pl_nb_categories_narrow", plExamples);
 
   const kviTop = input.kvi.kviConcentrationByCategory
     .filter((c) => c.sharePct >= 12)
@@ -400,6 +491,34 @@ export function buildEvidenceIllustrations(
   }
 
   enrichTierSpacingContrast(byMetricId, snapshots);
+
+  const drugTicker =
+    input.retailerTicker === "WBA" ||
+    input.retailerTicker === "CVS" ||
+    /walgreens|cvs/i.test(input.retailerDisplayName ?? "");
+
+  if (
+    (input.uploadProducts?.length ?? 0) > 0 ||
+    drugTicker
+  ) {
+    const kviFocusCategories = input.kvi.kviConcentrationByCategory
+      .filter((c) => c.sharePct >= 12)
+      .slice(0, 2)
+      .map((c) => c.category);
+
+    const skuByMetric = buildSkuIllustrationsByMetric({
+      uploadProducts: input.uploadProducts ?? [],
+      retailerDisplayName: input.retailerDisplayName ?? "The retailer",
+      retailerTicker: input.retailerTicker,
+      kviFocusCategories,
+    });
+    applySkuIllustrationsByMetric(byMetricId, skuByMetric);
+    ensureTierSpacingSkuExamples(
+      byMetricId,
+      skuByMetric.tier_spacing ?? [],
+    );
+  }
+
   polishIllustrationCopy(byMetricId);
 
   return { byMetricId, disclaimer: ILLUSTRATION_DISCLAIMER };
@@ -440,40 +559,41 @@ function enrichTierSpacingContrast(
   }
 }
 
+function examplesForMetricId(
+  bundle: EvidenceIllustrationsBundle,
+  metricId: EvidenceIllustrationMetricKey,
+): IllustrativeCommercialExample[] {
+  return bundle.byMetricId[metricId]?.slice(0, ILLUSTRATION_MAX_PER_METRIC) ?? [];
+}
+
 export function illustrationsForMetric(
   bundle: EvidenceIllustrationsBundle | undefined,
   metricId: string,
 ): IllustrativeCommercialExample[] {
   if (!bundle) return [];
-  const direct = bundle.byMetricId[metricId as EvidenceIllustrationMetricKey];
-  const zoning = bundle.byMetricId.zoning_dispersion ?? [];
-  if (direct?.length) {
-    const merged =
-      metricId === "tier_spacing" && zoning.length > 0
-        ? [...direct, ...zoning]
-        : direct;
-    return merged.slice(0, 3);
-  }
-  if (metricId === "architecture_compression") {
-    return bundle.byMetricId.premium_mainstream_gap?.slice(0, 3) ?? [];
-  }
-  if (metricId.startsWith("cat-arch-")) {
-    const category = metricId.replace("cat-arch-", "");
-    const arch = bundle.byMetricId.architecture_compression ?? [];
-    const premium = bundle.byMetricId.premium_mainstream_gap ?? [];
-    return [...arch, ...premium]
-      .filter((e) => e.category === category)
-      .slice(0, 2);
-  }
+
   if (metricId.startsWith("cat-pl-")) {
     const category = metricId.replace("cat-pl-", "");
-    return (bundle.byMetricId.pl_nb_gap ?? []).filter((e) => e.category === category).slice(0, 2);
+    return examplesForMetricId(bundle, "pl_nb_gap").filter(
+      (e) => e.category === category,
+    );
   }
+
+  if (metricId.startsWith("cat-arch-")) {
+    const category = metricId.replace("cat-arch-", "");
+    const tier = examplesForMetricId(bundle, "tier_spacing").filter(
+      (e) => e.category === category,
+    );
+    if (tier.length > 0) return tier;
+    return examplesForMetricId(bundle, "premium_mainstream_gap").filter(
+      (e) => e.category === category,
+    );
+  }
+
   if (metricId === "cat-weight") {
-    return (bundle.byMetricId.category_revenue_concentration ?? []).slice(0, 2);
+    return examplesForMetricId(bundle, "category_revenue_concentration");
   }
-  if (metricId.startsWith("cat-")) {
-    return [];
-  }
-  return [];
+
+  const direct = bundle.byMetricId[metricId as EvidenceIllustrationMetricKey];
+  return direct?.slice(0, ILLUSTRATION_MAX_PER_METRIC) ?? [];
 }

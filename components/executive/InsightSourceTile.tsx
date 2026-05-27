@@ -26,52 +26,47 @@ export function InsightSourceTile({ tile }: InsightSourceTileProps) {
 
   return (
     <article
-      className={`ent-evidence-tile flex flex-col gap-2 rounded-xl border p-4 ${
+      className={`ent-evidence-tile ${
         isPrimary
-          ? "ent-evidence-primary border-[var(--accent-deep)]/35 bg-white shadow-sm ring-1 ring-[var(--accent-deep)]/10"
+          ? "ent-evidence-primary"
           : isSecondary
-            ? "ent-evidence-secondary border-[var(--accent-deep)]/20 bg-white"
-            : "border-[var(--border)] bg-[var(--surface-muted)] opacity-95"
+            ? "ent-evidence-secondary"
+            : "ent-evidence-supporting"
       } ${tile.strength === "strong" && !isPrimary ? "ent-evidence-strong" : ""}`}
     >
-      <p className="ent-evidence-label m-0 text-[0.8125rem] font-semibold leading-snug text-[var(--text-navy)] normal-case tracking-normal">
-        {tile.title}
-      </p>
+      <header className="ent-evidence-tile-header">
+        <p className="ent-evidence-tile-title">{tile.title}</p>
+      </header>
 
-      <div className="ent-evidence-observation">
-        <p className="m-0 text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-          {tile.observationLabel ?? "What we noticed"}
-        </p>
-        {stat ? (
-          <p className="ent-evidence-stat m-0 mt-0.5 text-3xl font-semibold leading-none tracking-tight text-[var(--accent-deep)]">
-            {stat}
+      <div className="ent-evidence-tile-body">
+        <div className="ent-evidence-observation">
+          <p className="ent-evidence-eyebrow">
+            {tile.observationLabel ?? "What we noticed"}
           </p>
-        ) : tile.metric?.trim() ? (
-          <p className="ent-evidence-stat ent-evidence-stat-sm m-0 mt-0.5 text-base font-semibold leading-snug text-[var(--accent-deep)]">
-            {observationDetail ?? tile.metric}
-          </p>
-        ) : null}
-        {stat && observationDetail && (
-          <p className="m-0 mt-0.5 text-[0.6875rem] leading-snug text-[var(--text-muted)]">
-            {observationDetail}
-          </p>
+          {stat ? (
+            <p className="ent-evidence-stat">{stat}</p>
+          ) : tile.metric?.trim() ? (
+            <p className="ent-evidence-stat ent-evidence-stat-sm">
+              {observationDetail ?? tile.metric}
+            </p>
+          ) : null}
+          {stat && observationDetail && (
+            <p className="ent-evidence-metric-detail">{observationDetail}</p>
+          )}
+        </div>
+
+        {implication && (
+          <div className="ent-evidence-implication">
+            <p className="ent-evidence-eyebrow">Why this matters</p>
+            <p className="ent-evidence-implication-text">{implication}</p>
+          </div>
         )}
       </div>
 
-      {implication && (
-        <div className="ent-evidence-implication mt-auto">
-          <p className="m-0 text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            Why this matters
-          </p>
-          <p className="ent-evidence-implication-text">{implication}</p>
-        </div>
+      {tile.benchmarkHint && (
+        <span className="ent-chip ent-chip-xs ent-evidence-chip">{tile.benchmarkHint}</span>
       )}
 
-      {tile.benchmarkHint && (
-        <span className="ent-chip ent-chip-xs inline-block w-fit rounded border border-[var(--border)] px-2 py-0.5 text-[0.6875rem] text-[var(--text-muted)]">
-          {tile.benchmarkHint}
-        </span>
-      )}
       {tile.illustrativeExamples && tile.illustrativeExamples.length > 0 && (
         <IllustrativeExamplesPanel
           examples={tile.illustrativeExamples}

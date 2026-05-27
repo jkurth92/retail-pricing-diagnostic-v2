@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { parseUploadFiles } from "@/lib/parseUploadHeaders";
+import type { UploadProductRow } from "@/types/upload-products";
 
 type SimplifiedUploadPanelProps = {
   maxFiles?: number;
@@ -10,6 +11,7 @@ type SimplifiedUploadPanelProps = {
     names: string[],
     detectedColumns: string[],
     productNameSample: string[],
+    productRows: UploadProductRow[],
   ) => void;
 };
 
@@ -25,8 +27,15 @@ export function SimplifiedUploadPanel({
     const selected = Array.from(files).slice(0, maxFiles);
     const names = selected.map((f) => f.name);
     setFileNames(names);
-    const { detectedColumns, productNameSample } = await parseUploadFiles(selected);
-    onFilesChange?.(names.length, names, detectedColumns, productNameSample);
+    const { detectedColumns, productNameSample, productRows } =
+      await parseUploadFiles(selected);
+    onFilesChange?.(
+      names.length,
+      names,
+      detectedColumns,
+      productNameSample,
+      productRows,
+    );
   };
 
   return (

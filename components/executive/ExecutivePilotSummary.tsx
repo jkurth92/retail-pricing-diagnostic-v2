@@ -40,7 +40,7 @@ export function ExecutivePilotSummary({
 }: ExecutivePilotSummaryProps) {
   const margin = parseMarginRangeDisplay(exec.marginOpportunitySummary);
   const exposure = opportunityExposure ?? exec.opportunityExposure ?? null;
-  const insights = buildInsightSourceTiles(exec, exposure, computedEvidence, 6);
+  const insights = buildInsightSourceTiles(exec, exposure, computedEvidence, 4);
   const opportunityDrivers =
     refinementPresentation?.driverSynthesis.drivers ??
     buildOpportunityDriverSynthesis({
