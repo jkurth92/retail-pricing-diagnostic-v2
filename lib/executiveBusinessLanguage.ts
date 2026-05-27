@@ -6,8 +6,10 @@
 import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
+import { buildEvidenceMetricImplication } from "@/lib/evidenceTileInterpretation";
 import { buildPortfolioConfidenceChipLabel } from "@/lib/narrativeRefinement";
 import { softenExecutiveDriverPhrase } from "@/lib/interpretationCalibration";
+import type { EvidenceMetric } from "@/types/evidence-computation";
 
 const PHRASE_MAP: [RegExp, string][] = [
   [/\bmonetizable exposure\b/gi, "evaluated revenue"],
@@ -18,7 +20,6 @@ const PHRASE_MAP: [RegExp, string][] = [
   [/\bhigh confidence\b/gi, "strong evidence support"],
   [/\bmedium confidence\b/gi, "moderate evidence support"],
   [/\bmoderate confidence\b/gi, "moderate evidence support"],
-  [/\bthematic width\b/gi, "selective structural opportunity"],
   [/\bmoderate thematic width\b/gi, "opportunity concentrated in select structural themes"],
   [/\bwider thematic band\b/gi, "broader opportunity range"],
   [/\btighter confidence band\b/gi, "relatively narrow opportunity range"],
@@ -37,6 +38,14 @@ const PHRASE_MAP: [RegExp, string][] = [
   [/\bPL\/NB\b/g, "private brand vs. national brand"],
   [/\bdirectional signal\b/gi, "structural signal"],
   [/\bupload proxy\b/gi, "reviewed data"],
+  [/\bthematic width\b/gi, "breadth of structural themes"],
+  [/\bmonetizable exposure\b/gi, "in-scope commercial exposure"],
+  [/\bexposure[- ]weighted\b/gi, "in-scope"],
+  [/\bweighting contribution\b/gi, "contribution"],
+  [/\bladder legibility\b/gi, "tier clarity on shelf"],
+  [/\bdirectional\b/gi, "indicative"],
+  [/\binferred category revenue weight\b/gi, "reviewed category mix"],
+  [/\barchitecture compression indicator\b/gi, "compressed tier spacing"],
 ];
 
 export type OpportunityFootprintMode =
@@ -322,18 +331,19 @@ export function softenEvidenceMetricSubtext(subtext: string): string {
     .replace(/supporting directional signal/i, "Supporting signal");
 }
 
+/** @deprecated Prefer buildEvidenceTilePresentation in evidenceTileInterpretation.ts */
 const METRIC_TITLE: Record<string, string> = {
-  premium_mainstream_gap: "Premium vs. mainstream spacing",
-  entry_mainstream_gap: "Entry vs. mainstream spacing",
-  tier_spacing: "Average tier spacing",
-  pl_nb_gap: "Private brand vs. national brand gap",
+  premium_mainstream_gap: "Trade-up spacing (premium vs. mainstream)",
+  entry_mainstream_gap: "Entry price signaling",
+  tier_spacing: "Tier step-up across the ladder",
+  pl_nb_gap: "Private brand monetization gap",
   pl_nb_categories_narrow: "Narrow private brand separation",
-  kvi_revenue_share: "Visible value revenue share",
-  kvi_sku_share: "Visible value SKU share",
-  kvi_category_concentration: "Value concentration by category",
-  category_revenue_concentration: "Largest category revenue weight",
+  kvi_revenue_share: "Value-oriented pricing in the mix",
+  kvi_sku_share: "Value-oriented pricing in the mix",
+  kvi_category_concentration: "Where trip-driving value concentrates",
+  category_revenue_concentration: "Categories shaping the opportunity",
   pack_size_consistency: "Pack-size ladder consistency",
-  architecture_compression: "Architecture compression",
+  architecture_compression: "Compressed tier spacing (select categories)",
 };
 
 /** Preserve numeric values; only normalize whitespace. */
@@ -350,44 +360,19 @@ export function formatEvidenceMetricTitle(metricId: string, engineLabel: string)
     .replace(/\s+\(mainstream\)/gi, "");
 }
 
+/** @deprecated Prefer buildEvidenceTilePresentation */
 export function formatEvidenceMetricSubtext(
   metricId: string,
   rawValue: string,
   strength: "strong" | "moderate" | "weak" = "moderate",
 ): string {
-  const v = rawValue.toLowerCase();
-  const tight = strength === "strong" || strength === "moderate";
-
-  switch (metricId) {
-    case "premium_mainstream_gap":
-      return tight
-        ? "Premium tier appears compressed versus mainstream."
-        : "Premium spacing sits within a typical range.";
-    case "entry_mainstream_gap":
-      return tight
-        ? "Entry-to-mainstream step-up appears shallow."
-        : "Entry spacing is broadly in line with peers.";
-    case "tier_spacing":
-      return tight
-        ? "Overall tier steps are relatively tight."
-        : "Tier spacing is broadly consistent.";
-    case "pl_nb_gap":
-      return tight
-        ? "Private brand separation may be narrow in places."
-        : "Private brand gap is broadly healthy.";
-    case "kvi_revenue_share":
-      return v.includes("%") && parseInt(v, 10) < 15
-        ? "Visible value represents a modest share of revenue."
-        : "Visible value has meaningful revenue weight.";
-    case "kvi_category_concentration":
-      return `Concentration is most visible in ${rawValue.replace(/\s*\(\+\d+ more\)/i, "")}.`;
-    case "category_revenue_concentration":
-      return "Largest single category in the reviewed revenue base.";
-    default:
-      if (strength === "strong") return "Reinforces the core structural view.";
-      if (strength === "moderate") return "Adds context to the architecture story.";
-      return "Secondary supporting context.";
-  }
+  return translateExecutivePhrase(
+    buildEvidenceMetricImplication(
+      metricId as EvidenceMetric["id"],
+      rawValue,
+      strength,
+    ),
+  );
 }
 
 /** @deprecated Use buildPrimaryOpportunityAreaLine */

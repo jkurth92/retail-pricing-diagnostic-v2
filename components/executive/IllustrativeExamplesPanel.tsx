@@ -26,7 +26,7 @@ export function IllustrativeExamplesPanel({
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
       >
-        <span>{open ? "Hide examples" : "Illustrative examples"}</span>
+        <span>{open ? "Hide detail" : "Where we saw it"}</span>
         <span className="text-[var(--text-muted)]" aria-hidden>
           {open ? "−" : "+"}
         </span>

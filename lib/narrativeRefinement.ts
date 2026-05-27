@@ -344,7 +344,7 @@ export function metricDisplayRank(title: string, metricId?: string): number {
   if (/premium.*mainstream|premium\/mainstream/i.test(t)) return 2;
   if (/entry.*mainstream|entry\/mainstream/i.test(t)) return 3;
   if (/pl\/nb|private-label|monetization/i.test(t)) return 4;
-  if (/category concentration|revenue weight|in-scope/i.test(t)) return 5;
+  if (/categories shaping|category concentration|in-scope/i.test(t)) return 5;
   if (/kvi|visible value/i.test(t)) return 6;
   return 7;
 }
@@ -362,7 +362,7 @@ export function insightTileEmphasis(
   if (displayRank <= 4 && strength !== "weak") {
     return index === 0 && displayRank <= 3 ? "primary" : "secondary";
   }
-  if (/category concentration/i.test(rank)) return "supporting";
+  if (/categories shaping|category concentration/i.test(rank)) return "supporting";
   if (strength === "strong" && index < 1) return "secondary";
   return "supporting";
 }

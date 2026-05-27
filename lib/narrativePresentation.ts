@@ -12,11 +12,14 @@ import {
   buildExecutiveBusinessSummaryParagraphs,
   businessConfidenceLabel,
   businessConcentrationLabel,
-  formatEvidenceMetricDisplay,
-  formatEvidenceMetricSubtext,
-  formatEvidenceMetricTitle,
   translateExecutivePhrase,
 } from "@/lib/executiveBusinessLanguage";
+import {
+  buildCategoryConcentrationTilePresentation,
+  buildEvidenceTilePresentation,
+  buildExposureCategoryTilePresentation,
+  exposureTileShouldShow,
+} from "@/lib/evidenceTileInterpretation";
 import {
   buildStrategicDiscussionPrompts,
   calibrateValueConcentrationPhrase,
@@ -50,7 +53,10 @@ export type InsightSourceTile = {
   id: string;
   title: string;
   metric: string;
+  /** @deprecated Use implication */
   subtext: string;
+  observationLabel?: string;
+  implication?: string;
   benchmarkHint?: string;
   strength?: "strong" | "moderate" | "weak";
   emphasis?: "primary" | "secondary" | "supporting";
@@ -126,7 +132,8 @@ export function buildStrategicDriverCards(
     cards.push({
       id,
       title,
-      interpretation: interpretation || "Structural signal in measured upload proxy.",
+      interpretation:
+        interpretation || "Structural pattern observed in reviewed pricing data.",
       benchmarkHint,
       impact: impactFromText(raw),
       confidenceLabel: theme?.confidence.level.replace(/_/g, " "),
@@ -171,17 +178,22 @@ function metricToInsight(
   m: ComputedEvidenceBundle["metrics"][0],
   evidence?: ComputedEvidenceBundle | null,
 ): InsightSourceTile | null {
-  const displayValue = formatEvidenceMetricDisplay(m.id, m.value);
-  if (!displayValue) return null;
+  const metrics = evidence?.metrics ?? [];
+  const pres = buildEvidenceTilePresentation(m, metrics);
+  if (!pres || pres.suppress || !pres.observationValue) return null;
+
+  const implication = translateExecutivePhrase(pres.implication);
 
   return attachIllustrations(
     {
       id: m.id,
-      title: formatEvidenceMetricTitle(m.id, m.label),
-      metric: displayValue,
-      subtext: formatEvidenceMetricSubtext(m.id, m.value, m.strength),
+      title: pres.title,
+      observationLabel: pres.observationLabel,
+      metric: pres.observationValue,
+      implication,
+      subtext: implication,
       strength: m.strength,
-      emphasis: insightTileEmphasis(m.label, m.strength, 0),
+      emphasis: insightTileEmphasis(pres.title, m.strength, 0),
     },
     evidence,
   );
@@ -221,79 +233,74 @@ export function buildInsightSourceTiles(
     });
   }
 
-  for (const line of filterGenericNarrativeLines(exec.supportingEvidenceMetrics)) {
-    const soft = softenBenchmarkPhrase(line);
-    const colon = soft.indexOf(":");
-    if (colon > 0) {
+  if (exposure && exposureTileShouldShow("cat-weight", evidence)) {
+    const topCats = [...exposure.categoryExposures]
+      .sort((a, b) => b.revenueWeightPct - a.revenueWeightPct)
+      .slice(0, 2);
+    const catPres = buildCategoryConcentrationTilePresentation(topCats);
+    if (catPres) {
+      const implication = translateExecutivePhrase(catPres.implication);
       push({
-        id: `sem-${tiles.length}`,
-        title: soft.slice(0, colon).trim(),
-        metric: soft.slice(colon + 1).trim(),
-        subtext: "From reviewed pricing structure.",
-        benchmarkHint: /benchmark|expected|typical/i.test(soft) ? "Contextual" : undefined,
-      });
-    } else if (soft.length > 10) {
-      push({
-        id: `sem-${tiles.length}`,
-        title: shortenThemeTitle(soft.slice(0, 50)),
-        metric: "",
-        subtext: soft.length > 50 ? soft : "Commercial observation from diagnostic scope.",
+        id: "cat-weight",
+        title: catPres.title,
+        observationLabel: catPres.observationLabel,
+        metric: catPres.observationValue,
+        implication,
+        subtext: implication,
+        strength: "moderate",
+        emphasis: "supporting",
       });
     }
   }
 
   if (exposure) {
-    const topCats = [...exposure.categoryExposures]
-      .sort((a, b) => b.revenueWeightPct - a.revenueWeightPct)
-      .slice(0, 3);
-    if (topCats.length >= 2) {
-      const names = topCats.map((c) => c.category).join(" + ");
-      const pct = topCats.reduce((s, c) => s + c.revenueWeightPct, 0);
-      push({
-        id: "cat-weight",
-        title: "Category concentration",
-        metric: `${names} · ~${Math.round(pct)}% in-scope revenue`,
-        subtext: "Largest contributors to exposure-weighted opportunity framing.",
-      });
-    }
-
     const archCats = exposure.categoryExposures.filter(
       (x) => x.architectureCompression,
     );
-    for (const c of archCats.slice(0, 3)) {
+    if (exposureTileShouldShow("cat-arch", evidence) && archCats.length > 0) {
+      const c = archCats[0];
+      const pres = buildExposureCategoryTilePresentation(
+        c.category,
+        c.revenueWeightPct,
+        "architecture",
+      );
+      const implication = translateExecutivePhrase(pres.implication);
       push({
         id: `cat-arch-${c.category}`,
-        title: "Premium spacing",
-        metric: `${c.category} · ${c.revenueWeightPct}% revenue`,
-        subtext: "Compressed premium architecture in this category.",
-        benchmarkHint: "In scope",
-        strength: "moderate",
-        emphasis: "primary",
-      });
-    }
-    for (const c of exposure.categoryExposures
-      .filter((x) => x.plNbNarrow && !x.architectureCompression)
-      .slice(0, 2)) {
-      push({
-        id: `cat-pl-${c.category}`,
-        title: "PL/NB gap",
-        metric: `${c.category} · ${c.revenueWeightPct}% revenue`,
-        subtext: "Narrow private-label monetization separation.",
+        title: pres.title,
+        observationLabel: pres.observationLabel,
+        metric: pres.observationValue,
+        implication,
+        subtext: implication,
         benchmarkHint: "In scope",
         strength: "moderate",
         emphasis: "secondary",
       });
     }
-  }
 
-  for (const line of exec.causalFramingLines.slice(0, 2)) {
-    const soft = softenBenchmarkPhrase(line);
-    push({
-      id: `causal-${tiles.length}`,
-      title: shortenThemeTitle(soft.split(".")[0] ?? soft),
-      metric: "",
-      subtext: soft,
-    });
+    const plCats = exposure.categoryExposures.filter(
+      (x) => x.plNbNarrow && !x.architectureCompression,
+    );
+    if (exposureTileShouldShow("cat-pl", evidence) && plCats.length > 0) {
+      const c = plCats[0];
+      const pres = buildExposureCategoryTilePresentation(
+        c.category,
+        c.revenueWeightPct,
+        "pl_nb",
+      );
+      const implication = translateExecutivePhrase(pres.implication);
+      push({
+        id: `cat-pl-${c.category}`,
+        title: pres.title,
+        observationLabel: pres.observationLabel,
+        metric: pres.observationValue,
+        implication,
+        subtext: implication,
+        benchmarkHint: "In scope",
+        strength: "moderate",
+        emphasis: "supporting",
+      });
+    }
   }
 
   const ordered = tiles

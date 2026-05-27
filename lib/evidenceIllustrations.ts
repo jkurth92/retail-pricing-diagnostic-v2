@@ -155,8 +155,8 @@ function categoryPremiumExample(s: CategoryCommercialSnapshot): IllustrativeComm
     category: s.category,
     observation: `Premium tiers average ~${pct}% above mainstream.`,
     interpretation: s.compressed
-      ? "Trade-up separation appears compressed relative to typical mass / hybrid architecture."
-      : "Premium step-up is within a typical spacing band for this category.",
+      ? "Trade-up may be hard to read on shelf — premium tiers sit close to mainstream."
+      : "Premium step-up is relatively clear versus peer categories in scope.",
     granularity: "category",
   };
 }
@@ -168,8 +168,8 @@ function categoryEntryExample(s: CategoryCommercialSnapshot): IllustrativeCommer
     observation: `Opening-price items sit ~${pct}% below mainstream.`,
     interpretation:
       pct < COMPRESSION_ENTRY_GAP_PCT
-        ? "Entry-to-mainstream step-up appears shallow in this category."
-        : "Entry spacing is broadly in line with peer categories.",
+        ? "Opening-price separation is relatively shallow — entry signaling may be muted for value shoppers."
+        : "Entry-to-mainstream step-up is broadly in line with peer categories.",
     granularity: "category",
   };
 }
@@ -185,8 +185,8 @@ function categoryTierSpacingExample(
       ? `Tier spacing appears healthier (~${pct}%) with clearer trade-up separation.`
       : `Average tier spacing is relatively tight (~${pct}%).`,
     interpretation: healthy
-      ? "Provides a contrast category where ladder spacing is more legible."
-      : "Overall tier steps are compressed versus categories with clearer premium separation.",
+      ? "Shows clearer premium differentiation than most reviewed categories — stronger trade-up separation."
+      : "Tier steps are tight versus categories with clearer premium separation.",
     granularity: "category",
   };
 }
@@ -202,7 +202,7 @@ function skuPlNbExample(
     category: s.category,
     observation: `${pair.pl}${unit} priced only ~${pct}% below ${pair.nb} equivalent.`,
     interpretation:
-      "Private-brand separation appears narrow relative to expected mass retail spacing.",
+      "Limited private-brand separation reduces flexibility to monetize tier differences.",
     granularity: "sku",
   };
 }
@@ -217,7 +217,7 @@ function skuPremiumExample(
     category: s.category,
     observation: `${pair.nb} and adjacent premium items show only ~${pct}% step-up over mainstream.`,
     interpretation:
-      "Premium architecture looks compressed — limited visible trade-up in shelf logic.",
+      "Premium shelf logic looks compressed — limited visible trade-up versus mainstream.",
     granularity: "sku",
   };
 }
@@ -228,11 +228,11 @@ function kviCategoryExample(
 ): IllustrativeCommercialExample {
   return {
     category,
-    observation: `Visible value items represent ~${sharePct}% of inferred category revenue weight.`,
+    observation: `Trip-driving value represents ~${sharePct}% of reviewed category mix.`,
     interpretation:
       sharePct >= 20
-        ? "Trip-driving value concentration is meaningful in this category."
-        : "Value concentration is present but not dominant in this category.",
+        ? "This category anchors how shoppers read value — margin recovery is highly visible here."
+        : "Value-oriented pricing is present but not the dominant story in this category.",
     granularity: "category",
   };
 }
@@ -375,9 +375,9 @@ export function buildEvidenceIllustrations(
     "category_revenue_concentration",
     topRev.map((c) => ({
       category: c.category,
-      observation: `${c.category} represents ~${c.sharePct}% of inferred in-scope revenue weight.`,
+      observation: `${c.category} represents ~${c.sharePct}% of reviewed in-scope mix.`,
       interpretation:
-        "Largest commercial weight sits in this category — patterns here influence portfolio read-through.",
+        "Structural patterns in this category disproportionately shape the portfolio pricing read.",
       granularity: "category" as const,
     })),
   );
@@ -398,7 +398,30 @@ export function buildEvidenceIllustrations(
     );
   }
 
+  enrichTierSpacingContrast(byMetricId, snapshots);
+
   return { byMetricId, disclaimer: ILLUSTRATION_DISCLAIMER };
+}
+
+function enrichTierSpacingContrast(
+  byMetricId: Partial<
+    Record<EvidenceIllustrationMetricKey, IllustrativeCommercialExample[]>
+  >,
+  snapshots: CategoryCommercialSnapshot[],
+): void {
+  const tierExamples = byMetricId.tier_spacing;
+  if (!tierExamples?.length) return;
+
+  const healthy = snapshots.find(
+    (s) => (s.tierSpacingPct ?? 0) >= HEALTHY_TIER_SPACING_PCT,
+  );
+  const tight = snapshots.find((s) => (s.tierSpacingPct ?? 0) < 12);
+  if (!healthy || !tight || healthy.category === tight.category) return;
+
+  const tightExample = tierExamples.find((e) => e.category === tight.category);
+  if (tightExample) {
+    tightExample.interpretation = `${healthy.category} shows clearer premium differentiation than ${tight.category}, allowing stronger trade-up separation.`;
+  }
 }
 
 export function illustrationsForMetric(
