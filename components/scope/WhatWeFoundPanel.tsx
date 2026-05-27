@@ -6,15 +6,17 @@ import { inferUploadFindings } from "@/lib/inferUploadFindings";
 type WhatWeFoundPanelProps = {
   retailerName: string;
   uploadedFileCount: number;
+  detectedColumns?: string[];
 };
 
 export function WhatWeFoundPanel({
   retailerName,
   uploadedFileCount,
+  detectedColumns = [],
 }: WhatWeFoundPanelProps) {
   const findings = useMemo(
-    () => inferUploadFindings(uploadedFileCount),
-    [uploadedFileCount],
+    () => inferUploadFindings(uploadedFileCount, detectedColumns),
+    [uploadedFileCount, detectedColumns],
   );
 
   return (

@@ -237,19 +237,32 @@ export function assembleEnrichmentBundle(
   };
 }
 
+/** Strip stale ticker overrides when the user has not pinned a manual ticker. */
+export function enrichmentOverridesForFetch(
+  manualTicker: string | null | undefined,
+  storedOverrides: RetailerEnrichmentOverrides = {},
+): RetailerEnrichmentOverrides {
+  if (manualTicker?.trim()) {
+    return { ...storedOverrides, ticker: manualTicker.trim().toUpperCase() };
+  }
+  const { ticker: _omit, ...rest } = storedOverrides;
+  return rest;
+}
+
 /** Client-side: fetch full enrichment bundle from API. */
 export async function fetchEnrichmentBundle(
   retailerName: string,
   manualTicker?: string | null,
   overrides: RetailerEnrichmentOverrides = {},
 ): Promise<RetailerEnrichmentBundle> {
+  const effectiveOverrides = enrichmentOverridesForFetch(manualTicker, overrides);
   const params = new URLSearchParams({
     type: "full",
     name: retailerName,
   });
-  if (manualTicker) params.set("ticker", manualTicker);
-  if (Object.keys(overrides).length > 0) {
-    params.set("overrides", JSON.stringify(overrides));
+  if (manualTicker?.trim()) params.set("ticker", manualTicker.trim());
+  if (Object.keys(effectiveOverrides).length > 0) {
+    params.set("overrides", JSON.stringify(effectiveOverrides));
   }
 
   try {
@@ -323,8 +336,11 @@ export function mergeEnrichmentOverrides(
   };
   return assembleEnrichmentBundle(
     bundle.context.retailerName,
-    manualTicker ?? bundle.context.ticker,
-    { ...bundle.manualOverrides, ...overrides },
+    manualTicker?.trim() ? manualTicker : null,
+    enrichmentOverridesForFetch(manualTicker, {
+      ...bundle.manualOverrides,
+      ...overrides,
+    }),
     serverData,
   );
 }

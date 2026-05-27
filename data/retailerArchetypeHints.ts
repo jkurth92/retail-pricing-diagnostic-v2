@@ -87,9 +87,9 @@ export const RETAILER_ARCHETYPE_HINTS: RetailerArchetypeHint[] = [
   {
     aliases: ["cvs", "cvs health", "walgreens", "walgreens boots alliance"],
     tickers: ["CVS", "WBA"],
-    archetypeId: "convenience",
-    pricingPosture: "Convenience",
-    retailerFormat: "Convenience",
+    archetypeId: "specialty",
+    pricingPosture: "Hybrid",
+    retailerFormat: "Drug",
   },
   {
     aliases: ["gap", "old navy", "banana republic"],

@@ -15,18 +15,46 @@ export function normalizeHeaderToken(header: string): string {
     .replace(/^_+|_+$/g, "");
 }
 
+/** Headers that must not map to store/zone/region (e.g. product URLs). */
+const GEO_FIELD_DENY_PATTERNS = [
+  /_uri$/,
+  /_url$/,
+  /^url_/,
+  /^uri_/,
+  /product_uri/,
+  /product_url/,
+  /web_?url/,
+  /page_url/,
+  /link_url/,
+];
+
+function isDeniedGeoHeader(token: string): boolean {
+  return GEO_FIELD_DENY_PATTERNS.some((pattern) => pattern.test(token));
+}
+
 function tokenSimilarity(a: string, b: string): number {
   if (a === b) return 1;
-  if (a.includes(b) || b.includes(a)) {
+
+  const aParts = a.split("_").filter(Boolean);
+  const bParts = b.split("_").filter(Boolean);
+  if (aParts.includes(b) || bParts.includes(a)) {
+    return 0.95;
+  }
+
+  const shared = aParts.filter((part) => bParts.includes(part));
+  if (shared.length > 0) {
+    return shared.length / Math.max(aParts.length, bParts.length);
+  }
+
+  if (b.length >= 4 && a.includes(b)) {
     const longer = Math.max(a.length, b.length);
     const shorter = Math.min(a.length, b.length);
     return shorter / longer;
   }
-  const aParts = a.split("_").filter(Boolean);
-  const bParts = b.split("_").filter(Boolean);
-  const overlap = aParts.filter((p) => bParts.includes(p)).length;
-  if (overlap > 0) {
-    return overlap / Math.max(aParts.length, bParts.length);
+  if (a.length >= 4 && b.includes(a)) {
+    const longer = Math.max(b.length, a.length);
+    const shorter = Math.min(a.length, b.length);
+    return shorter / longer;
   }
   return 0;
 }
@@ -96,6 +124,19 @@ export function normalizeColumnHeader(sourceColumn: string): FieldResolution {
 
   const fuzzy = resolveFuzzy(token);
   if (fuzzy) {
+    const geoField =
+      fuzzy.field === "store" ||
+      fuzzy.field === "zone" ||
+      fuzzy.field === "region";
+    if (geoField && isDeniedGeoHeader(token)) {
+      return {
+        sourceColumn,
+        canonicalField: null,
+        method: "semantic_inference",
+        confidence: 0,
+        inferredPurpose: "Unmapped — may still support proxy inference",
+      };
+    }
     return {
       sourceColumn,
       canonicalField: fuzzy.field,
@@ -123,10 +164,11 @@ export function normalizeDetectedColumns(
 export function canonicalFieldsFromResolutions(
   resolutions: FieldResolution[],
   existing: CanonicalFieldKey[] = [],
+  minConfidence = 0.55,
 ): CanonicalFieldKey[] {
   const set = new Set<CanonicalFieldKey>(existing);
   for (const r of resolutions) {
-    if (r.canonicalField && r.confidence >= 0.55) {
+    if (r.canonicalField && r.confidence >= minConfidence) {
       set.add(r.canonicalField);
     }
   }

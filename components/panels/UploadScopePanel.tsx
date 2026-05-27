@@ -28,7 +28,12 @@ type UploadScopePanelProps = {
   onCategoryRolesChange: (rows: InferredCategoryRow[]) => void;
   onTotalRevenueChange: (value: string) => void;
   onAddressablePercentChange: (value: string) => void;
-  onUploadFilesChange?: (count: number, names: string[]) => void;
+  onUploadFilesChange?: (
+    count: number,
+    names: string[],
+    detectedColumns: string[],
+    productNameSample: string[],
+  ) => void;
   onRunDiagnostic: () => void;
   canRunDiagnostic: boolean;
   runDisabledReason?: string;
@@ -55,10 +60,17 @@ export function UploadScopePanel({
   runDisabledReason,
 }: UploadScopePanelProps) {
   const [uploadedFileCount, setUploadedFileCount] = useState(0);
+  const [detectedColumns, setDetectedColumns] = useState<string[]>([]);
 
-  const handleFilesChange = (count: number, names: string[]) => {
+  const handleFilesChange = (
+    count: number,
+    names: string[],
+    columns: string[],
+    productNameSample: string[],
+  ) => {
     setUploadedFileCount(count);
-    onUploadFilesChange?.(count, names);
+    setDetectedColumns(columns);
+    onUploadFilesChange?.(count, names, columns, productNameSample);
   };
 
   return (
@@ -78,6 +90,7 @@ export function UploadScopePanel({
       <WhatWeFoundPanel
         retailerName={retailerName}
         uploadedFileCount={uploadedFileCount}
+        detectedColumns={detectedColumns}
       />
 
       <InferredCategoryRolesTable

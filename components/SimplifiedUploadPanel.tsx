@@ -1,10 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { parseUploadFiles } from "@/lib/parseUploadHeaders";
 
 type SimplifiedUploadPanelProps = {
   maxFiles?: number;
-  onFilesChange?: (count: number, names: string[]) => void;
+  onFilesChange?: (
+    count: number,
+    names: string[],
+    detectedColumns: string[],
+    productNameSample: string[],
+  ) => void;
 };
 
 export function SimplifiedUploadPanel({
@@ -14,13 +20,13 @@ export function SimplifiedUploadPanel({
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileNames, setFileNames] = useState<string[]>([]);
 
-  const handleFiles = (files: FileList | null) => {
+  const handleFiles = async (files: FileList | null) => {
     if (!files) return;
-    const names = Array.from(files)
-      .slice(0, maxFiles)
-      .map((f) => f.name);
+    const selected = Array.from(files).slice(0, maxFiles);
+    const names = selected.map((f) => f.name);
     setFileNames(names);
-    onFilesChange?.(names.length, names);
+    const { detectedColumns, productNameSample } = await parseUploadFiles(selected);
+    onFilesChange?.(names.length, names, detectedColumns, productNameSample);
   };
 
   return (

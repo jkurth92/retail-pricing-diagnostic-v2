@@ -1,4 +1,5 @@
 import { CATEGORY_ROLE_BY_ID } from "@/data/categoryRoles";
+import { inferCategoriesFromProductSample } from "@/lib/inferCategoriesFromProductSample";
 import { resolveRetailerLookup } from "@/lib/retailerLookup";
 import type { InferredCategoryRow } from "@/types/category-scope";
 import type { CategoryRoleId } from "@/types/role-inference";
@@ -9,6 +10,8 @@ export type InferCategoryRolesInput = {
   retailerName?: string;
   ticker?: string | null;
   uploadedFileNames?: string[];
+  /** Product titles sampled from uploaded price files. */
+  productNameSample?: string[];
 };
 
 let rowId = 0;
@@ -64,6 +67,26 @@ const BY_TICKER: Record<string, CategoryTemplate[]> = {
     { category: "Computing", roleId: "traffic_driver" },
     { category: "Services & plans", roleId: "profit_driver" },
     { category: "Seasonal", roleId: "opportunistic_seasonal" },
+  ],
+  WBA: [
+    { category: "Health & wellness", roleId: "destination" },
+    { category: "Pharmacy / OTC", roleId: "traffic_driver" },
+    { category: "Personal care", roleId: "basket_builder" },
+    { category: "Cosmetics", roleId: "premiumization" },
+    { category: "Fragrance", roleId: "premiumization" },
+    { category: "Beauty", roleId: "premiumization" },
+    { category: "Oral care", roleId: "basket_builder" },
+    { category: "Snacks & impulse", roleId: "convenience_urgency" },
+  ],
+  CVS: [
+    { category: "Health & wellness", roleId: "destination" },
+    { category: "Pharmacy / OTC", roleId: "traffic_driver" },
+    { category: "Personal care", roleId: "basket_builder" },
+    { category: "Cosmetics", roleId: "premiumization" },
+    { category: "Fragrance", roleId: "premiumization" },
+    { category: "Beauty", roleId: "premiumization" },
+    { category: "Oral care", roleId: "basket_builder" },
+    { category: "Baby & family", roleId: "basket_builder" },
   ],
   AMZN: [
     { category: "Marketplace core", roleId: "traffic_driver" },
@@ -140,7 +163,12 @@ const BY_ARCHETYPE: Record<RetailerArchetypeId, CategoryTemplate[]> = {
 };
 
 const FILE_CATEGORY_HINTS: { pattern: RegExp; category: string; roleId: CategoryRoleId }[] = [
-  { pattern: /beauty|cosmetic/i, category: "Beauty", roleId: "premiumization" },
+  {
+    pattern: /walgreens|wba|cvs|pharmacy|drug.?store/i,
+    category: "Health & wellness",
+    roleId: "destination",
+  },
+  { pattern: /beauty|cosmetic|fragrance/i, category: "Beauty", roleId: "premiumization" },
   { pattern: /grocery|food|dairy|produce/i, category: "Grocery", roleId: "traffic_driver" },
   { pattern: /apparel|fashion|clothing/i, category: "Apparel", roleId: "premiumization" },
   { pattern: /home|decor|furniture/i, category: "Home decor", roleId: "opportunistic_seasonal" },
@@ -186,14 +214,32 @@ function mergeTemplates(
   return merged;
 }
 
+function categoriesFromProductSample(
+  productNames: string[],
+): CategoryTemplate[] {
+  return inferCategoriesFromProductSample(productNames).map(
+    ({ category, roleId }) => ({ category, roleId }),
+  );
+}
+
 export function inferCategoryRoles(input: InferCategoryRolesInput): InferredCategoryRow[] {
   rowId = 0;
   const ticker = resolveTicker(input);
   const fromTicker = ticker ? BY_TICKER[ticker] : null;
   const fromArchetype = BY_ARCHETYPE[input.archetypeId] ?? BY_ARCHETYPE.mass;
   const fromFiles = categoriesFromFileHints(input.uploadedFileNames ?? []);
+  const fromProducts = categoriesFromProductSample(input.productNameSample ?? []);
 
-  const template = mergeTemplates(fromTicker ?? fromArchetype, fromFiles);
+  let template: CategoryTemplate[];
+  if (fromProducts.length >= 2) {
+    template = mergeTemplates(
+      fromProducts,
+      mergeTemplates(fromTicker ?? [], fromFiles),
+    );
+  } else {
+    template = mergeTemplates(fromTicker ?? fromArchetype, fromFiles);
+  }
+
   return template.map((t) => row(t.category, t.roleId));
 }
 

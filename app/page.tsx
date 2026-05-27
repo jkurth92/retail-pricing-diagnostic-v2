@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   createEmptyEnrichment,
+  enrichmentOverridesForFetch,
   fetchEnrichmentBundle,
   mergeEnrichmentOverrides,
 } from "@/lib/api/contextResolver";
@@ -79,6 +80,7 @@ export default function Home() {
   const [knowledgePosture, setKnowledgePosture] =
     useState<KnowledgePosture>("EDLP");
   const [uploadFileNames, setUploadFileNames] = useState<string[]>([]);
+  const [uploadProductSample, setUploadProductSample] = useState<string[]>([]);
   const [revenueFromProfile, setRevenueFromProfile] = useState(false);
   const [competitors, setCompetitors] = useState<CompetitorEntry[]>([]);
   const [totalRevenueInput, setTotalRevenueInput] = useState("");
@@ -97,18 +99,20 @@ export default function Home() {
         retailerName: confirmedRetailer,
         ticker: retailerEnrichment.context.ticker,
         uploadedFileNames: uploadFileNames,
+        productNameSample: uploadProductSample,
       }),
     [
       archetypeId,
       confirmedRetailer,
       retailerEnrichment.context.ticker,
       uploadFileNames,
+      uploadProductSample,
     ],
   );
 
   const [categoryRolesEdited, setCategoryRolesEdited] =
     useState<InferredCategoryRow[] | null>(null);
-  const categoryRolesKey = `${archetypeId}|${confirmedRetailer}|${retailerEnrichment.context.ticker}|${uploadFileNames.join(",")}`;
+  const categoryRolesKey = `${archetypeId}|${confirmedRetailer}|${retailerEnrichment.context.ticker}|${uploadFileNames.join(",")}|${uploadProductSample.length}`;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset edits when retailer context changes
@@ -341,16 +345,18 @@ export default function Home() {
       }
       setEnrichmentLoading(true);
       try {
+        const pinnedTicker = (tickerOverride ?? manualTicker).trim() || undefined;
         const bundle = await fetchEnrichmentBundle(
           name.trim(),
-          (tickerOverride ?? manualTicker) || null,
-          overrides ?? retailerEnrichment.manualOverrides,
+          pinnedTicker,
+          overrides ??
+            enrichmentOverridesForFetch(
+              pinnedTicker,
+              retailerEnrichment.manualOverrides,
+            ),
         );
         setRetailerEnrichment(bundle);
         setFinancePeers(suggestFinancePeers(bundle));
-        if (bundle.context.ticker && !manualTicker) {
-          setManualTicker(bundle.context.ticker);
-        }
         const hint = resolveRetailerArchetypeHint(
           name.trim(),
           bundle.context.ticker,
@@ -383,7 +389,8 @@ export default function Home() {
   const handleConfirmRetailer = () => {
     const trimmed = retailerInput.trim();
     setConfirmedRetailer(trimmed || "");
-    const hint = resolveRetailerArchetypeHint(trimmed, manualTicker || null);
+    setManualTicker("");
+    const hint = resolveRetailerArchetypeHint(trimmed, null);
     if (hint) {
       setArchetypeId(hint.archetypeId);
       setKnowledgePosture(hint.pricingPosture);
@@ -393,7 +400,7 @@ export default function Home() {
       setCompetitors(createSuggestedCompetitors(retailerFormat));
       setArchetypeId(formatToArchetypeId(retailerFormat));
     }
-    void refreshEnrichment(trimmed);
+    void refreshEnrichment(trimmed, undefined, {});
   };
 
   const handleRetailerFormatChange = (format: RetailerFormat) => {
@@ -401,8 +408,15 @@ export default function Home() {
     setArchetypeId(formatToArchetypeId(format));
   };
 
-  const handleUploadFilesChange = (_count: number, names: string[]) => {
+  const handleUploadFilesChange = (
+    _count: number,
+    names: string[],
+    _detectedColumns: string[] = [],
+    productNameSample: string[] = [],
+  ) => {
     setUploadFileNames(names);
+    setUploadProductSample(productNameSample);
+    setCategoryRolesEdited(null);
   };
 
   const handleRunDiagnostic = () => {
@@ -466,9 +480,17 @@ export default function Home() {
             onConfirmRetailer={handleConfirmRetailer}
             onManualTickerChange={setManualTicker}
             onEnrichmentOverrides={handleEnrichmentOverrides}
-            onRefreshEnrichment={() =>
-              refreshEnrichment(confirmedRetailer || retailerInput)
-            }
+            onRefreshEnrichment={() => {
+              const pinned = manualTicker.trim() || undefined;
+              void refreshEnrichment(
+                confirmedRetailer || retailerInput,
+                pinned,
+                enrichmentOverridesForFetch(
+                  pinned,
+                  retailerEnrichment.manualOverrides,
+                ),
+              );
+            }}
             onFinancePeersChange={(peers) =>
               setFinancePeers(refreshFinancePeerResolution(peers))
             }
