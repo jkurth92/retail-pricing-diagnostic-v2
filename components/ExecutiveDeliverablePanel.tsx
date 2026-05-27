@@ -53,6 +53,7 @@ type ExecutiveDeliverablePanelProps = {
   consultantSlot?: ReactNode;
   opportunityExposure?: import("@/types/opportunity-exposure").OpportunityExposureBundle | null;
   computedEvidence?: import("@/types/evidence-computation").ComputedEvidenceBundle | null;
+  evaluatedRevenuePercent?: number | null;
 };
 
 export function ExecutiveDeliverablePanel({
@@ -63,6 +64,7 @@ export function ExecutiveDeliverablePanel({
   consultantSlot,
   opportunityExposure,
   computedEvidence,
+  evaluatedRevenuePercent,
 }: ExecutiveDeliverablePanelProps) {
   const { executiveSummary: exec } = readout;
   const profile = exec.retailerProfile;
@@ -74,6 +76,7 @@ export function ExecutiveDeliverablePanel({
           exec={exec}
           opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
           computedEvidence={computedEvidence}
+          evaluatedRevenuePercent={evaluatedRevenuePercent}
         />
       </div>
     );
@@ -177,6 +180,7 @@ export function ExecutiveDeliverablePanel({
           exec={exec}
           opportunityExposure={opportunityExposure ?? exec.opportunityExposure}
           computedEvidence={computedEvidence}
+          evaluatedRevenuePercent={evaluatedRevenuePercent}
           technicalDiagnosticsSlot={
             consultantSlot || readout.storylineSections.length > 0 ? technicalSlot : undefined
           }

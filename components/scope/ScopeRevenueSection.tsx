@@ -84,21 +84,29 @@ export function ScopeRevenueSection({
           )}
         </div>
         <div>
-          <label className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
+          <label
+            htmlFor="scope-addressable-percent"
+            className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]"
+          >
             Addressable %
           </label>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={addressablePercentInput}
-            onChange={(e) => onAddressablePercentChange(e.target.value)}
-            placeholder="65"
-            className="mt-2 w-full max-w-[6rem] rounded-md border border-[var(--border)] px-3 py-2 text-sm"
-          />
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <input
+              id="scope-addressable-percent"
+              type="text"
+              inputMode="decimal"
+              value={addressablePercentInput}
+              onChange={(e) => onAddressablePercentChange(e.target.value)}
+              placeholder="65"
+              aria-label="Addressable percent of revenue"
+              className="scope-addressable-input w-[5.5rem] min-w-[5.5rem] rounded-lg border-2 border-[color-mix(in_srgb,var(--accent-deep)_28%,var(--border))] bg-white px-3 py-2.5 text-center text-2xl font-semibold tabular-nums leading-none tracking-tight text-[var(--accent-deep)] shadow-[0_2px_8px_rgba(26,53,104,0.08)] transition-[border-color,box-shadow] focus:border-[var(--accent-deep)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+            />
+            <span className="text-lg font-semibold text-[var(--text-muted)]">%</span>
+          </div>
         </div>
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-            Addressable revenue
+            Revenue evaluated
           </p>
           <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text-navy)]">
             {addressableDisplay}
@@ -106,7 +114,7 @@ export function ScopeRevenueSection({
         </div>
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-            In diagnostic scope
+            Used in this assessment
           </p>
           <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--accent)]">
             {inScopeDisplay}

@@ -222,26 +222,37 @@ export function refineStrategicImplicationOneLiner(
 
 /** Consultant-style executive summary sentence with correct grammar. */
 export function buildConsultingEvidenceSentence(drivers: string[]): string {
-  const arch = drivers.filter((d) =>
+  const safe = drivers.filter(
+    (d): d is string => typeof d === "string" && d.trim().length > 0,
+  );
+  const arch = safe.filter((d) =>
     /architecture|premium|tier|spacing|compression|pl\/nb|monetization/i.test(d),
   );
-  const kvi = drivers.filter((d) =>
+  const kvi = safe.filter((d) =>
     /kvi|value concentration|visible value/i.test(d),
   );
-  const lead = arch.slice(0, 2);
+  const other = safe.filter((d) => !arch.includes(d) && !kvi.includes(d));
+  const lead = [...arch, ...other].slice(0, 2);
   const support = kvi.slice(0, 1);
 
   if (lead.length === 0 && support.length === 0) {
     return "The primary opportunity appears concentrated in measured structural pricing gaps.";
   }
+  if (lead.length === 0 && support.length >= 1) {
+    return `The primary opportunity appears concentrated in ${support[0].toLowerCase()}.`;
+  }
   if (lead.length >= 1 && support.length >= 1) {
-    const leadPhrase = lead.length === 1 ? lead[0] : `${lead[0]} and ${lead[1]}`;
+    const leadPhrase =
+      lead.length === 1 ? lead[0] : `${lead[0]} and ${lead[1]}`;
     return `The primary opportunity appears concentrated in ${leadPhrase.toLowerCase()}, with ${support[0].toLowerCase()} as a supporting factor.`;
   }
   if (lead.length === 1) {
     return `The primary opportunity appears concentrated in ${lead[0].toLowerCase()}.`;
   }
-  return `The primary opportunity appears concentrated in ${lead[0].toLowerCase()} and ${lead[1].toLowerCase()}.`;
+  if (lead.length >= 2) {
+    return `The primary opportunity appears concentrated in ${lead[0].toLowerCase()} and ${lead[1].toLowerCase()}.`;
+  }
+  return "The primary opportunity appears concentrated in measured structural pricing gaps.";
 }
 
 export function buildStrategicDiscussionPrompts(

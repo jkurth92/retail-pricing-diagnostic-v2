@@ -15,11 +15,6 @@ export type UploadFindings = {
   hasFileSignal: boolean;
 };
 
-const BASE_DETECTED = [
-  "Pricing structure",
-  "Category hierarchy",
-];
-
 const WITH_FILES_DETECTED = [
   "Pricing structure",
   "Category hierarchy",
@@ -44,7 +39,7 @@ export function inferUploadFindings(
         : ["Architecture", "KVI"];
 
   return {
-    detected: hasFileSignal ? WITH_FILES_DETECTED : BASE_DETECTED,
+    detected: hasFileSignal ? WITH_FILES_DETECTED : [],
     diagnosticsAvailable,
     hasFileSignal,
   };

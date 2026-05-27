@@ -1,8 +1,8 @@
 "use client";
 
 import { OpportunityRangeVisual } from "@/components/executive/OpportunityRangeVisual";
-import { confidenceLabelFromTrace } from "@/lib/executiveUxHelpers";
-import { heroContextChips } from "@/lib/narrativePresentation";
+import { businessRangeConfidenceLabel } from "@/lib/executiveUxHelpers";
+import { buildHeroBusinessInterpretation } from "@/lib/executiveBusinessLanguage";
 import type { ExecutiveSummary } from "@/types/executive-summary";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 
@@ -12,6 +12,7 @@ type OverallOpportunityHeroProps = {
   lowPct: number | null;
   highPct: number | null;
   exposure?: OpportunityExposureBundle | null;
+  evaluatedRevenuePercent?: number | null;
 };
 
 export function OverallOpportunityHero({
@@ -20,22 +21,31 @@ export function OverallOpportunityHero({
   lowPct,
   highPct,
   exposure,
+  evaluatedRevenuePercent,
 }: OverallOpportunityHeroProps) {
-  const chips = heroContextChips(exec, exposure);
+  const interpretation = buildHeroBusinessInterpretation(
+    exec,
+    marginDisplay,
+    exposure,
+    evaluatedRevenuePercent,
+  );
   const confidenceLabel =
     lowPct != null && highPct != null
-      ? confidenceLabelFromTrace(
-          exec.marginOpportunityTotalTrace?.formulaSummary,
-          lowPct,
-          highPct,
-        )
+      ? businessRangeConfidenceLabel(lowPct, highPct)
       : undefined;
+
+  const interpretationRows = [
+    { label: "Scope analyzed", value: interpretation.scopeEvaluated },
+    { label: "Opportunity concentration", value: interpretation.concentration },
+    { label: "Evidence support", value: interpretation.confidence },
+    { label: "Primary issue", value: interpretation.primaryIssue },
+  ].filter((r) => r.value);
 
   return (
     <article className="ent-hero-card relative w-full overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--accent-deep)_14%,var(--border))] bg-gradient-to-br from-white to-[var(--accent-light)] p-8 shadow-[0_20px_50px_rgba(26,53,104,0.08)]">
       <header>
         <h2 className="ent-hero-label m-0 text-xs font-semibold uppercase tracking-wider text-[var(--accent-mid)]">
-          Potential pricing opportunity
+          Pricing opportunity
         </h2>
       </header>
 
@@ -54,7 +64,7 @@ export function OverallOpportunityHero({
             </p>
           )}
           <p className="ent-hero-unit mt-2 text-sm font-medium text-[var(--text-muted)]">
-            Indicative margin uplift
+            Indicative margin opportunity (directional)
           </p>
         </div>
 
@@ -70,22 +80,20 @@ export function OverallOpportunityHero({
         </div>
       </div>
 
-      <footer className="ent-hero-meta mt-7 border-t border-[var(--border)] pt-5">
-        <ul className="ent-hero-chips m-0 flex list-none flex-wrap gap-2 p-0">
-          {chips.map((c) => (
-            <li
-              key={c.label}
-              className={
-                c.tone === "primary"
-                  ? "ent-chip ent-chip-primary rounded-full border px-3 py-1.5 text-xs font-semibold"
-                  : "ent-chip rounded-full border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--text-navy)]"
-              }
-            >
-              {c.label}
-            </li>
+      {interpretationRows.length > 0 && (
+        <dl className="ent-hero-interpretation m-0 mt-7 grid gap-4 border-t border-[var(--border)] pt-6 sm:grid-cols-2">
+          {interpretationRows.map((row) => (
+            <div key={row.label}>
+              <dt className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                {row.label}
+              </dt>
+              <dd className="mt-1 text-sm font-medium leading-snug text-[var(--text-navy)]">
+                {row.value}
+              </dd>
+            </div>
           ))}
-        </ul>
-      </footer>
+        </dl>
+      )}
     </article>
   );
 }

@@ -502,6 +502,7 @@ export default function Home() {
             retailerTicker={retailerEnrichment.context.ticker}
             computedEvidence={computedEvidence}
             opportunityExposure={opportunityExposure}
+            evaluatedRevenuePercent={parseNumericInput(addressablePercentInput)}
           />
         );
       case "executive_outputs":

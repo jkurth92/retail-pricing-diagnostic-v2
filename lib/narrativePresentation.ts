@@ -9,8 +9,13 @@ import {
   softenExecutiveDriverPhrase,
 } from "@/lib/interpretationCalibration";
 import {
-  buildConsultingEvidenceSentence,
-  buildPortfolioConfidenceChipLabel,
+  buildExecutiveBusinessSummaryParagraphs,
+  businessConfidenceLabel,
+  businessConcentrationLabel,
+  softenEvidenceMetricSubtext,
+  translateExecutivePhrase,
+} from "@/lib/executiveBusinessLanguage";
+import {
   buildStrategicDiscussionPrompts,
   calibrateValueConcentrationPhrase,
   dedupeNarrativeLines,
@@ -142,12 +147,13 @@ export function buildStrategicDriverCards(
 }
 
 function metricToInsight(m: ComputedEvidenceBundle["metrics"][0]): InsightSourceTile | null {
-  const subtext =
+  const rawSubtext =
     m.strength === "strong"
       ? "Strong measured signal in upload proxy."
       : m.strength === "moderate"
         ? "Moderate signal — directionally meaningful."
         : "Supporting directional signal.";
+  const subtext = softenEvidenceMetricSubtext(rawSubtext);
 
   return {
     id: m.id,
@@ -289,36 +295,19 @@ export function buildInsightSourceTiles(
   }));
 }
 
+/** @deprecated Hero uses structured interpretation; kept for legacy compact views. */
 export function heroContextChips(
   exec: ExecutiveSummary,
   exposure: OpportunityExposureBundle | null | undefined,
 ): { label: string; tone: "primary" | "neutral" }[] {
   const chips: { label: string; tone: "primary" | "neutral" }[] = [];
-
   chips.push({
-    label: buildPortfolioConfidenceChipLabel(
-      exec.evidenceStrength,
-      exec.topThemes,
-    ),
+    label: businessConfidenceLabel(exec.evidenceStrength, exec.topThemes),
     tone: "primary",
   });
-
-  if (exposure && exposure.monetizableExposurePct > 0) {
-    chips.push({
-      label: `~${exposure.monetizableExposurePct}% monetizable exposure`,
-      tone: "primary",
-    });
-  }
-
-  const archLed = exec.primaryDrivers.some((d) =>
-    /architecture|premium|tier|spacing/i.test(d),
-  );
-  if (archLed) chips.push({ label: "Architecture-led", tone: "neutral" });
-
-  const profile = `${exec.retailerProfile.archetype} · ${exec.retailerProfile.posture}`;
-  chips.push({ label: profile, tone: "neutral" });
-
-  return chips.slice(0, 4);
+  const concentration = businessConcentrationLabel(exposure);
+  if (concentration) chips.push({ label: concentration, tone: "primary" });
+  return chips.slice(0, 3);
 }
 
 /**
@@ -327,31 +316,20 @@ export function heroContextChips(
  */
 export function buildExecutiveConsultingSummary(
   exec: ExecutiveSummary,
-  implications: string[] = exec.strategicImplications,
+  _implications: string[] = exec.strategicImplications,
   exposure?: OpportunityExposureBundle | null,
+  evaluatedRevenuePercent?: number | null,
 ): ExecutiveConsultingSummary {
-  const paragraphs: string[] = [];
+  const paragraphs = buildExecutiveBusinessSummaryParagraphs(
+    exec,
+    exposure ?? exec.opportunityExposure,
+    evaluatedRevenuePercent,
+  ).map((p) => polishNarrativeText(translateExecutivePhrase(p)));
 
-  if (exec.opportunityHeadline?.trim()) {
-    paragraphs.push(polishNarrativeText(exec.opportunityHeadline));
-  }
-
-  if (exec.primaryDrivers.length > 0) {
+  if (paragraphs.length === 0 && exec.executiveNarrative.trim()) {
     paragraphs.push(
-      polishNarrativeText(
-        buildConsultingEvidenceSentence(
-          exec.primaryDrivers.map((d) => softenBenchmarkPhrase(d)),
-        ),
-      ),
+      polishNarrativeText(translateExecutivePhrase(exec.executiveNarrative.slice(0, 220))),
     );
-  } else if (exec.executiveNarrative.trim()) {
-    paragraphs.push(polishNarrativeText(exec.executiveNarrative.slice(0, 220)));
-  }
-
-  if (exec.strategicImplicationOneLiner?.trim()) {
-    paragraphs.push(polishNarrativeText(exec.strategicImplicationOneLiner));
-  } else if (implications[0]?.trim()) {
-    paragraphs.push(polishNarrativeText(implications[0]));
   }
 
   const nextSteps =

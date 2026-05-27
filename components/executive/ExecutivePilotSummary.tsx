@@ -4,7 +4,9 @@ import type { ReactNode } from "react";
 import { Disclosure } from "@/components/Disclosure";
 import { ExecutiveConsultingSummary } from "@/components/executive/ExecutiveConsultingSummary";
 import { InsightSourceTile } from "@/components/executive/InsightSourceTile";
+import { OpportunityLeverBreakdown } from "@/components/executive/OpportunityLeverBreakdown";
 import { OverallOpportunityHero } from "@/components/executive/OverallOpportunityHero";
+import { buildDirectionalLeverContributions } from "@/lib/opportunityLeverAttribution";
 import { StrategicDriverCard } from "@/components/executive/StrategicDriverCard";
 import { OpportunityCalculationTracePanel } from "@/components/opportunity/OpportunityCalculationTracePanel";
 import {
@@ -22,6 +24,8 @@ type ExecutivePilotSummaryProps = {
   opportunityExposure?: OpportunityExposureBundle | null;
   computedEvidence?: ComputedEvidenceBundle | null;
   technicalDiagnosticsSlot?: ReactNode;
+  /** Addressable % of total revenue in diagnostic scope */
+  evaluatedRevenuePercent?: number | null;
 };
 
 export function ExecutivePilotSummary({
@@ -29,15 +33,24 @@ export function ExecutivePilotSummary({
   opportunityExposure,
   computedEvidence,
   technicalDiagnosticsSlot,
+  evaluatedRevenuePercent,
 }: ExecutivePilotSummaryProps) {
   const margin = parseMarginRangeDisplay(exec.marginOpportunitySummary);
   const exposure = opportunityExposure ?? exec.opportunityExposure ?? null;
   const drivers = buildStrategicDriverCards(exec, 4);
   const insights = buildInsightSourceTiles(exec, exposure, computedEvidence, 6);
+  const leverRows = buildDirectionalLeverContributions(
+    exec.topThemes,
+    exec.primaryDrivers,
+    computedEvidence,
+    computedEvidence?.promoMarkdownEligible ?? false,
+  );
+
   const consultingSummary = buildExecutiveConsultingSummary(
     exec,
     exec.strategicImplications,
     exposure,
+    evaluatedRevenuePercent,
   );
 
   const lowPct = margin ? parseFloat(margin.low) : null;
@@ -54,18 +67,20 @@ export function ExecutivePilotSummary({
           lowPct={lowPct}
           highPct={highPct}
           exposure={exposure}
+          evaluatedRevenuePercent={evaluatedRevenuePercent}
         />
+        {leverRows.length > 0 && <OpportunityLeverBreakdown rows={leverRows} />}
       </div>
 
       {hasStructuralEvidence && (
         <section className="ent-row ent-row-evidence w-full">
           <div className="ent-panel ent-panel-evidence h-full rounded-2xl border bg-white p-6 shadow-sm">
             <h2 className="ent-section-title mb-1 text-sm font-semibold text-[var(--text-navy)]">
-              Structural evidence
+              What is driving the opportunity
             </h2>
             <p className="mb-5 text-xs leading-relaxed text-[var(--text-muted)]">
-              Key drivers and supporting signals from the diagnostic — directional, not
-              tactical price prescriptions.
+              Strongest commercial signals from the review — directional, not price
+              prescriptions.
             </p>
 
             {drivers.length > 0 && (

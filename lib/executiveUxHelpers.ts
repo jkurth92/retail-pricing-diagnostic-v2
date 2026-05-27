@@ -38,13 +38,21 @@ export function parseEvidenceMetricLine(line: string): ParsedEvidenceMetric {
 }
 
 export function confidenceLabelFromTrace(
-  formulaSummary?: string,
+  _formulaSummary?: string,
+  lowPct?: number,
+  highPct?: number,
+): string | undefined {
+  return businessRangeConfidenceLabel(lowPct, highPct);
+}
+
+/** Business-facing range width label for executive charts. */
+export function businessRangeConfidenceLabel(
   lowPct?: number,
   highPct?: number,
 ): string | undefined {
   if (lowPct == null || highPct == null) return undefined;
   const span = highPct - lowPct;
-  if (span <= 0.6) return "Tighter confidence band";
-  if (span <= 1.2) return "Moderate thematic width";
-  return "Wider thematic band (overlapping themes)";
+  if (span <= 0.6) return "Narrower opportunity range";
+  if (span <= 1.2) return "Opportunity concentrated in select structural themes";
+  return "Broader opportunity range across themes";
 }

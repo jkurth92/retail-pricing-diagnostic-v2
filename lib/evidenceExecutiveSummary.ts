@@ -2,6 +2,7 @@ import type { ComputedEvidenceBundle } from "@/types/evidence-computation";
 import type { OpportunityExposureBundle } from "@/types/opportunity-exposure";
 import type { ExecutiveTheme } from "@/types/executive-theme";
 import type { StorylineSynthesisResult } from "@/lib/storylineSynthesizer";
+import { businessConcentrationLabel } from "@/lib/executiveBusinessLanguage";
 import { localizedDriverPrefix } from "@/lib/signalPrioritization";
 import { calibrateKviExposureDriver } from "@/lib/narrativeRefinement";
 
@@ -65,10 +66,8 @@ export function buildOpportunityHeadline(
   if (evidence.evidenceStrength === "weak") {
     return `Directional pricing opportunity: ${low.toFixed(1)}–${high.toFixed(1)}% margin improvement (thematic, bounded)`;
   }
-  const exposureNote =
-    exposure && exposure.monetizableExposurePct > 0
-      ? ` · ~${exposure.monetizableExposurePct}% monetizable in-scope revenue`
-      : "";
+  const concentration = businessConcentrationLabel(exposure);
+  const exposureNote = concentration ? ` · ${concentration}` : "";
   return `Potential pricing opportunity: ${low.toFixed(1)}–${high.toFixed(1)}% margin improvement${exposureNote}`;
 }
 

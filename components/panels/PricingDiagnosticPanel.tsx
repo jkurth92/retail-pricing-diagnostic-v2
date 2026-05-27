@@ -23,6 +23,7 @@ type PricingDiagnosticPanelProps = {
   retailerTicker?: string | null;
   computedEvidence?: ComputedEvidenceBundle | null;
   opportunityExposure?: import("@/types/opportunity-exposure").OpportunityExposureBundle | null;
+  evaluatedRevenuePercent?: number | null;
 };
 
 export function PricingDiagnosticPanel({
@@ -38,6 +39,7 @@ export function PricingDiagnosticPanel({
   retailerTicker,
   computedEvidence,
   opportunityExposure,
+  evaluatedRevenuePercent,
 }: PricingDiagnosticPanelProps) {
   if (!diagnosticReady) {
     return (
@@ -66,6 +68,7 @@ export function PricingDiagnosticPanel({
           pilotMode
           opportunityExposure={opportunityExposure}
           computedEvidence={computedEvidence}
+          evaluatedRevenuePercent={evaluatedRevenuePercent}
           consultantSlot={
             <TechnicalDiagnosticsPanel
               knowledgeContext={knowledgeContext}
